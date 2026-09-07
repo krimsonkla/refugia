@@ -263,11 +263,15 @@ want it to, and then they do.
   the page has no server to ask. `tests/conformance/vectors.json` runs the same
   cases through both and fails the build if they disagree, so the duplication
   remains but the drift does not.
-- **The network adapters are thinly tested.** The scoring core and the store are
-  at or near 100% and the declarative tier is at 87%; the adapters are the modules whose
-  behaviour is defined by an upstream's quirks, and testing them properly means
-  recording real payloads as fixtures. The suite runs offline and refuses to
-  make a real request, so what is covered is covered honestly.
+- **Nothing here has been run against a live upstream by a second person.** Every
+  adapter is now tested — the suite sits at 93% and CI fails below 90 — but the
+  fixtures are hand-built from the shapes the upstreams are known to publish, not
+  recorded from real responses. That covers the quirks that have been _seen_: a 200
+  carrying an error body, a fill value of -999, a header row that moved, a place
+  name with two legal suffixes stacked. It cannot cover a quirk nobody has met yet.
+  The suite runs offline and refuses to make a real request, so what is covered is
+  covered honestly, and a vintage change upstream will still surface as a coverage
+  figure rather than as an exception.
 - Alaska and Hawaii appear in the table but not the map: the vegetation layer is
   CONUS-only.
 

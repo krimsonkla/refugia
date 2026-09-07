@@ -111,7 +111,7 @@ paragraph explaining why there was no such test outlived the test.
 ## 6. `findings.jsonl`
 
 **146 rows across 2 cycles and 8 lenses.**
-`8 open, 122 fixed, 3 parked, 13 declined.`
+`7 open, 123 fixed, 3 parked, 13 declined.`
 
 - `cyc-release-audit` — the first public-release audit. Seven lenses plus a
   completeness critic, so eight `lens` values appear.
@@ -200,12 +200,14 @@ jq -c 'select(.batch == "attribution" and .status == "open") | [.id, .effort, .t
   docs/data/findings.jsonl
 ```
 
-### `tests-that-bite` — 1 row (1 nice-to-have)
+### `tests-that-bite` — done
 
-Tests that cannot fail. A syntax error anywhere in the page passes the whole suite,
-the Throttle's lock can be deleted with nothing noticing, one spec assertion is a
-tautology, and the no-network fixture misses async and raw transports. The adapter
-coverage row sits here too, as the large one nobody should start on a Friday.
+Closed. Tests that could not fail: a syntax error anywhere in the page passed the
+whole suite, the Throttle's lock could be deleted with nothing noticing, one spec
+assertion was a tautology, and the no-network fixture missed async and raw
+transports. The large one at the end of the batch was adapter coverage, which was
+the reason the total sat at 60%; every module the row named is now tested and the
+floor is 90.
 
 ```bash
 jq -c 'select(.batch == "tests-that-bite" and .status == "open") | [.id, .effort, .title] | @tsv' -r \

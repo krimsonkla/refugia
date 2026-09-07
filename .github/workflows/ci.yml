@@ -69,7 +69,7 @@ jobs:
       # rather than a target — raise it when it is comfortably cleared, never lower
       # it to make a red build green.
       - name: Test
-        run: uv run pytest --cov=refugia --cov-report=term-missing --cov-fail-under=60
+        run: uv run pytest --cov=refugia --cov-report=term-missing --cov-fail-under=90
 
       # The only step that sees the artifact. Every test above imports from src/
       # because pytest puts it on the path, so none of them can observe a packaging
