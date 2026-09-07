@@ -38,34 +38,9 @@ re-weight it to their own priorities without installing anything.
 > this a way to narrow a list — not advice, and not a verdict on these places or
 > the people who live in them.
 
-### Using the page
-
-**The sliders are the point.** Move one and everything re-ranks immediately: the
-table reorders, the map reshades, the scores change. Nothing is precomputed, so
-there is no wrong question to ask of it.
-
-**Weights reorder, requirements remove.** The requirements panel drops places out
-of the running entirely — a minimum population, a maximum home value, states you
-will not consider — and each metric additionally offers "rule out anywhere worse
-than home", which is the cut you cannot express by weighting however heavily.
-
-**The map shades on whichever metric you pick**, from the selector above it, not
-only on the overall fit. That is how you see a single metric's geography rather
-than the answer's.
-
-**Click a county** for the comparison panel: every metric against home, ordered by
-how much it actually moved the score. **Click a town marker** for the city panel,
-where land cover and the health estimates are measured at the town rather than
-averaged over the county.
-
-**By keyboard:** tab to the results table and it is one stop, not three hundred.
-Arrows move between rows, Home and End jump to either end, Enter opens a county and
-Escape closes it and puts you back on the row you came from. Column headers are
-reachable and sortable with Enter, and announce their direction.
-
-**Saved setups live in your browser**, under `refugia.setups.v1` in `localStorage`.
-They are per-browser and per-device: they do not travel with a page you share, and
-somebody you send it to sees the weights it was published with, not yours.
+[Using the page](docs/guide/using-the-page.md) covers the rest: requirements
+against home, the map's metric selector, the city panel, the keyboard route, and
+where saved setups live.
 
 ## Why it works the way it does
 
@@ -125,6 +100,8 @@ way.
 
 ## Use
 
+Full walkthroughs live in **[the guide](docs/guide/)**. The short version:
+
 ```bash
 uv run refugia fetch                                      # download everything (slow, cached)
 uv run refugia rank --profile profiles/example.json --top 20 --explain
@@ -153,132 +130,25 @@ are yours, and that is the point.
 Read down the contributions and you can see whether a result is real or one metric
 doing all the work.
 
-### Every option
-
-Each command also takes `--root`, which defaults to the working directory and is
-where `data/` and `out/` live, and where a `specs/` of your own is looked for.
-
-| Command   | Option        | Default                  | What it does                                 |
-| --------- | ------------- | ------------------------ | -------------------------------------------- |
-| `fetch`   | `--universe`  | `metro_micro`            | `metro_micro`, `metro` or `all`              |
-|           | `--radius-km` | `25.0`                   | Vegetation sampling radius around each place |
-|           | `--only`      | every metric             | Comma-separated keys to refresh              |
-| `rank`    | `--profile`   | required                 | The profile JSON                             |
-|           | `--top`       | `20`                     | How many rows to print                       |
-|           | `--explain`   | off                      | Each metric's contribution and the raw value |
-| `publish` | `--profile`   | required                 | The profile JSON                             |
-|           | `--out`       | `out/refugia.html`       | Where to write the page                      |
-| `ask`     | `--model`     | `qwen3:30b-a3b`          | Ollama model tag                             |
-|           | `--host`      | `http://localhost:11434` | Ollama host                                  |
-| `metrics` | —             | —                        | Prints the registered keys; needs no dataset |
-
-**The universe is not every county.** `metro_micro`, the default, is the 1,906
-counties inside a Census metro or micropolitan area — the places with a town in
-them. `all` is every US county, and `metro` narrows to metro areas only. It
-decides what gets downloaded, so changing it means fetching again.
-
-### What a fetch costs
-
-Roughly 90 MB across about 6,900 files under `data/cache/`, and a `data/dataset.json`
-of around 1.3 MB. Expect it to take a while: the vegetation layer alone is
-thousands of individual samples.
-
-It is cache-first and therefore resumable — interrupt it and run it again and it
-picks up where it stopped. `--only wildfire_risk` refreshes one metric without
-touching the rest, which is what you want when a single upstream has published a
-new year.
-
-A source whose upstream has moved costs its own metrics and nothing else. Nine of
-these are pinned to a dated path — a filename with a year in it, a release
-directory — so expect it eventually. The run continues, those metrics keep
-whatever the last successful fetch saved, and the failure is repeated in red after
-the coverage table so an hour of scrollback cannot hide it.
+Every option and default, and what a cold fetch costs on disk, is in [the
+command line](docs/guide/command-line.md).
 
 ## Reading the output
 
-**The score is a position, not a measurement.** `score` in the CLI, `FIT` on the
-page, is a 0–100 percentile rank _among the places that survived your filters_. So
-it is not comparable between two profiles, and not comparable to itself before and
-after you change a requirement — tightening a filter re-spreads everything that is
-left. A place at 71 is not "71% good"; it is near the top of this particular
-field.
-
-**`cover`** — `Data` on the page — is the share of your weighted metrics that this
-place actually has a value for. Anything below `min_coverage` never appears at
-all. A row at 90% is scored on nine tenths of what you asked for, and the missing
-tenth is not counted against it.
-
-`rank --explain` breaks a place's score into each metric's contribution alongside
-the raw value, which is the fastest way to see whether a result is real or an
-artefact of one metric doing all the work.
+The score is a **percentile position among the places that survived your filters**,
+not a measurement — so it is not comparable between two profiles, nor to itself
+after you change a requirement. [Reading the
+numbers](docs/guide/reading-the-numbers.md) explains that, the coverage column, and
+how to tell how old a page's data is.
 
 ## Writing a profile
 
-A profile is the whole of your preference, as data. `profiles/example.json` is a
-working one to copy.
+A profile is the whole of your preference, as data: which metrics matter and how
+much, and what disqualifies a place outright. `profiles/example.json` is a working
+one to copy, and `refugia metrics` prints the vocabulary it is written against.
 
-```json
-{
-  "name": "Allergens first, cost close behind",
-  "normalization": "percentile",
-  "min_coverage": 0.8,
-  "home_fips": "17031",
-  "weights": { "juniper_cover": 5, "home_value": 3, "life_expectancy": 2 },
-  "criteria": [{ "field": "population", "comparison": "min", "value": 40000 }]
-}
-```
-
-**`weights`** — a metric key to a number. Only the ratios matter: they are
-rescaled to sum to 1, so `{"a": 5, "b": 1}` and `{"a": 50, "b": 10}` rank
-identically. Omitting a metric and weighting it `0` mean the same thing: both
-leave it out of the score and out of the coverage denominator, so switching one
-off cannot drop a place for missing data it is no longer being judged on. **Never
-use a negative weight** — it is read as zero. Each metric already declares whether high
-or low is good, so the sign is carried for you, and `refugia metrics` prints it:
-
-```
-$ uv run refugia metrics
-juniper_cover              lower is better  allergen    % of land
-coldest_day                higher is better climate     degrees F
-...
-21 metrics. Weight any of these in a profile's `weights`.
-```
-
-That list comes from the registry rather than from this page, so it cannot drift.
-A key that is not in it stops the run and says so.
-
-**`criteria`** — hard filters, each `{field, comparison, value}`. `comparison` is
-one of `min`, `max`, `in`, `not_in`; the last two take a list. `field` is either a
-metric key or an attribute of the place itself — `population`, `state`, `name`,
-`lat`, `lon`, `fips`, or `metro`. A place with no value for the field never
-passes, which is deliberate: an unknown is not a pass.
-
-```json
-[
-  { "field": "population", "comparison": "min", "value": 40000 },
-  { "field": "state", "comparison": "not_in", "value": ["Arizona", "Nevada"] },
-  { "field": "wildfire_risk", "comparison": "max", "value": 80 }
-]
-```
-
-Filters and weights are not interchangeable. A weight reorders; a filter removes.
-"Nowhere with more juniper than I have now" cannot be said by weighting, however
-heavily.
-
-**`normalization`** — `percentile` (the default) or `minmax`. Percentile resists
-the long tails that several of these metrics have; min-max lets one extreme county
-compress everything else.
-
-**`min_coverage`** — the share of your weighted metrics a place must actually have
-data for, default `0.8`. Below it the place is dropped rather than scored on what
-is left, because scoring on what is left quietly rewards a place for missing data.
-
-**`home_fips`** — optional, the 5-digit county FIPS of where you live now. Set it
-and the page ranks everywhere against home, adds the per-metric comparison panel,
-and offers each metric's "rule out anywhere worse than home" cut. Leave it out and
-everything else still works.
-
-**`name`** — free text, shown on the page.
+The full schema — weights, requirements, normalisation, coverage, home — is in
+[writing a profile](docs/guide/writing-a-profile.md).
 
 ## Two grains
 
@@ -307,34 +177,16 @@ a measurement and a repetition.
 Three tiers, in increasing order of what they can express and of what they cost.
 
 1. **A metric already registered needs no work to visualise.** The page builds its
-   sliders, table columns and map layers from the registry, reading each metric's
-   `direction`, `unit` and `category`. Nothing is hard-coded per metric.
+   sliders, table columns and map layers from the registry. Nothing is hard-coded
+   per metric.
+2. **A tabular source is a JSON spec** — no code at all.
+   See [adding a metric with a spec](docs/guide/adding-a-spec.md).
+3. **A source needing real logic is a written adapter**, and owes tests.
+   See [adding a metric with an adapter](docs/guide/adding-an-adapter.md).
 
-2. **A tabular source is a JSON spec** — no code. The six shipped ones live in
-   `src/refugia/specs/` so an installed copy carries them; drop your own in a
-   `specs/` directory beside the project and they register alongside. Name the URL, the
-   format (`csv`, `json`, `xlsx`), the column holding a county FIPS and the column
-   holding the value, plus a `citation` and `terms_url` if the publisher requires
-   one. `src/refugia/specs/life_expectancy.json` is a worked example. Nothing in a
-   spec executes, and it is validated on load — the URL must be `https`, and the
-   fields that reach the published page may not contain markup — so a model can
-   draft one and the blast radius stays bounded: a wrong spec produces a metric
-   with poor coverage, which the coverage gate surfaces, rather than arbitrary
-   behaviour. It is still a network request in data clothing, though. Read the URL
-   before you merge it.
-
-3. **A source needing real logic is a written adapter** in
-   `src/refugia/metrics/sources/`, implementing the `MetricSource` protocol.
-   Constructed geometry, pagination, class crosswalks and retry semantics live
-   here, where they can be tested. `landfire_vegetation.py` is the example, and its
-   history is the argument for the boundary: it took several rounds against
-   undocumented server behaviour, including a version of the raster that silently
-   returns no data across the eastern US.
-
-**Every new source is judged on coverage.** `fetch` flags any metric below 75%
-coverage, because the characteristic failure of a data source is not an error — it
-is a tidy set of plausible numbers for the places it reached and silence for the
-rest.
+**Every new source is judged on coverage.** `fetch` flags any metric below 75%,
+because the characteristic failure of a data source is not an error — it is a tidy
+set of plausible numbers for the places it reached and silence for the rest.
 
 ## Asking questions
 
