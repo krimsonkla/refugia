@@ -1,4 +1,12 @@
 {pkgs, ...}: {
+  # Node is here for one reason: tests/conformance runs the published page's own
+  # scoring kernel against the same vectors the Python engine runs, and that is
+  # the only check that can see across the two implementations. CI has node
+  # already, so without this the cross-check still runs there -- it would just
+  # skip on the machine where the change is being made, which is the worst place
+  # to learn about a divergence last.
+  packages = [pkgs.nodejs];
+
   # Dependencies are declared in pyproject.toml and pinned in uv.lock; devenv runs
   # `uv sync` on shell entry so the venv under $DEVENV_STATE/venv always matches.
   # The project installs editable, so `refugia` and `import refugia` resolve

@@ -108,9 +108,9 @@ def test_the_ordering_matches_the_vector():
 def test_the_page_kernel_matches_the_same_vectors():
     """Runs template.html's own scoring against every vector Python just ran.
 
-    Skipped without node, because the uv install path does not provide one and a
-    contributor should not be blocked by that. Never skipped in CI: the whole
-    point is that a divergence cannot reach main.
+    devenv provides node for exactly this. On the plain uv path there is none, so
+    this skips rather than blocking a contributor who is nowhere near scoring.
+    Never skipped in CI, where a divergence reaching main is the thing at stake.
     """
     node = shutil.which("node")
     if node is None:
