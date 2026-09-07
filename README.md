@@ -341,6 +341,13 @@ want it to, and then they do.
 - Alaska and Hawaii appear in the table but not the map: the vegetation layer is
   CONUS-only.
 
+## Contributing
+
+`CONTRIBUTING.md` has the setup, the checks CI runs, and the conventions that will
+get a pull request sent back. The most useful contributions are a new metric or a
+source that has stopped working — this is a thin layer over ten public datasets,
+and those datasets move.
+
 ## Data and licence
 
 The code is MIT — see `LICENSE`. The data is not the code's to license: refugia
