@@ -1,0 +1,36 @@
+{
+  "name": "Example — allergens first, cost close behind",
+  "normalization": "percentile",
+  "min_coverage": 0.8,
+  "home_fips": "17031",
+  "weights": {
+    "juniper_cover": 5,
+    "sagebrush_cover": 5,
+    "populus_cover": 3,
+    "air_pollution": 3,
+    "wildfire_risk": 3,
+    "unhealthy_air_days": 2,
+    "worst_air_day": 1,
+    "asthma": 2,
+    "depression": 1,
+    "mental_distress": 1,
+    "short_sleep": 1,
+    "physical_distress": 1,
+    "poor_or_fair_health": 2,
+    "poor_mental_health_days": 2,
+    "life_expectancy": 2,
+    "social_associations": 2,
+    "home_value": 3,
+    "sunshine": 2,
+    "humidity": 2,
+    "hottest_day": 1,
+    "coldest_day": 1
+  },
+  "criteria": [
+    {
+      "field": "population",
+      "comparison": "min",
+      "value": 40000
+    }
+  ]
+}

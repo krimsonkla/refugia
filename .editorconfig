@@ -1,0 +1,15 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# These files are written by formatters that indent at two spaces -- prettier for
+# the web and data formats, alejandra for Nix. Declaring four here would leave
+# eclint failing on files a formatter had just written, every run.
+[*.{html,css,js,json,yaml,yml,md,nix}]
+indent_size = 2

@@ -1,0 +1,15 @@
+{
+  "key": "wildfire_risk",
+  "label": "Wildfire risk to homes",
+  "unit": "national percentile",
+  "direction": "lower_better",
+  "category": "hazard",
+  "description": "USFS national percentile for wildfire risk to homes, combining burn likelihood with how many buildings are exposed. This is the chance of fire reaching housing, not the amount of smoke breathed - a dense place with frequent brush fires can rank high here while having clean air.",
+  "source": "USFS Wildfire Risk to Communities (2026-04)",
+  "url": "https://wildfirerisk.org/wp-content/uploads/2026/04/wrc_download_20260415.xlsx",
+  "format": "xlsx",
+  "sheet": "Counties",
+  "fips_column": "GEOID",
+  "value_column": "RISK_NATIONAL_RANK",
+  "aggregate": "first"
+}

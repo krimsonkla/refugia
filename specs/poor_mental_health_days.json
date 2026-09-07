@@ -1,0 +1,14 @@
+{
+  "key": "poor_mental_health_days",
+  "label": "Poor mental health days",
+  "unit": "days per month",
+  "direction": "lower_better",
+  "category": "wellbeing",
+  "description": "Average number of days in the past 30 that adults reported their mental health was not good, age-adjusted, from the BRFSS survey. Asked of residents about themselves.",
+  "source": "County Health Rankings & Roadmaps, 2025 release",
+  "url": "https://www.countyhealthrankings.org/sites/default/files/media/document/analytic_data2025_v2.csv",
+  "format": "csv",
+  "fips_column": "5-digit FIPS Code",
+  "value_column": "Poor Mental Health Days raw value",
+  "aggregate": "first"
+}

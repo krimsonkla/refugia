@@ -1,0 +1,14 @@
+{
+  "key": "life_expectancy",
+  "label": "Life expectancy",
+  "unit": "years",
+  "direction": "higher_better",
+  "category": "wellbeing",
+  "description": "Average number of years a person can expect to live. The broadest single outcome measure of how a place treats the people in it.",
+  "source": "County Health Rankings & Roadmaps, 2025 release",
+  "url": "https://www.countyhealthrankings.org/sites/default/files/media/document/analytic_data2025_v2.csv",
+  "format": "csv",
+  "fips_column": "5-digit FIPS Code",
+  "value_column": "Life Expectancy raw value",
+  "aggregate": "first"
+}

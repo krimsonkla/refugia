@@ -1,0 +1,14 @@
+{
+  "key": "air_pollution",
+  "label": "Fine particulate air pollution",
+  "unit": "ug/m3 annual mean",
+  "direction": "lower_better",
+  "category": "hazard",
+  "description": "Average daily density of fine particulate matter (PM2.5) over a year, from the modelled surface that fuses monitor readings with satellite and atmospheric modelling - which is why it covers counties that have no monitor. Being an annual mean it describes the air normally breathed, and averages away the short severe episodes that wildfire smoke arrives as.",
+  "source": "County Health Rankings & Roadmaps, 2025 release (EPA/CDC fused surface)",
+  "url": "https://www.countyhealthrankings.org/sites/default/files/media/document/analytic_data2025_v2.csv",
+  "format": "csv",
+  "fips_column": "5-digit FIPS Code",
+  "value_column": "Air Pollution: Particulate Matter raw value",
+  "aggregate": "first"
+}

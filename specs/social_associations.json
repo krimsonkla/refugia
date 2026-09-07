@@ -1,0 +1,14 @@
+{
+  "key": "social_associations",
+  "label": "Social associations",
+  "unit": "per 10,000 people",
+  "direction": "higher_better",
+  "category": "community",
+  "description": "Membership organisations per 10,000 residents - civic and fraternal groups, sports and recreation clubs, religious organisations, political and labour organisations. The standard administrative proxy for how much organised social life a place has; it counts opportunities to belong, not whether people feel they belong.",
+  "source": "County Health Rankings & Roadmaps, 2025 release",
+  "url": "https://www.countyhealthrankings.org/sites/default/files/media/document/analytic_data2025_v2.csv",
+  "format": "csv",
+  "fips_column": "5-digit FIPS Code",
+  "value_column": "Social Associations raw value",
+  "aggregate": "first"
+}

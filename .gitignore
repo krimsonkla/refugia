@@ -1,0 +1,34 @@
+# devenv / nix
+.devenv/
+.direnv/
+.cache/
+# generated on shell entry as a symlink into the nix store — devenv writes it
+# from the git-hooks block in devenv.nix, so editing it here achieves nothing
+.pre-commit-config.yaml
+# local assistant configuration, not part of the project
+.mcp.json
+.claude/
+.DS_Store
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+
+# editors
+.idea/
+.vscode/
+
+# a profile is personal: the example is the only one that ships
+profiles/*.json
+!profiles/example.json
+
+# generated data — `refugia fetch` rebuilds these
+data/cache/*
+!data/cache/.gitkeep
+data/dataset.json
+out/

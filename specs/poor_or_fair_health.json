@@ -1,0 +1,15 @@
+{
+  "key": "poor_or_fair_health",
+  "label": "Poor or fair health",
+  "unit": "% of adults",
+  "direction": "lower_better",
+  "category": "wellbeing",
+  "description": "Adults rating their own health as fair or poor, age-adjusted, from the BRFSS survey. A self-report of lived experience rather than a diagnosis, which is why it is carried alongside the clinical measures.",
+  "source": "County Health Rankings & Roadmaps, 2025 release",
+  "url": "https://www.countyhealthrankings.org/sites/default/files/media/document/analytic_data2025_v2.csv",
+  "format": "csv",
+  "fips_column": "5-digit FIPS Code",
+  "value_column": "Poor or Fair Health raw value",
+  "aggregate": "first",
+  "scale": 100
+}

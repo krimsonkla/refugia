@@ -1,0 +1,3152 @@
+<title>Refugia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;500;600&display=swap"
+/>
+<style>
+  :root {
+    --ground: #eff2eb;
+    --surface: #fafcf7;
+    --surface-2: #f4f7ee;
+    --ink: #171c15;
+    --muted: #667062;
+    --line: #d6decf;
+    --accent: #2f6b58;
+    --accent-soft: #dce9e2;
+    --bad: #9e4a2c;
+    --mid: #ded9c4;
+    --good: #2f6b58;
+    --shadow:
+      0 1px 2px rgba(23, 28, 21, 0.06), 0 8px 24px rgba(23, 28, 21, 0.05);
+    --display: "Fraunces", Georgia, serif;
+    --body: "Source Sans 3", system-ui, -apple-system, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0e120c;
+      --surface: #161b14;
+      --surface-2: #1c221a;
+      --ink: #e4eadd;
+      --muted: #8e9889;
+      --line: #2a3127;
+      --accent: #74bca4;
+      --accent-soft: #1e2c26;
+      --bad: #c46743;
+      --mid: #4a4f3c;
+      --good: #74bca4;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0e120c;
+    --surface: #161b14;
+    --surface-2: #1c221a;
+    --ink: #e4eadd;
+    --muted: #8e9889;
+    --line: #2a3127;
+    --accent: #74bca4;
+    --accent-soft: #1e2c26;
+    --bad: #c46743;
+    --mid: #4a4f3c;
+    --good: #74bca4;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+  }
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--display);
+    font-weight: 600;
+    text-wrap: balance;
+    margin: 0;
+  }
+  .wrap {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 28px 24px 64px;
+  }
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    align-items: baseline;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 18px;
+    margin-bottom: 22px;
+  }
+  header h1 {
+    font-size: 30px;
+    letter-spacing: -0.01em;
+  }
+  header .sub {
+    color: var(--muted);
+    font-size: 14px;
+    max-width: 62ch;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: 296px minmax(0, 1fr);
+    gap: 22px;
+    align-items: start;
+  }
+  @media (max-width: 1000px) {
+    .layout {
+      grid-template-columns: 1fr;
+    }
+    .rail {
+      position: static;
+      max-height: none;
+      overflow: visible;
+      padding-right: 0;
+    }
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+  }
+  .card > .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .card > .head h2 {
+    font-size: 16px;
+  }
+  .card > .head #find {
+    flex: 1;
+    min-width: 120px;
+    max-width: 320px;
+    margin-left: auto;
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--surface-2);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 13px;
+  }
+  .card > .body {
+    padding: 16px;
+  }
+  /* The rail carries a control per metric, so it outgrows the viewport as metrics
+    are added. It scrolls as its own column rather than dragging the map and table
+    along with it; overscroll-behavior stops the page from taking over at the end. */
+  .rail {
+    position: sticky;
+    top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: calc(100vh - 36px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 4px;
+  }
+  .rail::-webkit-scrollbar {
+    width: 9px;
+  }
+  .rail::-webkit-scrollbar-thumb {
+    background: var(--line);
+    border-radius: 5px;
+  }
+  .rail::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .grp {
+    border-top: 1px solid var(--line);
+  }
+  .grp:first-of-type {
+    border-top: 0;
+  }
+  .grp > summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 0 10px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .grp > summary::-webkit-details-marker {
+    display: none;
+  }
+  .grp > summary::before {
+    content: "\25B8";
+    font-size: 9px;
+    transition: transform 0.12s;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .grp > summary::before {
+      transition: none;
+    }
+  }
+  .grp[open] > summary::before {
+    transform: rotate(90deg);
+  }
+  .grp > summary:hover {
+    color: var(--ink);
+  }
+  /* A collapsed group still has to say whether it is contributing to the ranking. */
+  .grp .cnt {
+    margin-left: auto;
+    font-size: 10px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    letter-spacing: 0;
+  }
+  .grp .cnt[hidden] {
+    display: none;
+  }
+  .grp > .inner {
+    padding-bottom: 6px;
+  }
+  .w {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2px 8px;
+    margin-bottom: 11px;
+  }
+  .w label {
+    font-size: 13px;
+    line-height: 1.25;
+  }
+  .w label.use {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    cursor: pointer;
+  }
+  .w label.use input {
+    width: auto;
+    margin: 2px 0 0;
+    accent-color: var(--accent);
+    flex: none;
+  }
+  .w input[type="range"]:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .w .val {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .w.off label,
+  .w.off .hint {
+    opacity: 0.45;
+  }
+  .w.off .val {
+    color: var(--muted);
+  }
+  .w input[type="range"] {
+    grid-column: 1/-1;
+    width: 100%;
+    accent-color: var(--accent);
+    margin: 3px 0 0;
+  }
+  .w label.cut {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .w label.cut input {
+    width: auto;
+    margin: 2px 0 0;
+    accent-color: var(--bad);
+    flex: none;
+  }
+  .w label.cut:hover {
+    color: var(--ink);
+  }
+  .w label.cut .cv {
+    font-family: var(--mono);
+    font-size: 11.5px;
+  }
+  .w .hint {
+    grid-column: 1/-1;
+    font-size: 11.5px;
+    color: var(--muted);
+    line-height: 1.35;
+  }
+  .filt {
+    display: grid;
+    gap: 5px;
+    margin-bottom: 13px;
+  }
+  .filt label {
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+  .filt input,
+  .filt select {
+    width: 100%;
+    padding: 7px 9px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--surface-2);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 13.5px;
+  }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--ink);
+    border-radius: 6px;
+    padding: 7px 12px;
+    font-family: var(--body);
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .btn:hover {
+    border-color: var(--accent);
+  }
+  .btn.p {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--surface);
+  }
+  :root[data-theme="dark"] .btn.p {
+    color: #0e120c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .btn.p {
+      color: #0e120c;
+    }
+  }
+  .btn:focus-visible,
+  select:focus-visible,
+  input:focus-visible,
+  tr:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .mapwrap {
+    position: relative;
+    padding: 6px 10px 12px;
+  }
+  svg.map {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  svg.map path {
+    stroke: var(--surface);
+    stroke-width: 0.4;
+    cursor: pointer;
+    transition: opacity 0.12s;
+  }
+  svg.map path:hover {
+    stroke: var(--ink);
+    stroke-width: 1.1;
+  }
+  svg.map path.sel {
+    stroke: var(--ink);
+    stroke-width: 3;
+    paint-order: stroke;
+  }
+  /* A hidden county keeps a quiet outline: dropping it out entirely leaves the
+    survivors floating with no coastline or border to locate them against. CSS
+    beats the inline fill attribute, so the ramp colour is replaced here. */
+  svg.map path {
+    vector-effect: non-scaling-stroke;
+    /* A focusable path makes the browser draw its focus ring around the bounding
+      box, which on a county reads as a stray rectangle. Selection is already
+      shown by the stroke below. */
+    outline: none;
+  }
+  /* State borders sit above the fills as a frame. Without them a filtered map is
+    a scatter of shapes with no coastline or border to locate them against. */
+  svg.map .cities {
+    pointer-events: none;
+  }
+  /* Only the oversized transparent target takes clicks; the drawn dot must not,
+    or it steals them from its own hit area. The label is clickable too, being by
+    far the larger thing on screen. */
+  svg.map .cities circle.hit {
+    fill: transparent;
+    stroke: none;
+    pointer-events: auto;
+    cursor: pointer;
+  }
+  svg.map .cities circle:not(.hit) {
+    pointer-events: none;
+  }
+  svg.map .cities text {
+    pointer-events: auto;
+    cursor: pointer;
+  }
+  svg.map .cities circle.hit:hover + circle,
+  svg.map .cities text:hover {
+    stroke: var(--accent);
+    stroke-width: 2.6;
+  }
+  svg.map .cities circle {
+    fill: var(--ink);
+    stroke: var(--surface);
+    stroke-width: 0.9;
+    vector-effect: non-scaling-stroke;
+  }
+  svg.map .cities text {
+    fill: var(--ink);
+    font-family: var(--body);
+    font-weight: 500;
+    /* Painted stroke-then-fill so a name stays readable over any county colour. */
+    stroke: var(--surface);
+    stroke-width: 2.4;
+    paint-order: stroke;
+    vector-effect: non-scaling-stroke;
+  }
+  svg.map .borders path.border {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 0.9;
+    opacity: 0.45;
+    pointer-events: none;
+  }
+  svg.map.grabbing {
+    cursor: grabbing;
+  }
+  svg.map {
+    cursor: grab;
+    touch-action: none;
+  }
+  /* Where you live now stays on the map whatever the threshold does: the whole
+    point of the comparison is seeing what you are leaving. */
+  svg.map path.home {
+    stroke: var(--bad);
+    stroke-width: 2.2;
+  }
+  /* Dimmed means "did not make the cut", not "inert": the county a reader clicks
+    is very often the one that lost, and the comparison is the answer to why. */
+  svg.map path.out {
+    fill: var(--surface-2);
+    stroke: var(--line);
+    stroke-width: 0.4;
+  }
+  svg.map path.out:hover {
+    stroke: var(--muted);
+    stroke-width: 1.1;
+  }
+  .legend {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    padding: 0 16px 14px;
+  }
+  .ramp {
+    height: 9px;
+    flex: 1;
+    border-radius: 5px;
+    background: linear-gradient(90deg, var(--bad), var(--mid), var(--good));
+  }
+  .tip {
+    position: absolute;
+    pointer-events: none;
+    background: var(--ink);
+    color: var(--ground);
+    padding: 6px 9px;
+    border-radius: 6px;
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.1s;
+    white-space: nowrap;
+    z-index: 5;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  .scroll {
+    overflow-x: auto;
+  }
+  th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    cursor: pointer;
+  }
+  /* Shown but visibly outside the score, so a column nobody is ranking by is not
+    mistaken for one that is. */
+  th.dim,
+  td.dim {
+    opacity: 0.45;
+  }
+  th.num,
+  td.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-family: var(--mono);
+  }
+  td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  tbody tr {
+    cursor: pointer;
+  }
+  tbody tr:hover {
+    background: var(--surface-2);
+  }
+  tbody tr.sel {
+    background: var(--accent-soft);
+  }
+  tbody tr.home td:first-child {
+    box-shadow: inset 3px 0 0 var(--bad);
+  }
+  .rk {
+    font-family: var(--mono);
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .pill.home {
+    background: color-mix(in srgb, var(--bad) 16%, transparent);
+    color: var(--bad);
+  }
+  .anchornote {
+    padding: 0 16px 12px;
+    margin: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .pill {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 11px;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .bar {
+    height: 5px;
+    border-radius: 3px;
+    background: var(--accent);
+    display: block;
+  }
+  .empty {
+    padding: 40px 16px;
+    text-align: center;
+    color: var(--muted);
+  }
+  .detail dl {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 12px;
+    margin: 0;
+  }
+  .detail dt {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .detail dd {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
+  }
+  /* The artifact frame is sandboxed without allow-modals, and showModal() throws
+    there rather than opening - so every panel silently failed to appear when the
+    page was viewed as published, while working locally where no sandbox applies.
+    The panels are opened by the `open` attribute instead, which needs no
+    permission, with a scrim of our own because ::backdrop belongs to showModal. */
+  #scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 50;
+  }
+  #scrim[hidden] {
+    display: none;
+  }
+  dialog#cmp[open],
+  dialog#citydlg[open] {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    z-index: 60;
+  }
+  dialog#citydlg {
+    width: min(820px, 94vw);
+    max-height: 88vh;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  dialog#citydlg[open] {
+    display: flex;
+    flex-direction: column;
+  }
+  dialog#citydlg::backdrop {
+    background: rgba(0, 0, 0, 0.55);
+  }
+  .grain {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 1px 6px;
+    border-radius: 999px;
+    margin-left: 7px;
+  }
+  .grain.city {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .grain.county {
+    background: var(--surface-2);
+    color: var(--muted);
+  }
+  /* Markers are the only clickable thing in the city layer; the labels beside
+    them would otherwise swallow clicks meant for the county underneath. */
+  svg.map .cities circle {
+    pointer-events: auto;
+    cursor: pointer;
+  }
+  dialog#cmp {
+    width: min(860px, 94vw);
+    max-height: 88vh;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  /* Only while open: a dialog is display:none when closed, and setting a display
+    here unconditionally would show it. The column is what lets the body take the
+    remaining height instead of a height computed from an assumed header size -
+    the header wraps on a long county name, and the arithmetic then cut the
+    bottom of the panel off. */
+  dialog#cmp[open] {
+    display: flex;
+    flex-direction: column;
+  }
+  dialog#cmp::backdrop {
+    background: rgba(0, 0, 0, 0.55);
+  }
+  .cmphead {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 17px 20px 15px;
+    border-bottom: 1px solid var(--line);
+    flex: none;
+  }
+  .cmphead h2 {
+    font-size: 21px;
+    margin-top: 3px;
+  }
+  .cmpbody {
+    padding: 16px 20px 20px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    /* min-height:0 lets a flex child shrink below its content, which is what
+      makes it scroll rather than push the panel past its own bottom edge. */
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .scoreline {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .scorebox {
+    flex: 1 1 190px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    padding: 11px 13px;
+    background: var(--surface-2);
+  }
+  .scorebox .k {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .scorebox .v {
+    font-family: var(--mono);
+    font-size: 25px;
+    font-variant-numeric: tabular-nums;
+    margin-top: 3px;
+  }
+  .scorebox .s {
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+  .cmptable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  .cmptable th {
+    position: static;
+    cursor: pointer;
+    user-select: none;
+  }
+  .cmptable th:hover {
+    color: var(--ink);
+  }
+  .cmptable td.metric {
+    max-width: 240px;
+  }
+  /* Shown but visibly outside the score, so a difference on a metric the reader
+    switched off still reaches them without being read as part of the fit. */
+  .cmptable tr.uncounted td {
+    opacity: 0.62;
+  }
+  .delta {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 12.5px;
+    padding: 1px 7px;
+    border-radius: 999px;
+  }
+  .delta.up {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .delta.down {
+    background: color-mix(in srgb, var(--bad) 18%, transparent);
+    color: var(--bad);
+  }
+  .delta.same {
+    color: var(--muted);
+  }
+  .cmplinks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 15px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+  }
+  .cmplinks a {
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--muted);
+    border-radius: 999px;
+    padding: 5px 11px;
+    font-size: 12.5px;
+    text-decoration: none;
+  }
+  .cmplinks a:hover {
+    border-color: var(--accent);
+    color: var(--ink);
+  }
+  .cmplinks .lbl {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--muted);
+    width: 100%;
+    margin-bottom: 2px;
+  }
+  .cmpai {
+    margin-top: 17px;
+    padding-top: 15px;
+    border-top: 1px solid var(--line);
+  }
+  .saverow {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 11px;
+  }
+  .saverow input {
+    flex: 1;
+    min-width: 0;
+    padding: 7px 9px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--surface-2);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 13px;
+  }
+  .preset {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 0;
+    border-top: 1px solid var(--line);
+    font-size: 13px;
+  }
+  .preset .nm {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+    background: none;
+    border: 0;
+    color: var(--ink);
+    text-align: left;
+    font-family: var(--body);
+    font-size: 13px;
+  }
+  .preset .nm:hover {
+    color: var(--accent);
+  }
+  .preset.is-default .nm {
+    font-weight: 600;
+  }
+  .preset button.icon {
+    appearance: none;
+    border: 0;
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: var(--body);
+    font-size: 12.5px;
+    padding: 2px 4px;
+    border-radius: 4px;
+  }
+  .preset button.icon:hover {
+    color: var(--ink);
+  }
+  .preset button.icon.on {
+    color: var(--accent);
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 11px;
+  }
+  .chips button {
+    appearance: none;
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--muted);
+    border-radius: 999px;
+    padding: 5px 11px;
+    font-family: var(--body);
+    font-size: 12.5px;
+    cursor: pointer;
+    text-align: left;
+  }
+  .chips button:hover {
+    border-color: var(--accent);
+    color: var(--ink);
+  }
+  .askrow {
+    display: flex;
+    gap: 9px;
+    align-items: stretch;
+  }
+  .askrow textarea {
+    flex: 1;
+    resize: vertical;
+    padding: 9px 11px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--surface-2);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  .askrow .btn {
+    align-self: flex-end;
+  }
+  .answer {
+    margin-top: 13px;
+    padding-top: 13px;
+    border-top: 1px solid var(--line);
+    font-size: 14.5px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+  .answer.err {
+    color: var(--bad);
+  }
+  .note {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+  .srcs {
+    margin-top: 22px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .srcs code {
+    font-family: var(--mono);
+    font-size: 11.5px;
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <div style="flex: 1 1 340px">
+      <div class="eyebrow">Relocation search</div>
+      <h1>Refugia</h1>
+    </div>
+    <p class="sub" id="sub"></p>
+  </header>
+
+  <div class="layout">
+    <aside class="rail">
+      <div class="card">
+        <div class="head">
+          <h2>What matters</h2>
+          <button class="btn" id="reset">Reset</button>
+        </div>
+        <div class="body" id="weights"></div>
+      </div>
+      <div class="card">
+        <div class="head"><h2>Requirements</h2></div>
+        <div class="body" id="filters"></div>
+      </div>
+      <div class="card">
+        <div class="head"><h2>Saved settings</h2></div>
+        <div class="body">
+          <div class="saverow">
+            <input
+              id="pname"
+              placeholder="Name this setup"
+              autocomplete="off"
+              aria-label="Name for the saved setup"
+            />
+            <button class="btn p" id="psave">Save</button>
+          </div>
+          <div id="plist"></div>
+          <p class="note" id="pnote"></p>
+        </div>
+      </div>
+    </aside>
+
+    <main
+      style="display: flex; flex-direction: column; gap: 22px; min-width: 0"
+    >
+      <section class="card">
+        <div class="head">
+          <h2>Where the answer lives</h2>
+          <button class="btn" id="zoomout" title="Zoom out">&minus;</button>
+          <button class="btn" id="zoomin" title="Zoom in">+</button>
+          <button class="btn" id="resetview">Reset view</button>
+          <select id="mapmetric" aria-label="Metric to map"></select>
+        </div>
+        <div class="mapwrap">
+          <div class="tip" id="tip"></div>
+          <div id="map"></div>
+        </div>
+        <div class="legend">
+          <span id="lo">worse</span><span class="ramp"></span>
+          <span id="hi">better</span>
+        </div>
+        <p class="note" style="padding: 0 16px 14px; margin: 0">
+          Drag to pan. Hold &#8984; or Ctrl and scroll to zoom, or use the
+          buttons.
+        </p>
+      </section>
+
+      <section class="card">
+        <div class="head">
+          <h2 id="rankhead">Ranked</h2>
+          <input
+            id="find"
+            type="search"
+            placeholder="Filter by county, metro or state"
+            aria-label="Filter the ranked list"
+            autocomplete="off"
+          />
+          <span class="pill home" id="homepill" hidden></span>
+          <span class="pill" id="count"></span>
+        </div>
+        <p class="note anchornote" id="anchornote" hidden></p>
+        <div class="scroll" style="max-height: 620px; overflow-y: auto">
+          <table>
+            <thead>
+              <tr id="thead"></tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="empty" hidden>
+          No place meets every requirement. Loosen one.
+        </div>
+      </section>
+
+      <section class="card" id="askcard" hidden>
+        <div class="head">
+          <h2>Ask about this view</h2>
+          <span class="pill">answers from the numbers on screen</span>
+        </div>
+        <div class="body">
+          <div class="chips" id="chips"></div>
+          <div class="askrow">
+            <textarea
+              id="q"
+              rows="2"
+              placeholder="e.g. the west coast is mostly a poor fit — what is the largest driving factor?"
+            ></textarea>
+            <button class="btn p" id="asend">Ask</button>
+          </div>
+          <div id="answer" class="answer" hidden></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="scrim" hidden></div>
+
+  <dialog id="citydlg">
+    <div class="cmphead">
+      <div>
+        <div class="eyebrow" id="cityeyebrow">City detail</div>
+        <h2 id="citytitle"></h2>
+        <p class="note" id="citysub"></p>
+      </div>
+      <button class="btn" id="cityclose" aria-label="Close">Close</button>
+    </div>
+    <div class="cmpbody">
+      <p class="note" id="citygrain"></p>
+      <div class="scroll">
+        <table class="cmptable">
+          <thead id="citythead"></thead>
+          <tbody id="citytbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="cmp">
+    <div class="cmphead">
+      <div>
+        <div class="eyebrow" id="cmpeyebrow">Compared with home</div>
+        <h2 id="cmptitle"></h2>
+        <p class="note" id="cmpsub"></p>
+      </div>
+      <button class="btn" id="cmpclose" aria-label="Close">Close</button>
+    </div>
+    <div class="cmpbody">
+      <div class="scoreline" id="cmpscores"></div>
+      <div class="scroll">
+        <table class="cmptable">
+          <thead id="cmpthead"></thead>
+          <tbody id="cmptbody"></tbody>
+        </table>
+      </div>
+      <div class="cmplinks" id="cmplinks"></div>
+      <div class="cmpai">
+        <button class="btn p" id="cmpask">Summarise this comparison</button>
+        <div id="cmpanswer" class="answer" hidden></div>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="srcs" id="srcs"></div>
+</div>
+
+<script id="payload" type="application/json">
+  __REFUGIA_DATA__
+</script>
+<script>
+  const D = JSON.parse(document.getElementById("payload").textContent);
+  const M = D.metrics,
+    PL = D.places,
+    V = D.values,
+    PATHS = D.paths,
+    STATES = D.state_paths || {},
+    CENTROIDS = D.centroids || {},
+    CITIES = D.cities || {},
+    CITY_METRICS = D.city_metrics || {},
+    CITY_ONLY = D.city_only_metrics || [];
+  // The county metrics plus the ones only the place release publishes, so a
+  // measure with no county equivalent is still shown rather than collected and
+  // silently dropped.
+  const CITY_ROWS = [...M, ...CITY_ONLY];
+  // Flattened once: the page asks "which towns are in this rectangle", never
+  // "which towns are in this county".
+  const ALL_CITIES = Object.values(CITIES).flat();
+  const CITY_BY_GEOID = Object.fromEntries(ALL_CITIES.map((c) => [c.geoid, c]));
+  const CITY_COUNTY = {};
+  Object.entries(CITIES).forEach(([fips, group]) =>
+    group.forEach((c) => (CITY_COUNTY[c.geoid] = fips)),
+  );
+  const VIEW0 = { x: 0, y: 0, w: 960, h: 600 };
+  let view = { ...VIEW0 };
+  const byFips = Object.fromEntries(PL.map((p) => [p.fips, p]));
+  let weights = { ...D.profile.weights };
+  const defaults = { ...D.profile.weights };
+  let filters = { population: 0, home_value: 0, states: [] };
+  const HOME = D.profile.home_fips || null;
+  const HOME_PLACE = HOME ? PL.find((p) => p.fips === HOME) : null;
+  const HOME_NAME = HOME_PLACE ? `${HOME_PLACE.name} County` : "";
+  // Declared here rather than beside the other city constants: it depends on HOME,
+  // and reading HOME above its own declaration threw before anything rendered.
+  const HOME_CITY = HOME ? (CITIES[HOME] || [])[0] || null : null;
+  /* Anchoring the threshold to where you already live turns an arbitrary cutoff
+    into the only question that matters: is this place better than the one I am
+    leaving? It has to be recomputed on every draw, because the answer moves when
+    the weights move. */
+  let anchorHome = !!HOME_PLACE;
+  let minFit = 0;
+  /* A hard cut per metric, measured against home. Distinct from a weight: a
+    weight reorders, a cut removes. "Nowhere with more juniper than I already
+    have" is a requirement, and no amount of weighting expresses it. */
+  let cuts = {};
+  let textFilter = "";
+  let homeExcluded = false;
+  let computedHome = null;
+  let lastNorm = {},
+    lastAll = [],
+    lastRows = [],
+    lastHome = null;
+  let minCoverage = D.profile.min_coverage ?? 0.8;
+  let sortKey = "score",
+    sortDir = -1,
+    selected = null,
+    mapMetric = "score";
+
+  /* Not every county is called a county. Louisiana has parishes, Alaska has
+    boroughs and census areas that differ one to the next, and the District of
+    Columbia and the consolidated cities are not counties at all - appending the
+    word produced "District of Columbia County, District of Columbia". */
+  function countyLabel(p) {
+    if (p.state === "Louisiana") return `${p.name} Parish, ${p.state}`;
+    if (p.state === "District of Columbia") return "District of Columbia";
+    if (p.state === "Alaska") return `${p.name}, ${p.state}`;
+    if (/\bCity$/.test(p.name)) return `${p.name}, ${p.state}`;
+    return `${p.name} County, ${p.state}`;
+  }
+
+  const ordinal = (n) => {
+    const rest = n % 100;
+    const suffix =
+      rest >= 11 && rest <= 13
+        ? "th"
+        : { 1: "st", 2: "nd", 3: "rd" }[n % 10] || "th";
+    return n.toLocaleString() + suffix;
+  };
+
+  const fmt = (v, u) =>
+    v == null
+      ? "—"
+      : u === "USD"
+        ? "$" + Math.round(v).toLocaleString()
+        : u === "people"
+          ? Math.round(v).toLocaleString()
+          : v.toFixed(1);
+
+  /* ---- scoring: mirrors the Python engine, so the page and CLI agree ---- */
+  function percentile(vals) {
+    const e = Object.entries(vals).sort((a, b) => a[1] - b[1]),
+      n = e.length,
+      out = {};
+    if (!n) return out;
+    if (n === 1) {
+      out[e[0][0]] = 50;
+      return out;
+    }
+    let i = 0;
+    while (i < n) {
+      let j = i;
+      while (j + 1 < n && e[j + 1][1] === e[i][1]) j++;
+      const s = (100 * ((i + j) / 2)) / (n - 1);
+      for (let k = i; k <= j; k++) out[e[k][0]] = s;
+      i = j + 1;
+    }
+    return out;
+  }
+  function cutsAllow(p) {
+    for (const key of Object.keys(cuts)) {
+      if (!cuts[key]) continue;
+      const metric = M.find((x) => x.key === key);
+      const homeValue = (V[key] || {})[HOME];
+      const value = (V[key] || {})[p.fips];
+      if (homeValue == null) continue;
+      // No data is not a pass: a place cannot be shown to clear a bar it has no
+      // measurement for.
+      if (value == null) return false;
+      // Equal passes, so home always clears its own cuts.
+      if (
+        metric.direction === "lower_better"
+          ? value > homeValue
+          : value < homeValue
+      )
+        return false;
+    }
+    return true;
+  }
+
+  function passes(p) {
+    if (p.population < filters.population) return false;
+    if (filters.states.length && filters.states.includes(p.state)) return false;
+    if (!cutsAllow(p)) return false;
+    if (filters.home_value > 0) {
+      const hv = (V.home_value || {})[p.fips];
+      if (hv == null || hv > filters.home_value) return false;
+    }
+    return true;
+  }
+  /* Where you live is a reference point, not a candidate. It has to be scored on
+    the same scale whatever the requirements say, or asking for somewhere bigger
+    than home silently removes the thing every comparison is made against. It is
+    scored with the field and then taken back out of the ranking. */
+  function compute() {
+    const passers = PL.filter(passes);
+    const homePlace = HOME ? PL.find((p) => p.fips === HOME) : null;
+    homeExcluded = !!homePlace && !passers.some((p) => p.fips === HOME);
+    const live = homeExcluded ? [...passers, homePlace] : passers;
+    const keep = new Set(live.map((p) => p.fips));
+    const active = Object.entries(weights).filter(([, w]) => w > 0);
+    /* Normalised over every metric, not only the weighted ones. Scoring uses the
+      weighted subset, but a comparison between two places has to be able to show
+      what a switched-off metric says: those are exactly where an unwelcome
+      surprise hides, and they were invisible. */
+    const norm = {};
+    for (const m of M) {
+      const k = m.key;
+      const obs = {};
+      for (const [f, v] of Object.entries(V[k] || {}))
+        if (keep.has(f)) obs[f] = v;
+      const pc = percentile(obs);
+      norm[k] =
+        m.direction === "lower_better"
+          ? Object.fromEntries(Object.entries(pc).map(([f, s]) => [f, 100 - s]))
+          : pc;
+    }
+    const rows = live.map((p) => {
+      let tot = 0,
+        avail = 0;
+      const contrib = {},
+        missing = [];
+      for (const [k, w] of active) {
+        const s = norm[k]?.[p.fips];
+        if (s == null) {
+          missing.push(k);
+          continue;
+        }
+        avail += w;
+      }
+      for (const [k, w] of active) {
+        const s = norm[k]?.[p.fips];
+        if (s == null) continue;
+        const share = avail ? w / avail : 0;
+        contrib[k] = share * s;
+        tot += share * s;
+      }
+      return {
+        p,
+        score: tot,
+        contrib,
+        missing,
+        cover: active.length
+          ? (active.length - missing.length) / active.length
+          : 1,
+      };
+    });
+    // A place missing a metric is scored on the rest, which rewards it for the
+    // absence: a county outside the vegetation layer would otherwise top an
+    // allergen search precisely because its allergen data is unknown.
+    lastNorm = norm;
+    const kept = rows.filter((r) => r.cover >= minCoverage);
+    kept.sort((a, b) => b.score - a.score);
+    kept.forEach((r, i) => (r.rank = i + 1));
+    // Keep the scored home aside; where it is not a candidate it must not be
+    // counted among them, or "rank 4 of 336" quietly becomes 337.
+    computedHome = kept.find((r) => r.p.fips === HOME) || null;
+    if (!homeExcluded) return kept;
+    const candidates = kept.filter((r) => r.p.fips !== HOME);
+    candidates.forEach((r, i) => (r.rank = i + 1));
+    return candidates;
+  }
+
+  /* ---- colour ---- */
+  function mix(a, b, t) {
+    return a.map((v, i) => Math.round(v + (b[i] - v) * t));
+  }
+  function readVar(n) {
+    const c = getComputedStyle(document.documentElement)
+      .getPropertyValue(n)
+      .trim();
+    const m = c.match(/^#([0-9a-f]{6})$/i);
+    return m
+      ? [
+          parseInt(m[1].slice(0, 2), 16),
+          parseInt(m[1].slice(2, 4), 16),
+          parseInt(m[1].slice(4, 6), 16),
+        ]
+      : [128, 128, 128];
+  }
+  function ramp(t) {
+    const bad = readVar("--bad"),
+      mid = readVar("--mid"),
+      good = readVar("--good");
+    const c = t < 0.5 ? mix(bad, mid, t * 2) : mix(mid, good, (t - 0.5) * 2);
+    return `rgb(${c[0]},${c[1]},${c[2]})`;
+  }
+
+  /* ---- render ---- */
+  /* Which groups are expanded survives a re-render, so Reset does not also fold up
+    the panel the user had arranged. */
+  const openGroups = new Set();
+
+  /* Zero is a state, not a number: a metric at zero is out of the score entirely,
+    and showing "0.0" beside the others reads as a very small weight rather than
+    as off. */
+  const weightLabel = (w) => ((w || 0) > 0 ? (w || 0).toFixed(1) : "off");
+  /* What a metric was set to before being switched off, so turning it back on
+    restores the reader's own number instead of a default. */
+  const parked = {};
+
+  /* Offered only where home has a value to compare against: without one the cut
+    has no threshold, and a checkbox that silently does nothing is worse than an
+    absent one. */
+  function cutControl(m) {
+    const homeValue = HOME ? (V[m.key] || {})[HOME] : null;
+    if (homeValue == null) return "";
+    // Offered only on a metric that is switched on, so a live requirement cannot
+    // sit inside a row that otherwise reads as disabled.
+    if (!((weights[m.key] || 0) > 0)) return "";
+    const worse = m.direction === "lower_better" ? "more" : "less";
+    return (
+      `<label class="cut" title="Removes places rather than reordering them">` +
+      `<input type="checkbox" id="c-${m.key}" data-cut="${m.key}"` +
+      `${cuts[m.key] ? " checked" : ""}>` +
+      `<span>Rule out ${worse} than ${HOME_NAME} ` +
+      `<span class="cv">(${fmt(homeValue, m.unit)})</span></span></label>`
+    );
+  }
+
+  function activeCount(metrics) {
+    return metrics.filter((m) => (weights[m.key] || 0) > 0).length;
+  }
+
+  function renderWeights() {
+    const cats = {};
+    M.forEach((m) => (cats[m.category] = cats[m.category] || []).push(m));
+    // Every group starts folded. With twenty-one metrics the expanded panel is a
+    // wall, and the badge on each summary already says how many inside it are
+    // switched on, so nothing is hidden that a reader needs in order to choose
+    // which one to open.
+
+    document.getElementById("weights").innerHTML = Object.entries(cats)
+      .map(([c, ms]) => {
+        const n = activeCount(ms);
+        return (
+          `<details class="grp" data-cat="${c}"${openGroups.has(c) ? " open" : ""}>` +
+          `<summary>${c}` +
+          `<span class="cnt" id="cnt-${c}"${n ? "" : " hidden"}>${n} on</span>` +
+          `</summary><div class="inner">` +
+          ms
+            .map(
+              (m) => `
+      <div class="w${(weights[m.key] || 0) > 0 ? "" : " off"}" id="row-${m.key}">
+        <label class="use"><input type="checkbox" id="u-${m.key}" data-k="${m.key}"
+              data-cat="${c}"${(weights[m.key] || 0) > 0 ? " checked" : ""}>
+          <span>${m.label}</span></label>
+        <span class="val" id="v-${m.key}">${weightLabel(weights[m.key])}</span>
+        <input type="range" id="w-${m.key}" min="0.5" max="5" step="0.5"
+              value="${weights[m.key] || parked[m.key] || 1}" data-k="${m.key}"
+              data-cat="${c}"${(weights[m.key] || 0) > 0 ? "" : " disabled"}>
+        <div class="hint">${m.description}</div>
+        ${cutControl(m)}
+      </div>`,
+            )
+            .join("") +
+          `</div></details>`
+        );
+      })
+      .join("");
+
+    document.querySelectorAll("#weights details.grp").forEach((el) =>
+      el.addEventListener("toggle", () => {
+        if (el.open) openGroups.add(el.dataset.cat);
+        else openGroups.delete(el.dataset.cat);
+      }),
+    );
+    const refresh = (k, c) => {
+      document.getElementById("v-" + k).textContent = weightLabel(weights[k]);
+      document
+        .getElementById("row-" + k)
+        .classList.toggle("off", !(weights[k] > 0));
+      document.getElementById("w-" + k).disabled = !(weights[k] > 0);
+      const n = activeCount(M.filter((m) => m.category === c));
+      const badge = document.getElementById("cnt-" + c);
+      badge.textContent = `${n} on`;
+      badge.hidden = !n;
+      draw();
+    };
+
+    document.querySelectorAll('#weights input[type="range"]').forEach((el) =>
+      el.addEventListener("input", (e) => {
+        const k = e.target.dataset.k;
+        weights[k] = parseFloat(e.target.value);
+        parked[k] = weights[k];
+        refresh(k, e.target.dataset.cat);
+      }),
+    );
+
+    // The checkbox is the on/off; the slider only says how much. Turning a metric
+    // off drops it from the score exactly as a zero weight did, so nothing about
+    // the arithmetic changes - it is the state that was previously invisible.
+    document.querySelectorAll("#weights input[data-cut]").forEach((el) =>
+      el.addEventListener("change", (e) => {
+        cuts[e.target.dataset.cut] = e.target.checked;
+        renderCutSummary();
+        draw();
+      }),
+    );
+
+    document
+      .querySelectorAll('#weights input[data-k][type="checkbox"]')
+      .forEach((el) =>
+        el.addEventListener("change", (e) => {
+          const k = e.target.dataset.k;
+          if (e.target.checked) {
+            weights[k] =
+              parked[k] ||
+              parseFloat(document.getElementById("w-" + k).value) ||
+              1;
+            document.getElementById("w-" + k).value = weights[k];
+          } else {
+            if (weights[k] > 0) parked[k] = weights[k];
+            weights[k] = 0;
+            /* A cut lives inside its metric's row, so switching the metric off
+              while its cut keeps removing places reads as a control that ignored
+              being turned off. Switching a metric off means stop using it, and a
+              cut is a use of it. */
+            if (cuts[k]) {
+              cuts[k] = false;
+              renderCutSummary();
+            }
+          }
+          refresh(k, e.target.dataset.cat);
+        }),
+      );
+  }
+
+  function renderFilters() {
+    const states = [...new Set(PL.map((p) => p.state))].sort();
+    document.getElementById("filters").innerHTML = `
+    <div class="filt"><label for="f-pop">Minimum population</label>
+      <input type="number" id="f-pop" value="${filters.population || 0}" min="0" step="10000"></div>
+    <div class="filt"><label for="f-hv">Maximum home value (USD, 0 = no limit)</label>
+      <input type="number" id="f-hv" value="${filters.home_value || 0}" min="0" step="25000"></div>
+    <div class="filt"><label for="f-st">Rule out states (ctrl-click for several)</label>
+      <select id="f-st" multiple size="6">${states
+        .map(
+          (st) =>
+            `<option${filters.states.includes(st) ? " selected" : ""}>${st}</option>`,
+        )
+        .join("")}</select></div>
+    <p class="note">Requirements remove places entirely. Weights only reorder what is left.</p>
+    <div class="filt" id="cutsummary"></div>
+    <div class="filt" style="border-top:1px solid var(--line);padding-top:13px">
+      ${
+        HOME_PLACE
+          ? `<label style="display:flex;gap:7px;align-items:flex-start;color:var(--ink)">
+              <input type="checkbox" id="f-anchor" ${anchorHome ? "checked" : ""}
+                      style="width:auto;margin-top:3px">
+              <span>Only places better than ${HOME_NAME}</span>
+            </label>`
+          : ""
+      }
+      <label for="f-fit">Only show fit of
+        <span id="f-fit-v" class="val">${minFit.toFixed(0)}</span> or better</label>
+      <input type="range" id="f-fit" min="0" max="100" step="1" value="${minFit}"
+            style="accent-color:var(--accent);padding:0;border:0;background:none">
+      <span class="note" id="f-fit-n"></span>
+    </div>
+    <div class="filt">
+      <label for="f-cov">Require data for at least
+        <span id="f-cov-v" class="val">${Math.round(minCoverage * 100)}</span>% of the
+        metrics you weighted</label>
+      <input type="range" id="f-cov" min="0" max="100" step="10"
+            value="${Math.round(minCoverage * 100)}"
+            style="accent-color:var(--accent);padding:0;border:0;background:none">
+      <span class="note">Lowering this admits places with gaps. A place missing a
+        metric is judged on the others, so it is rewarded for the absence.</span>
+    </div>
+    <p class="note">This one hides rather than removes. Fit is a rank among the places that
+      met your requirements, so excluding places by their score would change the scores it
+      excluded them by.</p>`;
+    renderCutSummary();
+    document.getElementById("f-pop").addEventListener("input", (e) => {
+      filters.population = +e.target.value || 0;
+      draw();
+    });
+    document.getElementById("f-hv").addEventListener("input", (e) => {
+      filters.home_value = +e.target.value || 0;
+      draw();
+    });
+    document.getElementById("f-st").addEventListener("change", (e) => {
+      filters.states = [...e.target.selectedOptions].map((o) => o.value);
+      draw();
+    });
+    document.getElementById("f-fit").addEventListener("input", (e) => {
+      minFit = +e.target.value || 0;
+      document.getElementById("f-fit-v").textContent = minFit;
+      draw();
+    });
+    const anchor = document.getElementById("f-anchor");
+    if (anchor)
+      anchor.addEventListener("change", (e) => {
+        anchorHome = e.target.checked;
+        draw();
+      });
+    const cov = document.getElementById("f-cov");
+    cov.value = Math.round(minCoverage * 100);
+    document.getElementById("f-cov-v").textContent = cov.value;
+    cov.addEventListener("input", (e) => {
+      minCoverage = (+e.target.value || 0) / 100;
+      document.getElementById("f-cov-v").textContent = e.target.value;
+      draw();
+    });
+  }
+  /* The cuts are set beside their metric, which is where the reader is thinking
+    about that metric, but they are requirements. Listing them among the other
+    requirements keeps them from being invisible from here. */
+  function renderCutSummary() {
+    const box = document.getElementById("cutsummary");
+    if (!box) return;
+    const active = Object.keys(cuts).filter((k) => cuts[k]);
+    if (!active.length) {
+      box.innerHTML = `<p class="note">No metric cuts. Each metric can also rule out
+        anywhere worse than ${HOME_NAME}; the control sits under that metric.</p>`;
+      return;
+    }
+    const names = active
+      .map((k) => M.find((m) => m.key === k)?.label)
+      .filter(Boolean)
+      .join(", ");
+    box.innerHTML =
+      `<p class="note">Ruling out anywhere worse than ${HOME_NAME} on: ` +
+      `<strong>${names}</strong>.</p>` +
+      `<button class="btn" id="clearcuts">Clear metric cuts</button>`;
+    document.getElementById("clearcuts").addEventListener("click", () => {
+      cuts = {};
+      renderWeights();
+      renderCutSummary();
+      draw();
+    });
+  }
+
+  function renderMapSelect() {
+    const sel = document.getElementById("mapmetric");
+    sel.innerHTML =
+      `<option value="score">Overall fit</option>` +
+      M.map((m) => `<option value="${m.key}">${m.label}</option>`).join("");
+    sel.addEventListener("change", (e) => {
+      mapMetric = e.target.value;
+      draw();
+    });
+  }
+
+  const MIN_SPAN = 60; // roughly 16x; past this the 10m outlines have no more detail
+
+  function clampView() {
+    view.w = Math.min(VIEW0.w, Math.max(MIN_SPAN, view.w));
+    view.h = view.w * (VIEW0.h / VIEW0.w);
+    view.x = Math.min(VIEW0.w - view.w, Math.max(0, view.x));
+    view.y = Math.min(VIEW0.h - view.h, Math.max(0, view.y));
+  }
+
+  /* Zoom and pan rewrite the viewBox rather than transforming a group, so the
+    stroke widths, hit areas and the tooltip's coordinate maths all keep working
+    against the same units the paths were generated in. */
+  /* Redrawing mid-gesture would replace the element being dragged, so the table
+    catches up once the wheel stops or the pointer lifts. */
+  let settleTimer = null;
+  function settle() {
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(draw, 180);
+  }
+
+  function bindMapView() {
+    const svg = document.querySelector("svg.map");
+    if (!svg) return;
+
+    const toView = (e) => {
+      const b = svg.getBoundingClientRect();
+      return {
+        x: view.x + ((e.clientX - b.left) / b.width) * view.w,
+        y: view.y + ((e.clientY - b.top) / b.height) * view.h,
+      };
+    };
+
+    svg.addEventListener(
+      "wheel",
+      (e) => {
+        // A tall map in the middle of a page must not swallow the page scroll.
+        // Wheel zooms only with the modifier held; the buttons cover the rest.
+        if (!e.ctrlKey && !e.metaKey) return;
+        e.preventDefault();
+        const at = toView(e);
+        const factor = Math.exp(e.deltaY * 0.0015);
+        const before = view.w;
+        view.w = view.w * factor;
+        clampView();
+        // Keep the point under the cursor fixed as the scale changes.
+        const ratio = view.w / before;
+        view.x = at.x - (at.x - view.x) * ratio;
+        view.y = at.y - (at.y - view.y) * ratio;
+        clampView();
+        svg.setAttribute("viewBox", `${view.x} ${view.y} ${view.w} ${view.h}`);
+        settle();
+      },
+      { passive: false },
+    );
+
+    // A pointer that moves a pixel between press and release is a click, not a
+    // pan. Treating any movement as a drag swallowed almost every real click.
+    const PAN_SLOP = 4;
+    let dragging = null;
+    svg.dataset.panned = "";
+    /* Capture is taken only once a drag has actually begun. While an element
+      holds pointer capture the browser retargets the following click to the
+      capturing element, so capturing on pointerdown sent every click to the svg
+      and no county or town listener ever heard one. Synthetic clicks in testing
+      went straight to the element and skipped capture entirely, which is why
+      this survived being checked several times. */
+    svg.addEventListener("pointerdown", (e) => {
+      dragging = {
+        ...toView(e),
+        startX: e.clientX,
+        startY: e.clientY,
+        moved: false,
+        pointerId: e.pointerId,
+      };
+    });
+    svg.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      if (
+        !dragging.moved &&
+        Math.hypot(e.clientX - dragging.startX, e.clientY - dragging.startY) <
+          PAN_SLOP
+      )
+        return;
+      if (!dragging.moved) {
+        // Now it is a drag, so take the pointer and let the click be lost.
+        try {
+          svg.setPointerCapture(dragging.pointerId);
+        } catch {
+          /* a pointer that has already gone is not worth capturing */
+        }
+        svg.classList.add("grabbing");
+      }
+      const at = toView(e);
+      view.x += dragging.x - at.x;
+      view.y += dragging.y - at.y;
+      dragging.moved = true;
+      svg.dataset.panned = "1";
+      clampView();
+      svg.setAttribute("viewBox", `${view.x} ${view.y} ${view.w} ${view.h}`);
+    });
+    const end = (e) => {
+      if (dragging?.moved) {
+        try {
+          svg.releasePointerCapture(e.pointerId);
+        } catch {
+          /* never captured, nothing to release */
+        }
+      }
+      const panned = dragging?.moved;
+      dragging = null;
+      svg.classList.remove("grabbing");
+      // Clear on the next frame: the click event for this release has not fired yet.
+      if (panned) {
+        requestAnimationFrame(() => (svg.dataset.panned = ""));
+        settle();
+      }
+    };
+    svg.addEventListener("pointerup", end);
+    svg.addEventListener("pointercancel", end);
+  }
+
+  function draw() {
+    // The threshold is applied after scoring, never as a criterion: fit is a rank
+    // among the places that passed the requirements, so filtering on it would
+    // change the very scores the filter was reading.
+    const all = compute();
+    const home = computedHome;
+    if (anchorHome && home) {
+      minFit = home.score;
+      const slider = document.getElementById("f-fit");
+      if (slider) slider.value = Math.round(minFit);
+      const readout = document.getElementById("f-fit-v");
+      if (readout) readout.textContent = minFit.toFixed(1);
+    }
+    // Anchored, the comparison is strict and the home itself is not in the list:
+    // the question asked is which places are better, and including the one being
+    // left both answers it wrongly and inflates the count by one.
+    /* With nothing switched on every place scores zero, home included, and
+      "strictly better than home" is then true of nowhere. The anchor is a
+      comparison between rankings, so it means nothing until something is being
+      ranked; without a weighted metric it stands aside rather than emptying the
+      list. */
+    const scoring = Object.keys(weights).some((k) => weights[k] > 0);
+    const anchored = anchorHome && !!home && scoring;
+    let rows = !scoring
+      ? all.slice()
+      : anchored
+        ? all.filter((r) => r.score > home.score)
+        : all.filter((r) => r.score >= minFit);
+    // Zooming is a question about a region, so the table answers for that region.
+    // Only once zoomed: at full extent the viewport is not a choice anyone made.
+    if (textFilter) {
+      const q = textFilter.toLowerCase();
+      rows = rows.filter(
+        (r) =>
+          r.p.name.toLowerCase().includes(q) ||
+          r.p.state.toLowerCase().includes(q) ||
+          (r.p.cbsa_name || "").toLowerCase().includes(q),
+      );
+    }
+    const zoomed = view.w < VIEW0.w - 1 || view.h < VIEW0.h - 1;
+    if (zoomed)
+      rows = rows.filter((r) => {
+        const c = CENTROIDS[r.p.fips];
+        return (
+          c &&
+          c[0] >= view.x &&
+          c[0] <= view.x + view.w &&
+          c[1] >= view.y &&
+          c[1] <= view.y + view.h
+        );
+      });
+    const shown = new Map(rows.map((r) => [r.p.fips, r]));
+    const hidden = all.length - rows.length;
+    lastAll = all;
+    lastRows = rows;
+    lastHome = home;
+    /* The count has to name its own denominator. Anchored, it is the number of
+      places beating home - which moves whenever a weight moves, because home is
+      scored by the same weights. Reading "1,768 places" as the candidate pool
+      makes a slider look like it is adding counties. */
+    document.getElementById("count").textContent =
+      textFilter || zoomed
+        ? `${rows.length.toLocaleString()} of ${all.length.toLocaleString()} shown`
+        : anchored
+          ? `${rows.length.toLocaleString()} of ${all.length.toLocaleString()} beat ${HOME_NAME}`
+          : `${rows.length.toLocaleString()} of ${all.length.toLocaleString()} places`;
+
+    /* The count is a result, not a filter: it is how many places beat home, and
+      home is scored by the same weights. Raising a weight home does badly on
+      pushes home down and the list grows. Showing home's own rank beside the
+      count makes that one visible movement instead of a number that appears to
+      run backwards. */
+    const pill = document.getElementById("homepill");
+    const anchorNote = document.getElementById("anchornote");
+    if (anchored) {
+      pill.hidden = false;
+      pill.textContent = `${HOME_NAME} ${ordinal(home.rank)} of ${all.length.toLocaleString()}`;
+      anchorNote.hidden = false;
+      anchorNote.textContent =
+        `This list is everywhere that beats ${HOME_NAME}. Weight something it scores ` +
+        `badly on and it drops further, so the list gets longer. That is the answer, ` +
+        `not a wider filter.`;
+    } else {
+      pill.hidden = true;
+      anchorNote.hidden = !(!scoring && anchorHome && HOME_PLACE);
+      if (!anchorNote.hidden)
+        anchorNote.textContent =
+          `Nothing is switched on, so every place scores the same and none can ` +
+          `beat ${HOME_NAME}. Comparing against it resumes when a metric is on.`;
+    }
+    // The empty state has to name its own cause: requirements, the threshold, or
+    // simply having nothing switched on are three different things to fix.
+    const empty = document.getElementById("empty");
+    empty.hidden = rows.length > 0;
+    empty.textContent = !all.length
+      ? "No place meets every requirement. Loosen one."
+      : !scoring
+        ? "Nothing is switched on, so nothing is being ranked."
+        : anchored
+          ? `Nowhere beats ${HOME_NAME} on what you have weighted.`
+          : "Nothing clears the fit threshold. Lower it.";
+    const fitNote = document.getElementById("f-fit-n");
+    const slider = document.getElementById("f-fit");
+    if (slider) slider.disabled = anchored;
+    if (fitNote) {
+      if (anchored && homeExcluded)
+        fitNote.textContent =
+          `${HOME_NAME} scores ${home.score.toFixed(1)}. Your requirements rule it out, ` +
+          `so it is scored for comparison only. ` +
+          `${rows.length.toLocaleString()} ${rows.length === 1 ? "place beats" : "places beat"} it.`;
+      else if (anchored)
+        fitNote.textContent =
+          `${HOME_NAME} scores ${home.score.toFixed(1)} and ranks ` +
+          `${home.rank.toLocaleString()} of ${all.length.toLocaleString()}. ` +
+          `${rows.length.toLocaleString()} ${rows.length === 1 ? "place beats" : "places beat"} it.`;
+      else
+        fitNote.textContent = hidden
+          ? `${hidden.toLocaleString()} of ${all.length.toLocaleString()} hidden`
+          : `all ${all.length.toLocaleString()} shown`;
+    }
+
+    /* map */
+    let vals = {},
+      unit = "",
+      lo = "worse",
+      hi = "better";
+    // Coloured over `all` rather than `rows`: the ramp describes the field of
+    // candidates, so moving the visibility threshold should hide counties, not
+    // silently repaint the ones that remain.
+    if (mapMetric === "score") {
+      all.forEach((r) => (vals[r.p.fips] = r.score));
+      lo = "poor fit";
+      hi = "strong fit";
+    } else {
+      const m = M.find((x) => x.key === mapMetric);
+      unit = m.unit;
+      const obs = {};
+      all.forEach((r) => {
+        const v = (V[mapMetric] || {})[r.p.fips];
+        if (v != null) obs[r.p.fips] = v;
+      });
+      const pc = percentile(obs);
+      vals =
+        m.direction === "lower_better"
+          ? Object.fromEntries(Object.entries(pc).map(([f, s]) => [f, 100 - s]))
+          : pc;
+      lo =
+        m.direction === "lower_better"
+          ? `most ${m.label.toLowerCase()}`
+          : `least ${m.label.toLowerCase()}`;
+      hi =
+        m.direction === "lower_better"
+          ? `least ${m.label.toLowerCase()}`
+          : `most ${m.label.toLowerCase()}`;
+    }
+    document.getElementById("lo").textContent = lo;
+    document.getElementById("hi").textContent = hi;
+
+    const paths = Object.entries(PATHS)
+      .map(([f, d]) => {
+        const isHome = f === HOME;
+        const visible = shown.has(f) || isHome;
+        const v = visible ? vals[f] : null;
+        const fill =
+          v == null
+            ? "var(--surface-2)"
+            : ramp(Math.max(0, Math.min(1, v / 100)));
+        const names = [];
+        if (f === selected) names.push("sel");
+        if (!visible) names.push("out");
+        if (isHome) names.push("home");
+        const cls = names.length ? ` class="${names.join(" ")}"` : "";
+        return `<path d="${d}" fill="${fill}"${cls} data-f="${f}"></path>`;
+      })
+      .join("");
+    const borders = Object.values(STATES)
+      .map((d) => `<path class="border" d="${d}"></path>`)
+      .join("");
+
+    /* Towns appear on zoom only. Five thousand labels at national extent is not a
+      map, so the view decides: what fits is the largest places inside it, and
+      zooming further lets smaller ones through. Sizes are divided by the zoom so
+      a label stays the same size on screen however far in the reader goes. */
+    const CITY_ZOOM = 480;
+    const CITY_CAP = 70;
+    let markers = "";
+    if (view.w < CITY_ZOOM) {
+      const k = view.w / VIEW0.w;
+      const inView = ALL_CITIES.filter(
+        (c) =>
+          c.x >= view.x &&
+          c.x <= view.x + view.w &&
+          c.y >= view.y &&
+          c.y <= view.y + view.h,
+      )
+        .sort((a, b) => b.population - a.population)
+        .slice(0, CITY_CAP);
+      markers = inView
+        .map(
+          (c) =>
+            // An invisible target first: the drawn dot is about two pixels across,
+            // which is a marker rather than something a person can hit.
+            `<circle class="hit" cx="${c.x}" cy="${c.y}" r="${(10 * k).toFixed(2)}"` +
+            ` data-city="${c.geoid}"></circle>` +
+            `<circle cx="${c.x}" cy="${c.y}" r="${(2.2 * k).toFixed(2)}"></circle>` +
+            `<text x="${(c.x + 4 * k).toFixed(1)}" y="${(c.y + 1.4 * k).toFixed(1)}"` +
+            ` font-size="${(10 * k).toFixed(2)}" data-city="${c.geoid}">${c.name}</text>`,
+        )
+        .join("");
+    }
+    document.getElementById("map").innerHTML =
+      `<svg class="map" viewBox="${view.x} ${view.y} ${view.w} ${view.h}"` +
+      ` role="img" aria-label="US counties by ${mapMetric}">` +
+      `<g>${paths}</g><g class="borders">${borders}</g>` +
+      `<g class="cities">${markers}</g></svg>`;
+    bindMapView();
+
+    /* One listener on the map rather than one per shape. A click can be retargeted
+      away from the shape under the cursor - holding pointer capture does exactly
+      that - so the shape is resolved from the event target, and from the point
+      itself when the target is the map. Delegation also survives the redraw that
+      replaces every path on every draw. */
+    const mapSvg = document.querySelector("svg.map");
+    mapSvg.addEventListener("click", (e) => {
+      if (mapSvg.dataset.panned) return;
+      let target = e.target;
+      if (!target || target === mapSvg || !target.closest)
+        target = document.elementFromPoint(e.clientX, e.clientY);
+      const town = target?.closest?.("[data-city]");
+      if (town && CITY_BY_GEOID[town.dataset.city]) {
+        showCity(CITY_BY_GEOID[town.dataset.city]);
+        return;
+      }
+      const county = target?.closest?.("path[data-f]");
+      if (!county) return;
+      selected = county.dataset.f;
+      draw();
+      revealInTable(selected);
+      // Looked up in the full candidate set, not just what is on screen: a county
+      // dimmed out by the threshold is exactly the one a reader clicks to find out
+      // why it lost.
+      showDetail(lastAll.find((r) => r.p.fips === selected));
+    });
+
+    const tip = document.getElementById("tip");
+    document.querySelectorAll("svg.map path").forEach((el) => {
+      el.addEventListener("mousemove", (e) => {
+        const f = el.dataset.f,
+          p = byFips[f],
+          r = shown.get(f);
+        if (!p) {
+          tip.style.opacity = 0;
+          return;
+        }
+        const raw =
+          mapMetric === "score"
+            ? r
+              ? r.score.toFixed(1)
+              : "—"
+            : fmt((V[mapMetric] || {})[f], unit);
+        tip.textContent = `${p.name}, ${p.state} · ${raw}${unit && mapMetric !== "score" ? " " + unit : ""}`;
+        const b = document.getElementById("map").getBoundingClientRect();
+        tip.style.left = e.clientX - b.left + 12 + "px";
+        tip.style.top = e.clientY - b.top - 30 + "px";
+        tip.style.opacity = 1;
+      });
+      el.addEventListener("mouseleave", () => (tip.style.opacity = 0));
+    });
+
+    /* table */
+    const cols = [
+      { k: "rank", l: "#" },
+      { k: "place", l: "Place" },
+      { k: "score", l: "Fit" },
+      { k: "cover", l: "Data" },
+      /* Every metric, not only the weighted ones. A column that vanishes when its
+        weight goes to zero takes the evidence with it, and the reader is left
+        unable to see the thing they just decided not to score by. Weighting
+        decides the ranking; it should not decide what can be looked at. */
+      ...M.map((m) => ({
+        k: m.key,
+        l: m.label,
+        u: m.unit,
+        dim: !((weights[m.key] || 0) > 0),
+      })),
+    ];
+    document.getElementById("thead").innerHTML = cols
+      .map(
+        (c) =>
+          `<th class="${c.k === "place" || c.k === "rank" ? "" : "num"}${
+            c.dim ? " dim" : ""
+          }" data-k="${c.k}"${c.dim ? ' title="Not part of the score"' : ""}>${c.l}</th>`,
+      )
+      .join("");
+    const sorted = [...rows].sort((a, b) => {
+      if (sortKey === "score") return (a.score - b.score) * sortDir;
+      if (sortKey === "cover") return (a.cover - b.cover) * sortDir;
+      if (sortKey === "rank") return (a.rank - b.rank) * sortDir * -1;
+      if (sortKey === "place")
+        return (
+          (a.p.name + a.p.state).localeCompare(b.p.name + b.p.state) *
+          sortDir *
+          -1
+        );
+      const av = (V[sortKey] || {})[a.p.fips],
+        bv = (V[sortKey] || {})[b.p.fips];
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      return (av - bv) * sortDir;
+    });
+    // The table shows a slice, but a selection made on the map can land anywhere in
+    // the ranking; without this the row it is supposed to scroll to does not exist.
+    const slice = sorted.slice(0, 300);
+    if (selected && !slice.some((r) => r.p.fips === selected)) {
+      const picked = sorted.find((r) => r.p.fips === selected);
+      if (picked) slice.push(picked);
+    }
+    document.getElementById("tbody").innerHTML = slice
+      .map(
+        (r) => `
+    <tr data-f="${r.p.fips}" class="${[r.p.fips === selected ? "sel" : "", r.p.fips === HOME ? "home" : ""].join(" ").trim()}">
+      <td class="rk">${r.rank}</td>
+      <td>${countyLabel(r.p)}<br><span style="color:var(--muted);font-size:12px">${r.p.cbsa_name || "&mdash;"}</span></td>
+      <td class="num">${r.score.toFixed(1)}
+        <span class="bar" style="width:${Math.max(2, r.score)}%"></span></td>
+      <td class="num" style="color:${r.cover < 1 ? "var(--bad)" : "var(--muted)"}">${Math.round(r.cover * 100)}%</td>
+      ${M.map(
+        (m) =>
+          `<td class="num${(weights[m.key] || 0) > 0 ? "" : " dim"}">${fmt(
+            (V[m.key] || {})[r.p.fips],
+            m.unit,
+          )}</td>`,
+      ).join("")}
+    </tr>`,
+      )
+      .join("");
+    document.querySelectorAll("#thead th").forEach((th) =>
+      th.addEventListener("click", () => {
+        const k = th.dataset.k;
+        if (sortKey === k) sortDir *= -1;
+        else {
+          sortKey = k;
+          sortDir = -1;
+        }
+        draw();
+      }),
+    );
+    document.querySelectorAll("#tbody tr").forEach((tr) =>
+      tr.addEventListener("click", () => {
+        selected = tr.dataset.f;
+        draw();
+        revealOnMap(selected);
+        showDetail(lastAll.find((r) => r.p.fips === selected));
+      }),
+    );
+  }
+
+  const scrim = () => document.getElementById("scrim");
+
+  function openPanel(dlg) {
+    document.querySelectorAll("dialog[open]").forEach((d) => {
+      if (d !== dlg) d.removeAttribute("open");
+    });
+    dlg.setAttribute("open", "");
+    scrim().hidden = false;
+  }
+
+  function closePanel(dlg) {
+    dlg.removeAttribute("open");
+    if (!document.querySelector("dialog[open]")) scrim().hidden = true;
+    if (dlg.id === "cmp") afterCompareClosed();
+  }
+
+  function afterCompareClosed() {
+    // The selection outlives the panel: it is what keeps the map and the table
+    // pointing at the same place once the comparison is dismissed.
+    draw();
+    if (selected) revealInTable(selected);
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    const open = document.querySelector("dialog[open]");
+    if (open) closePanel(open);
+  });
+
+  let sampleFn = null;
+  let cmpRow = null;
+  let cmpData = [];
+  /* Default order is the metric's weight, because that is the order in which the
+    differences actually decided the score. Sorting by the difference answers a
+    different question - where is the gap widest - and both get asked. */
+  let cmpSort = { key: "weight", dir: -1 };
+
+  const STATE_ABBR = {
+    AL: "Alabama",
+    AK: "Alaska",
+    AZ: "Arizona",
+    AR: "Arkansas",
+    CA: "California",
+    CO: "Colorado",
+    CT: "Connecticut",
+    DE: "Delaware",
+    DC: "District of Columbia",
+    FL: "Florida",
+    GA: "Georgia",
+    HI: "Hawaii",
+    ID: "Idaho",
+    IL: "Illinois",
+    IN: "Indiana",
+    IA: "Iowa",
+    KS: "Kansas",
+    KY: "Kentucky",
+    LA: "Louisiana",
+    ME: "Maine",
+    MD: "Maryland",
+    MA: "Massachusetts",
+    MI: "Michigan",
+    MN: "Minnesota",
+    MS: "Mississippi",
+    MO: "Missouri",
+    MT: "Montana",
+    NE: "Nebraska",
+    NV: "Nevada",
+    NH: "New Hampshire",
+    NJ: "New Jersey",
+    NM: "New Mexico",
+    NY: "New York",
+    NC: "North Carolina",
+    ND: "North Dakota",
+    OH: "Ohio",
+    OK: "Oklahoma",
+    OR: "Oregon",
+    PA: "Pennsylvania",
+    RI: "Rhode Island",
+    SC: "South Carolina",
+    SD: "South Dakota",
+    TN: "Tennessee",
+    TX: "Texas",
+    UT: "Utah",
+    VT: "Vermont",
+    VA: "Virginia",
+    WA: "Washington",
+    WV: "West Virginia",
+    WI: "Wisconsin",
+    WY: "Wyoming",
+    PR: "Puerto Rico",
+  };
+  const ABBR_OF = Object.fromEntries(
+    Object.entries(STATE_ABBR).map(([a, n]) => [n, a]),
+  );
+  const slug = (x) =>
+    x
+      .toLowerCase()
+      .replace(/[.'’]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+
+  /* Wikipedia titles counties by their local term, so the suffix is not uniform:
+    Louisiana has parishes, Alaska has boroughs and census areas that vary one to
+    the next, and Carson City is a consolidated city. Alaska falls back to a
+    search, which always resolves, rather than to a guess that 404s. */
+  function countyWikiUrl(p) {
+    const base = "https://en.wikipedia.org/wiki/";
+    if (p.state === "Alaska")
+      return (
+        "https://en.wikipedia.org/w/index.php?search=" +
+        encodeURIComponent(`${p.name}, Alaska`)
+      );
+    if (p.state === "Nevada" && p.name === "Carson City")
+      return base + "Carson_City,_Nevada";
+    const kind = p.state === "Louisiana" ? "Parish" : "County";
+    return (
+      base +
+      encodeURIComponent(`${p.name} ${kind}, ${p.state}`).replace(/%20/g, "_")
+    );
+  }
+
+  /* The CBSA title leads with its principal city and lists the states it spans, so
+    the first city and the first abbreviation belong together - and that city is
+    often not in this county, which is why the link says metro rather than local. */
+  function metroCityLink(p) {
+    if (!p.cbsa_name) return null;
+    const [placePart, statePart] = p.cbsa_name.split(",");
+    if (!placePart || !statePart) return null;
+    const city = placePart.split("-")[0].trim();
+    const st = STATE_ABBR[statePart.trim().split("-")[0].trim()];
+    if (!city || !st) return null;
+    return {
+      href:
+        "https://en.wikipedia.org/wiki/" +
+        encodeURIComponent(`${city}, ${st}`).replace(/%20/g, "_"),
+      label: `Wikipedia: ${city} (metro's main city)`,
+    };
+  }
+
+  function renderLinks(p) {
+    const city = metroCityLink(p);
+    const items = [
+      { href: countyWikiUrl(p), label: `Wikipedia: ${p.name} County` },
+      city,
+      {
+        href: `https://www.google.com/maps/@${p.lat},${p.lon},10z`,
+        label: "Map of the area",
+      },
+      {
+        href: `https://data.census.gov/profile?g=050XX00US${p.fips}`,
+        label: "Census profile",
+      },
+      {
+        href: `https://www.countyhealthrankings.org/health-data/${slug(p.state)}/${slug(p.name)}?year=2025`,
+        label: "County Health Rankings",
+      },
+      {
+        href: `https://wildfirerisk.org/explore/0/${p.fips.slice(0, 2)}/${p.fips}/`,
+        label: "Wildfire risk detail",
+      },
+      {
+        href: `https://www.airnow.gov/?latitude=${p.lat}&longitude=${p.lon}`,
+        label: "Air quality now",
+      },
+      // Climate at a Glance keys counties as <state abbreviation>-<county code>,
+      // which is the 5-digit FIPS split apart rather than used whole.
+      ABBR_OF[p.state]
+        ? {
+            href:
+              "https://www.ncei.noaa.gov/access/monitoring/climate-at-a-glance/county/" +
+              `time-series/${ABBR_OF[p.state]}-${p.fips.slice(2)}/tavg/ann/1/1991-2020`,
+            label: "NOAA climate record",
+          }
+        : null,
+      ABBR_OF[p.state]
+        ? {
+            href: `https://www.zillow.com/homes/${encodeURIComponent(p.name)}-County-${ABBR_OF[p.state]}_rb/`,
+            label: "Homes for sale",
+          }
+        : null,
+    ].filter(Boolean);
+    document.getElementById("cmplinks").innerHTML =
+      `<div class="lbl">Look into it</div>` +
+      items
+        .map(
+          (i) =>
+            `<a href="${i.href}" target="_blank" rel="noopener noreferrer">${i.label}</a>`,
+        )
+        .join("");
+  }
+
+  /* A city panel, because some of what is measured is measurable at that grain.
+    The land cover sample was always a radius around a point, so a city asks the
+    same question at a sharper coordinate, and the health estimates are published
+    per place as well as per county. Everything else is still the county's, and
+    each row says which - a mixture presented as uniform would claim more
+    precision than the data has. */
+  function showCity(city) {
+    const dlg = document.getElementById("citydlg");
+    const fips = CITY_COUNTY[city.geoid];
+    const county = lastAll.find((r) => r.p.fips === fips);
+    const cityValues = CITY_METRICS[city.geoid] || {};
+    const homeCityValues = HOME_CITY ? CITY_METRICS[HOME_CITY.geoid] || {} : {};
+
+    document.getElementById("citytitle").textContent = city.name;
+    document.getElementById("citysub").textContent =
+      `population ${city.population.toLocaleString()}` +
+      (county ? `  ·  ${countyLabel(county.p)}` : "");
+    document.getElementById("cityeyebrow").textContent = HOME_CITY
+      ? `Compared with ${HOME_CITY.name}`
+      : "City detail";
+
+    const cityCount = Object.keys(cityValues).length;
+    document.getElementById("citygrain").textContent = cityCount
+      ? `${cityCount} of these are measured for this town itself. The rest are the ` +
+        `county's, and are marked as such - they are the same for every town in it.`
+      : `Nothing is measured for this town itself, so every row below is the ` +
+        `county's figure.`;
+
+    document.getElementById("citythead").innerHTML =
+      `<tr><th>Metric</th><th class="num">${city.name}</th>` +
+      `<th class="num">${HOME_CITY ? HOME_CITY.name : "Home"}</th>` +
+      `<th class="num">Better or worse</th></tr>`;
+
+    // A row with nothing on either side says only that the measure was not taken,
+    // which is not worth a line in a comparison.
+    document.getElementById("citytbody").innerHTML = CITY_ROWS.filter((m) => {
+      const atCity = cityValues[m.key];
+      const cityOnly = !M.some((x) => x.key === m.key);
+      const here =
+        atCity != null ? atCity : cityOnly ? null : (V[m.key] || {})[fips];
+      const there =
+        homeCityValues[m.key] != null
+          ? homeCityValues[m.key]
+          : cityOnly
+            ? null
+            : (V[m.key] || {})[HOME];
+      return here != null || there != null;
+    })
+      .map((m) => {
+        const atCity = cityValues[m.key];
+        const cityOnly = !M.some((x) => x.key === m.key);
+        const grain = atCity != null ? "city" : cityOnly ? "city" : "county";
+        const here =
+          atCity != null ? atCity : cityOnly ? null : (V[m.key] || {})[fips];
+        const there =
+          homeCityValues[m.key] != null
+            ? homeCityValues[m.key]
+            : cityOnly
+              ? null
+              : (V[m.key] || {})[HOME];
+        let verdict = '<span class="delta same">no data</span>';
+        if (here != null && there != null) {
+          // Compared on the raw values with the metric's own direction applied.
+          // There is no city-wide percentile to subtract, so the honest statement
+          // is the direction and the size of the gap in the metric's own unit.
+          const better =
+            m.direction === "lower_better" ? here < there : here > there;
+          const gap = Math.abs(here - there);
+          const cls = gap < 1e-9 ? "same" : better ? "up" : "down";
+          verdict =
+            `<span class="delta ${cls}">` +
+            (gap < 1e-9
+              ? "the same"
+              : `${better ? "better" : "worse"} by ${fmt(gap, m.unit)}`) +
+            `</span>`;
+        }
+        return (
+          `<tr><td class="metric">${m.label}` +
+          `<span class="grain ${grain}">${grain}</span>` +
+          `<div style="color:var(--muted);font-size:12px">${m.unit}</div></td>` +
+          `<td class="num">${fmt(here, m.unit)}</td>` +
+          `<td class="num">${fmt(there, m.unit)}</td>` +
+          `<td class="num">${verdict}</td></tr>`
+        );
+      })
+      .join("");
+
+    if (!dlg.open) openPanel(dlg);
+  }
+
+  document.getElementById("cityclose").addEventListener("click", () => {
+    closePanel(document.getElementById("citydlg"));
+  });
+
+  /* Clicking a place asks "should I move here", which is a comparison, not a
+    readout. The dialog puts the two side by side on every metric that carries
+    weight and states the direction of each difference, because a raw pair of
+    numbers still leaves the reader working out which one is the good one. */
+  /* The map and the table are two views of one selection, so choosing in either
+    has to move the other. Without it a county picked off the map is a highlight
+    in a list the reader then has to go and find. */
+  function revealInTable(fips) {
+    const row = document.querySelector(`#tbody tr[data-f="${fips}"]`);
+    if (row) row.scrollIntoView({ block: "center", behavior: "smooth" });
+  }
+
+  const ROW_ZOOM = 260; // wide enough to keep the neighbours in frame
+
+  function revealOnMap(fips) {
+    const centre = CENTROIDS[fips];
+    if (!centre) return;
+    document
+      .getElementById("map")
+      .scrollIntoView({ block: "center", behavior: "smooth" });
+    // Zoom as well as centre. A county highlighted at national extent is a few
+    // pixels of outline, which is not an answer to "where is this".
+    if (view.w > ROW_ZOOM) view.w = ROW_ZOOM;
+    clampView();
+    view.x = centre[0] - view.w / 2;
+    view.y = centre[1] - view.h / 2;
+    clampView();
+    draw();
+  }
+
+  function showDetail(r) {
+    const dlg = document.getElementById("cmp");
+    if (!r) {
+      if (dlg.open) closePanel(dlg);
+      return;
+    }
+    cmpRow = r;
+    const home = lastHome;
+    document.getElementById("cmptitle").textContent = countyLabel(r.p);
+    document.getElementById("cmpsub").textContent =
+      (r.p.cbsa_name ? r.p.cbsa_name + "  ·  " : "") +
+      `population ${r.p.population.toLocaleString()}` +
+      (r.missing.length ? `  ·  no data for ${r.missing.join(", ")}` : "");
+    document.getElementById("cmpeyebrow").textContent = home
+      ? `Compared with ${HOME_NAME}, ${home.p.state}`
+      : "Place detail";
+
+    document.getElementById("cmpscores").innerHTML =
+      `<div class="scorebox"><div class="k">this place</div>
+        <div class="v">${r.score.toFixed(1)}</div>
+        <div class="s">rank ${r.rank.toLocaleString()} of ${lastAll.length.toLocaleString()}</div></div>` +
+      (home
+        ? `<div class="scorebox"><div class="k">${HOME_NAME}</div>
+            <div class="v">${home.score.toFixed(1)}</div>
+            <div class="s">${
+              homeExcluded
+                ? "scored for comparison; not a candidate"
+                : `rank ${home.rank.toLocaleString()} of ${lastAll.length.toLocaleString()}`
+            }</div></div>
+          <div class="scorebox"><div class="k">difference</div>
+            <div class="v">${r.score >= home.score ? "+" : ""}${(r.score - home.score).toFixed(1)}</div>
+            <div class="s">${r.score >= home.score ? "better overall fit" : "worse overall fit"}</div></div>`
+        : "");
+
+    document.getElementById("cmpthead").innerHTML = home
+      ? `<tr><th>Metric</th><th class="num">Here</th><th class="num">${HOME_NAME}</th>
+          <th class="num">Better or worse</th></tr>`
+      : `<tr><th>Metric</th><th class="num">Value</th><th class="num">Score</th></tr>`;
+
+    cmpData = M.map((m) => {
+      const k = m.key;
+      const here = (V[k] || {})[r.p.fips];
+      const there = home ? (V[k] || {})[home.p.fips] : null;
+      const sh = lastNorm[k]?.[r.p.fips];
+      const sa = home ? lastNorm[k]?.[home.p.fips] : null;
+      return {
+        key: k,
+        label: m.label,
+        unit: m.unit,
+        here,
+        there,
+        score: sh,
+        // Compared on the 0-100 score, not the raw value: the scores already know
+        // which direction is good for each metric, and the raw values do not.
+        delta: sh == null || sa == null ? null : sh - sa,
+        weight: r.contrib[k] ?? 0,
+        counted: (weights[k] || 0) > 0,
+      };
+    });
+    renderCmpRows();
+
+    renderLinks(r.p);
+    const ai = document.getElementById("cmpask");
+    ai.hidden = !sampleFn;
+    document.getElementById("cmpanswer").hidden = true;
+    if (!dlg.open) openPanel(dlg);
+  }
+
+  function renderCmpRows() {
+    const home = lastHome;
+    const { key, dir } = cmpSort;
+    const val = (row) =>
+      key === "label" ? row.label.toLowerCase() : (row[key] ?? -Infinity);
+    const rows = [...cmpData].sort((a, b) => {
+      const x = val(a);
+      const y = val(b);
+      if (typeof x === "string") return x.localeCompare(y) * dir;
+      return (x - y) * dir;
+    });
+    const caret = (k) =>
+      cmpSort.key === k ? (dir === -1 ? " \u25BE" : " \u25B4") : "";
+    document.getElementById("cmpthead").innerHTML = home
+      ? `<tr>
+          <th data-k="label">Metric${caret("label")}</th>
+          <th class="num" data-k="here">Here${caret("here")}</th>
+          <th class="num" data-k="there">${HOME_NAME}${caret("there")}</th>
+          <th class="num" data-k="delta">Better or worse${caret("delta")}</th>
+          <th class="num" data-k="weight">Weight${caret("weight")}</th>
+        </tr>`
+      : `<tr>
+          <th data-k="label">Metric${caret("label")}</th>
+          <th class="num" data-k="here">Value${caret("here")}</th>
+          <th class="num" data-k="score">Score${caret("score")}</th>
+        </tr>`;
+    document.getElementById("cmptbody").innerHTML = rows
+      .map((row) => {
+        const label = `<td class="metric">${row.label}
+            <div style="color:var(--muted);font-size:12px">${row.unit}</div></td>`;
+        if (!home)
+          return `<tr>${label}<td class="num">${fmt(row.here, row.unit)}</td>
+            <td class="num">${(row.score ?? 0).toFixed(0)}</td></tr>`;
+        const d = row.delta;
+        const cls =
+          d == null ? "same" : d > 1 ? "up" : d < -1 ? "down" : "same";
+        const word =
+          d == null
+            ? "no data"
+            : Math.abs(d) <= 1
+              ? "about the same"
+              : `${d > 0 ? "better" : "worse"} by ${Math.abs(d).toFixed(0)} pts`;
+        return `<tr${row.counted ? "" : ' class="uncounted"'}>${label}
+          <td class="num">${fmt(row.here, row.unit)}</td>
+          <td class="num">${fmt(row.there, row.unit)}</td>
+          <td class="num"><span class="delta ${cls}">${word}</span></td>
+          <td class="num" style="color:var(--muted)">${
+            row.counted ? row.weight.toFixed(1) : "not counted"
+          }</td></tr>`;
+      })
+      .join("");
+    document.querySelectorAll("#cmpthead th").forEach((th) =>
+      th.addEventListener("click", () => {
+        const k = th.dataset.k;
+        if (cmpSort.key === k) cmpSort.dir *= -1;
+        else cmpSort = { key: k, dir: k === "label" ? 1 : -1 };
+        renderCmpRows();
+      }),
+    );
+  }
+
+  /* Button zoom holds the centre of the view fixed; wheel zoom holds the point
+    under the cursor. */
+  function zoomBy(factor) {
+    const cx = view.x + view.w / 2;
+    const cy = view.y + view.h / 2;
+    view.w *= factor;
+    clampView();
+    view.x = cx - view.w / 2;
+    view.y = cy - view.h / 2;
+    clampView();
+    draw();
+  }
+  document
+    .getElementById("zoomin")
+    .addEventListener("click", () => zoomBy(1 / 1.6));
+  document
+    .getElementById("zoomout")
+    .addEventListener("click", () => zoomBy(1.6));
+  document.getElementById("resetview").addEventListener("click", () => {
+    view = { ...VIEW0 };
+    draw();
+  });
+
+  document.getElementById("cmpclose").addEventListener("click", () => {
+    closePanel(document.getElementById("cmp"));
+  });
+  scrim().addEventListener("click", () => {
+    const open = document.querySelector("dialog[open]");
+    if (open) closePanel(open);
+  });
+
+  async function explainComparison() {
+    if (!sampleFn || !cmpRow) return;
+    const out = document.getElementById("cmpanswer");
+    out.hidden = false;
+    out.className = "answer";
+    out.textContent = "Thinking...";
+    const btn = document.getElementById("cmpask");
+    btn.disabled = true;
+    const names = [cmpRow.p.fips];
+    if (lastHome) names.push(lastHome.p.fips);
+    /* The comparison is a fixed question, so the rows on screen are handed over
+      rather than fetched: the tools are for questions whose shape is unknown.
+      The model had these figures available through compare_places and still
+      reported the home county as having clean air, which is the opposite of what
+      its own row says - so the numbers now arrive in the prompt, and the
+      instruction says plainly that nothing else is known about these places. */
+    const rows = cmpData.map((row) => ({
+      metric: row.label,
+      unit: row.unit,
+      here: row.here,
+      home: row.there,
+      here_score: row.score == null ? null : +row.score.toFixed(1),
+      home_score:
+        lastNorm[row.key]?.[lastHome?.p.fips] == null
+          ? null
+          : +lastNorm[row.key][lastHome.p.fips].toFixed(1),
+      difference_in_points: row.delta == null ? null : +row.delta.toFixed(1),
+      counted_in_fit: row.counted,
+      share_of_score: +(row.weight ?? 0).toFixed(1),
+    }));
+    const comparison = {
+      how_to_read:
+        "Every metric is a 0-100 score where 100 is best for this user, so a " +
+        "score already accounts for which direction is good. difference_in_points " +
+        "is here_score minus home_score: positive means this place is better on " +
+        "that metric, negative means worse. counted_in_fit false means the user " +
+        "has switched that metric off, so it does not move the fit - but the " +
+        "measurement is still true, and a bad one is still worth saying.",
+      this_place: {
+        name: `${cmpRow.p.name}, ${cmpRow.p.state}`,
+        fit: +cmpRow.score.toFixed(1),
+        rank: cmpRow.rank,
+      },
+      home: lastHome
+        ? {
+            name: `${lastHome.p.name}, ${lastHome.p.state}`,
+            fit: +lastHome.score.toFixed(1),
+            rank: lastHome.rank,
+          }
+        : null,
+      metrics: rows,
+    };
+    const input =
+      "You are comparing two places on a relocation screen for someone deciding " +
+      "whether to move.\n\nYou know nothing about either place beyond COMPARISON " +
+      "below. Ignore anything you may have read about them: no claim about their " +
+      "climate, air, landscape or character is permitted unless a row here says " +
+      "it. Quote figures from these rows. Name what would be given up only from " +
+      "rows where difference_in_points is negative, and name the strongest gains " +
+      "only from rows where it is positive. A large negative on a row with " +
+      "counted_in_fit false is worth raising explicitly, saying that it is not in " +
+      "the score: it is the kind of thing this screen would otherwise hide. If you " +
+      "want wider context on a state you may call the tools, but the verdict must " +
+      "rest on these rows.\n\n" +
+      "Say plainly whether this place is a better bet than home, give the two or " +
+      "three metrics that decide it with their figures, and state honestly what is " +
+      "lost. Four sentences at most. No preamble.\n\nCOMPARISON:\n" +
+      JSON.stringify(comparison);
+    try {
+      await sampleFn(input, {
+        tools: TOOLS,
+        cache: false,
+        onText: ({ text }) => {
+          out.textContent = text;
+        },
+      });
+    } catch (e) {
+      out.className = "answer err";
+      out.textContent =
+        e.code === "rate_limited"
+          ? "Too many questions at once. Wait a moment."
+          : `Could not answer: ${e.message || e.code}`;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+  document
+    .getElementById("cmpask")
+    .addEventListener("click", explainComparison);
+
+  document.getElementById("find").addEventListener("input", (e) => {
+    textFilter = e.target.value.trim();
+    draw();
+  });
+
+  /* Reset goes back to the setup marked as the default, and only falls back to
+    the one the file was published with when none is starred. It also restores
+    the requirements and cuts, not just the weights: a reset that leaves half the
+    state behind is why "reset" did not look like a reset. */
+  function publishedSetup() {
+    return {
+      weights: { ...defaults },
+      cuts: {},
+      filters: { population: 0, home_value: 0, states: [] },
+      anchorHome: !!HOME_PLACE,
+      minFit: 0,
+      minCoverage: D.profile.min_coverage ?? 0.8,
+    };
+  }
+
+  function resetToDefault() {
+    const store = readSetups();
+    const starred = store.items.find((i) => i.name === store.default);
+    applySetup(starred ? starred.setup : publishedSetup());
+    renderCutSummary();
+  }
+
+  document.getElementById("reset").addEventListener("click", resetToDefault);
+
+  document.getElementById("sub").textContent = D.subtitle;
+  document.getElementById("srcs").innerHTML =
+    "Sources — " +
+    [...new Set(M.map((m) => m.source))].join(" · ") +
+    ". Places are US counties in a Census metro or micropolitan area; vegetation is sampled around each county’s population-weighted centre, so it describes the inhabited part rather than empty acreage.";
+
+  /* ---- ask ----------------------------------------------------------------
+    The model is given functions over the live view rather than a precomputed
+    summary. A summary can only answer the question it was built for, and the
+    shape of the next question is not knowable: "what drives the west coast"
+    wants weighted deficits by region, "what would I give up in the mountain
+    west" wants a trade-off between two subsets, "which cheap places have low
+    juniper" wants a filtered ranking. So the page exposes the aggregation and
+    does the arithmetic exactly; the model chooses what to ask for and never
+    computes a number itself. */
+
+  const active = () => Object.keys(weights).filter((k) => weights[k] > 0);
+  const shares = () => {
+    const t = active().reduce((a, k) => a + weights[k], 0) || 1;
+    return Object.fromEntries(active().map((k) => [k, weights[k] / t]));
+  };
+  const r2 = (x) => (x == null ? null : +x.toFixed(2));
+
+  function subsetRows(sel = {}) {
+    let rs = sel.visible_only === false ? lastAll : lastRows;
+    if (sel.states?.length) {
+      const want = new Set(sel.states.map((x) => x.toLowerCase()));
+      rs = rs.filter((r) => want.has(r.p.state.toLowerCase()));
+    }
+    if (sel.fips?.length) {
+      const want = new Set(sel.fips);
+      rs = rs.filter((r) => want.has(r.p.fips));
+    }
+    if (sel.name_contains) {
+      const q = sel.name_contains.toLowerCase();
+      rs = rs.filter(
+        (r) =>
+          r.p.name.toLowerCase().includes(q) ||
+          (r.p.cbsa_name || "").toLowerCase().includes(q),
+      );
+    }
+    return rs;
+  }
+
+  function meanNorm(rows, key) {
+    const vs = rows
+      .map((r) => lastNorm[key]?.[r.p.fips])
+      .filter((v) => v != null);
+    return vs.length ? vs.reduce((a, b) => a + b, 0) / vs.length : null;
+  }
+
+  const TOOLS = [
+    {
+      name: "list_states",
+      description:
+        "Mean overall fit and county count for every state in the current view. " +
+        "Use this first to find which places are doing badly before asking why.",
+      inputSchema: { type: "object", properties: {} },
+      execute: () => {
+        const by = {};
+        lastAll.forEach((r) => {
+          (by[r.p.state] ||= []).push(r.score);
+        });
+        return Object.entries(by)
+          .map(([state, v]) => ({
+            state,
+            counties: v.length,
+            mean_fit: r2(v.reduce((a, b) => a + b, 0) / v.length),
+          }))
+          .sort((a, b) => a.mean_fit - b.mean_fit);
+      },
+    },
+    {
+      name: "explain_subset",
+      description:
+        "Why a set of places scores as it does. Give states, fips or name_contains. " +
+        "Returns, per metric: the subset's mean 0-100 score, the national mean, the " +
+        "gap, and weighted_deficit = gap x the metric's share of the score. Sorted " +
+        "worst first. weighted_deficit is the driver ranking - a large gap on a " +
+        "lightly weighted metric moves the result less than a small gap on a heavy one.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          states: { type: "array", items: { type: "string" } },
+          fips: { type: "array", items: { type: "string" } },
+          name_contains: { type: "string" },
+          visible_only: { type: "boolean" },
+        },
+      },
+      execute: (a) => {
+        const rows = subsetRows({ ...a, visible_only: false });
+        if (!rows.length) return { error: "no places matched", counties: 0 };
+        const sh = shares();
+        const out = active()
+          .map((k) => {
+            const sub = meanNorm(rows, k);
+            const nat = meanNorm(lastAll, k);
+            if (sub == null || nat == null) return null;
+            return {
+              metric: k,
+              weight_share: r2(sh[k] * 100) + "%",
+              subset_mean: r2(sub),
+              national_mean: r2(nat),
+              gap: r2(sub - nat),
+              weighted_deficit: r2(sh[k] * (sub - nat)),
+            };
+          })
+          .filter(Boolean)
+          .sort((x, y) => x.weighted_deficit - y.weighted_deficit);
+        return {
+          counties: rows.length,
+          mean_fit: r2(rows.reduce((a, b) => a + b.score, 0) / rows.length),
+          national_mean_fit: r2(
+            lastAll.reduce((a, b) => a + b.score, 0) / (lastAll.length || 1),
+          ),
+          metrics: out,
+        };
+      },
+    },
+    {
+      name: "top_places",
+      description:
+        "Ranked places in the current view, best first, with their real values. " +
+        "Optionally restrict by state or name, or sort by one metric's raw value.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          limit: { type: "number" },
+          states: { type: "array", items: { type: "string" } },
+          name_contains: { type: "string" },
+          sort_by_metric: { type: "string" },
+          ascending: { type: "boolean" },
+        },
+      },
+      execute: (a) => {
+        let rows = subsetRows(a);
+        if (a.sort_by_metric) {
+          const dir = a.ascending === false ? -1 : 1;
+          rows = [...rows].sort(
+            (x, y) =>
+              dir *
+              (((V[a.sort_by_metric] || {})[x.p.fips] ?? Infinity) -
+                ((V[a.sort_by_metric] || {})[y.p.fips] ?? Infinity)),
+          );
+        }
+        return rows.slice(0, Math.min(a.limit || 10, 40)).map((r) => ({
+          county: r.p.name,
+          state: r.p.state,
+          metro: r.p.cbsa_name || null,
+          population: r.p.population,
+          fit: r2(r.score),
+          rank: r.rank,
+          values: r.raw,
+        }));
+      },
+    },
+    {
+      name: "compare_places",
+      description:
+        "Side by side comparison of named places, including the home county. " +
+        "Give fips, or names via name_contains repeated in the list.",
+      inputSchema: {
+        type: "object",
+        properties: { names: { type: "array", items: { type: "string" } } },
+      },
+      execute: (a) => {
+        const picks = (a.names || []).map((n) => {
+          const q = n.toLowerCase();
+          return lastAll.find(
+            (r) =>
+              r.p.fips === n ||
+              r.p.name.toLowerCase().includes(q) ||
+              (r.p.cbsa_name || "").toLowerCase().includes(q),
+          );
+        });
+        return picks.filter(Boolean).map((r) => ({
+          county: r.p.name,
+          state: r.p.state,
+          fit: r2(r.score),
+          rank: r.rank,
+          values: r.raw,
+          normalised_0_100: Object.fromEntries(
+            active()
+              .map((k) => [k, r2(lastNorm[k]?.[r.p.fips])])
+              .filter(([, v]) => v != null),
+          ),
+        }));
+      },
+    },
+  ];
+
+  function contextHeader() {
+    const sh = shares();
+    return {
+      how_scoring_works:
+        "Each metric is turned into a 0-100 score by percentile rank among the " +
+        "candidate places, where 100 is best for this user. Overall fit is the " +
+        "weighted mean of those scores. To explain why somewhere scores badly, call " +
+        "explain_subset and read weighted_deficit, which already accounts for how " +
+        "much each metric counts.",
+      weights: Object.fromEntries(
+        Object.entries(sh).map(([k, v]) => [
+          k,
+          Math.round(v * 100) + "% of the score",
+        ]),
+      ),
+      metrics: Object.fromEntries(
+        active().map((k) => {
+          const m = M.find((x) => x.key === k);
+          return [
+            k,
+            `${m.label} (${m.unit}); ${m.direction.replace("_", " is ")}`,
+          ];
+        }),
+      ),
+      requirements: {
+        min_population: filters.population,
+        max_home_value: filters.home_value || "none",
+        states_ruled_out: filters.states.length ? filters.states : "none",
+        min_data_coverage: Math.round(minCoverage * 100) + "%",
+      },
+      counts: {
+        candidates: lastAll.length,
+        visible: lastRows.length,
+        visibility_rule:
+          anchorHome && lastHome
+            ? `only places scoring above ${HOME_NAME} (${lastHome.score.toFixed(1)})`
+            : `only places scoring ${minFit} or better`,
+      },
+      home: lastHome
+        ? {
+            name: HOME_NAME,
+            state: lastHome.p.state,
+            fit: r2(lastHome.score),
+            rank: lastHome.rank,
+          }
+        : null,
+    };
+  }
+
+  const CHIPS = [
+    "The west coast is mostly a poor fit. What is the largest driving factor?",
+    "What would I have to give up to stay in the mountain west?",
+    "Which visible places are cheapest, and what do they cost me elsewhere?",
+    "How does the best place compare with where I live now?",
+  ];
+
+  async function initAsk() {
+    const sample = await claude.use("sample");
+    if (!sample) return; // unavailable in this view; the page works without it
+    sampleFn = sample;
+    document.getElementById("askcard").hidden = false;
+
+    document.getElementById("chips").innerHTML = CHIPS.map(
+      (c, i) => `<button data-i="${i}">${c}</button>`,
+    ).join("");
+    document.querySelectorAll("#chips button").forEach((b) =>
+      b.addEventListener("click", () => {
+        document.getElementById("q").value = CHIPS[+b.dataset.i];
+        ask();
+      }),
+    );
+
+    const send = document.getElementById("asend");
+    const box = document.getElementById("q");
+    let running = null;
+
+    async function ask() {
+      const question = box.value.trim();
+      if (!question) return;
+      if (running) running.abort();
+      running = new AbortController();
+      const out = document.getElementById("answer");
+      out.hidden = false;
+      out.className = "answer";
+      out.textContent = "Thinking...";
+      send.disabled = true;
+      const input =
+        "You are answering a question about a live relocation-search screen.\n\n" +
+        "You have tools that compute over the data actually on screen. Call them; " +
+        "never do the arithmetic yourself and never state a number a tool did not " +
+        "return. Explaining why a region scores badly means calling explain_subset " +
+        "for it and reading weighted_deficit - the raw gap is misleading on its own, " +
+        "because the metrics are weighted very unevenly. Check each state separately " +
+        "before claiming something is a shared cause; if the states differ, say so " +
+        "rather than forcing a single answer. Be concise and quote the figures.\n\n" +
+        "SETUP:\n" +
+        JSON.stringify(contextHeader()) +
+        "\n\nQUESTION: " +
+        question;
+      try {
+        await sample(input, {
+          signal: running.signal,
+          cache: false,
+          tools: TOOLS,
+          onText: ({ text }) => {
+            out.textContent = text;
+          },
+        });
+      } catch (e) {
+        if (e.code === "cancelled") return;
+        out.className = "answer err";
+        out.textContent =
+          e.code === "rate_limited"
+            ? "Too many questions at once. Wait a moment and ask again."
+            : e.code === "not_granted"
+              ? "This view is not allowed to ask Claude."
+              : `Could not answer: ${e.message || e.code}`;
+      } finally {
+        send.disabled = false;
+        running = null;
+      }
+    }
+
+    send.addEventListener("click", ask);
+    box.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) ask();
+    });
+  }
+
+  /* ---- saved setups -------------------------------------------------------
+    Kept in this browser's local storage: they are one reader's preferences on
+    one machine, not shared state, and writing them into the artifact would
+    publish a new version of the page for everyone who can see it. The cost is
+    that they do not follow the reader to another device, which the panel says.
+
+    Every access is guarded. Storage is not merely empty in a private window or
+    a thumbnail capture - reading it throws - and an unguarded read would take
+    the whole page down with it. */
+  const STORE = "refugia.setups.v1";
+
+  function readSetups() {
+    let raw = null;
+    try {
+      // Only the access is guarded. A private window, a thumbnail capture or a
+      // browser set to refuse site data throws here rather than returning empty.
+      raw = localStorage.getItem(STORE);
+    } catch {
+      return { items: [], default: null };
+    }
+    try {
+      const parsed = raw ? JSON.parse(raw) : null;
+      return parsed && typeof parsed === "object" && Array.isArray(parsed.items)
+        ? parsed
+        : { items: [], default: null };
+    } catch {
+      return { items: [], default: null };
+    }
+  }
+
+  function writeSetups(store) {
+    try {
+      localStorage.setItem(STORE, JSON.stringify(store));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /* Only the decisions are saved. The map view and the search box are where the
+    reader happens to be looking, not what they have decided matters. */
+  const currentSetup = () => ({
+    cuts: { ...cuts },
+    weights: { ...weights },
+    filters: { ...filters },
+    anchorHome,
+    minFit,
+    minCoverage,
+  });
+
+  function applySetup(setup) {
+    if (!setup) return;
+    weights = { ...setup.weights };
+    cuts = { ...(setup.cuts || {}) };
+    filters = {
+      population: setup.filters?.population || 0,
+      home_value: setup.filters?.home_value || 0,
+      states: [...(setup.filters?.states || [])],
+    };
+    anchorHome = !!setup.anchorHome;
+    minFit = setup.minFit || 0;
+    minCoverage = setup.minCoverage ?? minCoverage;
+    renderWeights();
+    renderFilters();
+    draw();
+  }
+
+  function renderSetups() {
+    const store = readSetups();
+    const note = document.getElementById("pnote");
+    const starred = store.items.find((i) => i.name === store.default);
+    const reset = document.getElementById("reset");
+    if (reset) {
+      reset.textContent = starred ? "Reset" : "Reset";
+      reset.title = starred
+        ? `Back to your saved setup "${starred.name}"`
+        : "Back to the setup this page was published with";
+    }
+    document.getElementById("plist").innerHTML = store.items
+      .map(
+        (item, index) =>
+          `<div class="preset${item.name === store.default ? " is-default" : ""}">` +
+          `<button class="nm" data-load="${index}" title="Load this setup">${item.name}</button>` +
+          `<button class="icon star${item.name === store.default ? " on" : ""}"` +
+          ` data-default="${index}" title="Open with this setup">` +
+          `${item.name === store.default ? "\u2605" : "\u2606"}</button>` +
+          `<button class="icon" data-del="${index}" title="Delete">\u00d7</button>` +
+          `</div>`,
+      )
+      .join("");
+    note.textContent = store.items.length
+      ? "The starred setup loads when you open this page. Saved in this browser only."
+      : "Save the current weights and requirements to come back to them. Saved in this browser only.";
+
+    document
+      .querySelectorAll("#plist [data-load]")
+      .forEach((b) =>
+        b.addEventListener("click", () =>
+          applySetup(store.items[+b.dataset.load].setup),
+        ),
+      );
+    document.querySelectorAll("#plist [data-default]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const picked = store.items[+b.dataset.default].name;
+        store.default = store.default === picked ? null : picked;
+        writeSetups(store);
+        renderSetups();
+      }),
+    );
+    document.querySelectorAll("#plist [data-del]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const [removed] = store.items.splice(+b.dataset.del, 1);
+        if (store.default === removed.name) store.default = null;
+        writeSetups(store);
+        renderSetups();
+      }),
+    );
+  }
+
+  document.getElementById("psave").addEventListener("click", () => {
+    const field = document.getElementById("pname");
+    const name = field.value.trim();
+    if (!name) {
+      field.focus();
+      return;
+    }
+    const store = readSetups();
+    const existing = store.items.findIndex((i) => i.name === name);
+    const entry = { name, setup: currentSetup() };
+    if (existing >= 0) store.items[existing] = entry;
+    else store.items.push(entry);
+    if (!writeSetups(store)) {
+      document.getElementById("pnote").textContent =
+        "This browser will not let the page store anything, so setups cannot be kept.";
+      return;
+    }
+    field.value = "";
+    renderSetups();
+  });
+
+  /* Applied before the first render, and only here: reading the store earlier put
+    it above the declarations it depends on, and the guard that exists for
+    browsers which refuse storage swallowed the resulting error as "nothing
+    saved". A catch that broad has to sit where only storage can fail. */
+  (() => {
+    const store = readSetups();
+    const chosen = store.items.find((i) => i.name === store.default);
+    if (chosen) applySetup(chosen.setup);
+  })();
+
+  renderWeights();
+  renderFilters();
+  renderMapSelect();
+  renderSetups();
+  draw();
+  if (window.claude?.use) initAsk();
+</script>
