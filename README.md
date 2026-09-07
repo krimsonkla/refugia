@@ -381,4 +381,6 @@ writes, along with the ISC notice for the county outlines.
 
 That footer matters because a published page embeds the values for every county it
 ranks. Running the tool is not redistribution; sharing the page is, and the same
-terms travel with it.
+terms travel with it. So does the profile it was built from — including your home
+county, if you set one — so a page is a statement about your preferences as well as
+about the places. `publish` says as much when it writes one.

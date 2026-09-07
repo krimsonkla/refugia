@@ -104,6 +104,35 @@ def _report_failures(failures) -> None:
     )
 
 
+def _sharing_note(dataset: Dataset, profile: Profile) -> str:
+    """What the person who just built a page needs to know before sending it.
+
+    Running refugia is not redistribution -- the repository ships endpoints, and
+    each user fetches from the publisher under their own licence. A published page
+    is different: it embeds the values for every place it ranks, so sharing one is
+    redistribution, and whoever opens it did not agree to anything. This is the
+    only moment that reaches the person about to do it.
+    """
+    lines = [
+        f"This page embeds values for {len(dataset.places):,} places"
+        + (
+            f", and the profile behind it, including your home county {profile.home_fips}."
+            if profile.home_fips
+            else ", and the profile behind it."
+        ),
+        "Sharing it is redistribution in a way that running refugia is not.",
+    ]
+    # Counted from the metrics rather than written down, so dropping a source
+    # cannot leave this note asserting an obligation that no longer applies.
+    cited = {m.citation for m in dataset.metrics if m.citation}
+    if cited:
+        lines.append(
+            f"{len(cited)} source(s) require attribution and their citations travel in the "
+            "page footer. DATA_SOURCES.md says what each one's terms permit."
+        )
+    return "\n".join(lines)
+
+
 def _report_coverage(dataset: Dataset) -> None:
     """Print per-metric coverage and flag anything too thin to rank on.
 
@@ -234,8 +263,10 @@ def publish(
     """Build the interactive map and table as a self-contained HTML page."""
     workspace = _workspace(root)
     dataset = _load_dataset(workspace)
-    written = ArtifactBuilder(workspace.cache).build(dataset, Profile.load(profile), out)
+    loaded = Profile.load(profile)
+    written = ArtifactBuilder(workspace.cache).build(dataset, loaded, out)
     typer.echo(f"wrote {written} ({written.stat().st_size / 1e6:.1f} MB)")
+    typer.secho(f"\n{_sharing_note(dataset, loaded)}", fg="cyan")
 
 
 @app.command()
