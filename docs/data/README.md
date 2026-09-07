@@ -51,8 +51,8 @@ Rules:
 all one fact: a force-push does not remove objects from GitHub, so the pre-rewrite
 history stayed fetchable by SHA after the rewrite. The repository was deleted and
 re-created on 2026-09-07 and the pre-rewrite tip now returns 422. What is left is
-three non-blocking rows, all about the `v0.1.0` tag and about settings that cannot
-be turned on while the repository is private.
+one non-blocking row: branch protection and secret scanning cannot be turned on
+while the repository is private.
 
 That statement exists here because of how this file failed once. After the first
 cycle it recorded four blockers, all fixed, and two open rows, both cosmetic. A
@@ -113,7 +113,7 @@ paragraph explaining why there was no such test outlived the test.
 ## 6. `findings.jsonl`
 
 **146 rows across 2 cycles and 8 lenses.**
-`3 open, 127 fixed, 3 parked, 13 declined.`
+`1 open, 129 fixed, 3 parked, 13 declined.`
 
 - `cyc-release-audit` — the first public-release audit. Seven lenses plus a
   completeness critic, so eight `lens` values appear.
@@ -132,7 +132,7 @@ Open rows carry a `batch`, so the remaining work can be picked up by theme rathe
 than by scrolling. The grouping is by what a change touches, not by severity — a
 batch is meant to be one sitting with one set of files open in front of you.
 
-### `publish-the-repo` — 3 rows (1 important, 2 nice-to-have)
+### `publish-the-repo` — 1 row (1 nice-to-have)
 
 One sitting, and nothing else matters until it is done. The pre-rewrite history is
 still served by GitHub, so the repository has to be deleted and re-created rather
