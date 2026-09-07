@@ -69,17 +69,37 @@ the absence: a county outside the vegetation layer would otherwise top an allerg
 search precisely because its allergen data is unknown. `min_coverage` (default 0.8)
 drops those rows, and the page shows a Data column so a partial row is visible.
 
+## Install
+
+Python 3.12 or newer, and [uv](https://docs.astral.sh/uv/).
+
+```bash
+git clone https://github.com/krimsonkla/refugia && cd refugia
+uv sync --all-groups
+```
+
+That is the whole install. `uv` builds the environment from the committed
+`uv.lock` and puts the `refugia` command in it; prefix commands with `uv run`, or
+activate the venv once and drop the prefix. No API keys, accounts or registrations
+are needed for any data source.
+
+There is also a `devenv.nix` for [devenv.sh](https://devenv.sh), which pins the
+interpreter and installs the git hooks. It is a maintainer convenience rather than
+a requirement — nothing here needs nix, and the test suite runs identically either
+way.
+
 ## Use
 
 ```bash
-devenv shell -- refugia fetch                       # download everything (slow, cached)
-devenv shell -- refugia rank --profile profiles/example.json --top 20 --explain
-devenv shell -- refugia publish --profile profiles/example.json
-devenv shell -- refugia ask "cheapest places with almost no juniper"
+uv run refugia fetch                                      # download everything (slow, cached)
+uv run refugia rank --profile profiles/example.json --top 20 --explain
+uv run refugia publish --profile profiles/example.json    # writes out/refugia.html
+uv run refugia ask "cheapest places with almost no juniper"
 ```
 
 `fetch` is slow and network-bound; everything else reads the saved dataset, so
-re-weighting costs nothing.
+re-weighting costs nothing. Copy `profiles/example.json` and edit it — the weights
+are yours, and that is the point.
 
 ## Two grains
 
@@ -179,3 +199,20 @@ token: 30B-class quality at speed in about 18GB. Override with `--model`.
 - Network adapters are thinly tested; the scoring core is not.
 - Alaska and Hawaii appear in the table but not the map: the vegetation layer is
   CONUS-only.
+
+## Data and licence
+
+The code is MIT — see `LICENSE`. The data is not the code's to license: refugia
+ships none of it and fetches everything at run time, so each source's own terms
+govern what you fetch. `DATA_SOURCES.md` has one entry per publisher, and marks
+which positions are verified and which are inferred.
+
+Two matter in practice. **County Health Rankings**, which five metrics draw on,
+licenses its content for personal and non-profit use only and requires a specific
+citation; commercial use needs their prior written consent. **Zillow** requires
+clear attribution. Both citations are in the footer of every page `publish`
+writes, along with the ISC notice for the county outlines.
+
+That footer matters because a published page embeds the values for every county it
+ranks. Running the tool is not redistribution; sharing the page is, and the same
+terms travel with it.
