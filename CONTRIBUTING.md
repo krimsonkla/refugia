@@ -107,7 +107,10 @@ have not read.
 - **Scoring exists twice** — Python in `scoring/`, JavaScript in
   `artifact/template.html`, because the page's sliders re-rank with no server to
   ask. A change to ranking semantics has to be made in both, in the same commit,
-  and `tests/conformance/vectors.json` will fail you if it is not. Add a vector for
+  and `tests/conformance/vectors.json` will fail you if it is not — it covers
+  everything the profile decides: weights, requirements, normalisation and
+  coverage. It does not cover the page's own interactive controls or its
+  treatment of home, which genuinely differ. Add a vector for
   the behaviour you changed. The JavaScript half sits between the `scoring kernel:
 BEGIN/END` markers and must stay pure, since the test lifts it out of the file
   and runs it.

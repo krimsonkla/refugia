@@ -1149,6 +1149,10 @@
   const VIEW0 = { x: 0, y: 0, w: 960, h: 600 };
   let view = { ...VIEW0 };
   const byFips = Object.fromEntries(PL.map((p) => [p.fips, p]));
+  /* The saved profile, whole. The page used to read only its weights, its home and
+    its coverage floor, and ignore the requirements and the normalisation method it
+    was published with -- which made it rank a different field than the CLI. */
+  const PROFILE = D.profile || {};
   let weights = { ...D.profile.weights };
   const defaults = { ...D.profile.weights };
   let filters = { population: 0, home_value: 0, states: [] };
@@ -1242,17 +1246,57 @@
     return out;
   }
 
+  /* The other method the profile may ask for. Min-max keeps the spacing between
+    values where percentile keeps only their order, and a flat field is 50 on both
+    -- there is no defensible way to spread places that are all the same. */
+  function minmax(vals) {
+    const entries = Object.entries(vals);
+    if (!entries.length) return {};
+    const nums = entries.map(([, v]) => v);
+    const lo = Math.min(...nums),
+      hi = Math.max(...nums);
+    const out = {};
+    for (const [k, v] of entries)
+      out[k] = hi === lo ? 50 : (100 * (v - lo)) / (hi - lo);
+    return out;
+  }
+
   /* Normalised over every metric, not only the weighted ones. Scoring uses the
     weighted subset, but a comparison between two places has to be able to show
     what a switched-off metric says: those are exactly where an unwelcome surprise
     hides, and they were invisible. */
-  function normalizeAll(metrics, values, keep) {
+  /* The profile's own requirements, evaluated exactly as scoring/criterion.py does:
+    a field is a metric key or an attribute of the place, and a missing value never
+    passes. These were not applied here at all, so the page ranked a different field
+    than the CLI did for the same saved profile -- and because normalisation runs
+    over the survivors, that moved every score rather than only the membership. */
+  function accepts(observed, comparison, value) {
+    if (observed == null) return false;
+    if (comparison === "min") return Number(observed) >= Number(value);
+    if (comparison === "max") return Number(observed) <= Number(value);
+    if (comparison === "in")
+      return value.map(String).includes(String(observed));
+    return !value.map(String).includes(String(observed));
+  }
+
+  function meetsCriteria(place, values, criteria) {
+    for (const c of criteria || []) {
+      const observed =
+        place[c.field] !== undefined
+          ? place[c.field]
+          : (values[c.field] || {})[place.fips];
+      if (!accepts(observed, c.comparison, c.value)) return false;
+    }
+    return true;
+  }
+
+  function normalizeAll(metrics, values, keep, method) {
     const norm = {};
     for (const m of metrics) {
       const obs = {};
       for (const [f, v] of Object.entries(values[m.key] || {}))
         if (keep.has(f)) obs[f] = v;
-      const pc = percentile(obs);
+      const pc = method === "minmax" ? minmax(obs) : percentile(obs);
       norm[m.key] =
         m.direction === "lower_better"
           ? Object.fromEntries(Object.entries(pc).map(([f, s]) => [f, 100 - s]))
@@ -1265,11 +1309,29 @@
     zero or less is not a metric weighted lightly, it is a metric not asked for:
     it is left out of the score and out of the coverage denominator, so switching
     one off cannot drop a place for missing data it was never being judged on. */
-  function scoreAll(places, values, metrics, weights, minCoverage) {
-    const keep = new Set(places.map((p) => p.fips));
+  function scoreAll(
+    places,
+    values,
+    metrics,
+    weights,
+    minCoverage,
+    method,
+    criteria,
+    exempt,
+  ) {
+    /* The profile's requirements are applied HERE rather than by the caller, so
+      there is one path and these vectors run it. Applied in the caller, the
+      function could be correct while the page never called it -- which is exactly
+      how the page came to ignore `criteria` while every vector passed.
+      `exempt` is home: it is scored on the same scale whatever the requirements
+      say, then taken back out of the ranking by the caller. */
+    const eligible = places.filter(
+      (p) => p.fips === exempt || meetsCriteria(p, values, criteria),
+    );
+    const keep = new Set(eligible.map((p) => p.fips));
     const active = Object.entries(weights).filter(([, w]) => w > 0);
-    const norm = normalizeAll(metrics, values, keep);
-    const rows = places.map((p) => {
+    const norm = normalizeAll(metrics, values, keep, method);
+    const rows = eligible.map((p) => {
       let tot = 0,
         avail = 0;
       const contrib = {},
@@ -1350,7 +1412,16 @@
     const homePlace = HOME ? PL.find((p) => p.fips === HOME) : null;
     homeExcluded = !!homePlace && !passers.some((p) => p.fips === HOME);
     const live = homeExcluded ? [...passers, homePlace] : passers;
-    const { norm, ranked } = scoreAll(live, V, M, weights, minCoverage);
+    const { norm, ranked } = scoreAll(
+      live,
+      V,
+      M,
+      weights,
+      minCoverage,
+      PROFILE.normalization,
+      PROFILE.criteria,
+      HOME,
+    );
     lastNorm = norm;
     // Keep the scored home aside; where it is not a candidate it must not be
     // counted among them, or "rank 4 of 336" quietly becomes 337.

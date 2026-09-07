@@ -111,7 +111,7 @@ paragraph explaining why there was no such test outlived the test.
 ## 6. `findings.jsonl`
 
 **146 rows across 2 cycles and 8 lenses.**
-`16 open, 114 fixed, 3 parked, 13 declined.`
+`13 open, 117 fixed, 3 parked, 13 declined.`
 
 - `cyc-release-audit` — the first public-release audit. Seven lenses plus a
   completeness critic, so eight `lens` values appear.
@@ -144,7 +144,7 @@ jq -c 'select(.batch == "publish-the-repo" and .status == "open") | [.id, .effor
   docs/data/findings.jsonl
 ```
 
-### `scoring-parity` — 6 rows (3 important, 3 nice-to-have)
+### `scoring-parity` — 3 rows (2 important, 1 nice-to-have)
 
 The page and the CLI rank differently for the shipped example profile, because the
 page never reads `criteria` or `normalization`. Grouped because the fix moves the

@@ -20,6 +20,7 @@ import pytest
 from refugia.metrics.metric import Metric
 from refugia.metrics.registry import MetricRegistry
 from refugia.places.place import Place
+from refugia.scoring.criterion import Criterion
 from refugia.scoring.engine import ScoringEngine
 from refugia.scoring.profile import Profile
 
@@ -61,12 +62,28 @@ def _rank(case):
     registry = MetricRegistry()
     registry.register(_Stub(metrics))
     places = tuple(
-        Place(fips=f, name=f, state="Testland", lat=0.0, lon=0.0, population=100_000)
+        Place(
+            fips=f,
+            name=f,
+            state=case.get("states", {}).get(f, "Testland"),
+            lat=0.0,
+            lon=0.0,
+            population=case.get("populations", {}).get(f, 100_000),
+        )
         for f in _fips_in(case)
     )
     profile = Profile(
         case["name"],
         {k: float(v) for k, v in case["weights"].items()},
+        criteria=tuple(
+            Criterion(
+                field=c["field"],
+                comparison=c["comparison"],
+                value=tuple(c["value"]) if isinstance(c["value"], list) else c["value"],
+            )
+            for c in case.get("criteria", [])
+        ),
+        normalization=case.get("normalization", "percentile"),
         min_coverage=float(case["min_coverage"]),
     )
     return ScoringEngine(registry).rank(places, case["values"], profile)

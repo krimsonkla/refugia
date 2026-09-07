@@ -5,10 +5,23 @@
     "page has to re-rank without a server, so the duplication is forced; what is not",
     "forced is the two drifting apart, which is what these pin.",
     "",
-    "Each case gives an already-filtered set of places, their raw values, the metric",
-    "directions and the weights, and states the ranking both must produce. Filters,",
-    "home handling and the comparison panel are deliberately NOT covered: those",
-    "differ between the CLI and the page on purpose.",
+    "Each case gives a set of places, their raw values, the metric directions, the",
+    "weights, and the requirements and normalisation method the profile carries, and",
+    "states the ranking both must produce.",
+    "",
+    "An earlier version of this file said filters were 'deliberately NOT covered'",
+    "because the CLI and the page filter differently. That was wrong, and expensively:",
+    "the two do offer different filter CONTROLS, but both are handed the same saved",
+    "profile and must agree on what it means. They did not -- the page ignored",
+    "`criteria` and `normalization` outright -- and because percentile normalisation",
+    "runs over the survivors, a different survivor set moved every score rather than",
+    "only the membership. For the shipped example profile the CLI ranked 1,101 places",
+    "and the page 1,773, with a different top county and no shared place scoring the",
+    "same, while all twelve vectors passed.",
+    "",
+    "What is still not covered, and genuinely differs: the page's own interactive",
+    "controls, its treatment of home as a reference point rather than a candidate, and",
+    "the comparison panel. Those are the page's, not the profile's.",
     "",
     "Scores are compared to 6 decimal places. Add a case whenever you touch either",
     "implementation."
@@ -16,166 +29,673 @@
   "cases": [
     {
       "name": "lower_better inverts, so the smallest value ranks first",
-      "metrics": [{ "key": "a", "direction": "lower_better" }],
-      "values": { "a": { "00001": 1, "00002": 5, "00003": 9 } },
-      "weights": { "a": 1 },
+      "metrics": [
+        {
+          "key": "a",
+          "direction": "lower_better"
+        }
+      ],
+      "values": {
+        "a": {
+          "00001": 1,
+          "00002": 5,
+          "00003": 9
+        }
+      },
+      "weights": {
+        "a": 1
+      },
       "min_coverage": 0,
       "expect": [
-        { "fips": "00001", "score": 100, "cover": 1 },
-        { "fips": "00002", "score": 50, "cover": 1 },
-        { "fips": "00003", "score": 0, "cover": 1 }
+        {
+          "fips": "00001",
+          "score": 100,
+          "cover": 1
+        },
+        {
+          "fips": "00002",
+          "score": 50,
+          "cover": 1
+        },
+        {
+          "fips": "00003",
+          "score": 0,
+          "cover": 1
+        }
       ]
     },
     {
       "name": "higher_better does not invert",
-      "metrics": [{ "key": "a", "direction": "higher_better" }],
-      "values": { "a": { "00001": 1, "00002": 5, "00003": 9 } },
-      "weights": { "a": 1 },
+      "metrics": [
+        {
+          "key": "a",
+          "direction": "higher_better"
+        }
+      ],
+      "values": {
+        "a": {
+          "00001": 1,
+          "00002": 5,
+          "00003": 9
+        }
+      },
+      "weights": {
+        "a": 1
+      },
       "min_coverage": 0,
       "expect": [
-        { "fips": "00003", "score": 100, "cover": 1 },
-        { "fips": "00002", "score": 50, "cover": 1 },
-        { "fips": "00001", "score": 0, "cover": 1 }
+        {
+          "fips": "00003",
+          "score": 100,
+          "cover": 1
+        },
+        {
+          "fips": "00002",
+          "score": 50,
+          "cover": 1
+        },
+        {
+          "fips": "00001",
+          "score": 0,
+          "cover": 1
+        }
       ]
     },
     {
       "name": "ties share the averaged rank rather than the first or last",
-      "metrics": [{ "key": "a", "direction": "higher_better" }],
-      "values": { "a": { "00001": 5, "00002": 5, "00003": 9, "00004": 1 } },
-      "weights": { "a": 1 },
+      "metrics": [
+        {
+          "key": "a",
+          "direction": "higher_better"
+        }
+      ],
+      "values": {
+        "a": {
+          "00001": 5,
+          "00002": 5,
+          "00003": 9,
+          "00004": 1
+        }
+      },
+      "weights": {
+        "a": 1
+      },
       "min_coverage": 0,
       "expect": [
-        { "fips": "00003", "score": 100, "cover": 1 },
-        { "fips": "00001", "score": 50, "cover": 1 },
-        { "fips": "00002", "score": 50, "cover": 1 },
-        { "fips": "00004", "score": 0, "cover": 1 }
+        {
+          "fips": "00003",
+          "score": 100,
+          "cover": 1
+        },
+        {
+          "fips": "00001",
+          "score": 50,
+          "cover": 1
+        },
+        {
+          "fips": "00002",
+          "score": 50,
+          "cover": 1
+        },
+        {
+          "fips": "00004",
+          "score": 0,
+          "cover": 1
+        }
       ]
     },
     {
       "name": "a single place sits at the midpoint, not at either end",
-      "metrics": [{ "key": "a", "direction": "lower_better" }],
-      "values": { "a": { "00001": 7 } },
-      "weights": { "a": 1 },
+      "metrics": [
+        {
+          "key": "a",
+          "direction": "lower_better"
+        }
+      ],
+      "values": {
+        "a": {
+          "00001": 7
+        }
+      },
+      "weights": {
+        "a": 1
+      },
       "min_coverage": 0,
-      "expect": [{ "fips": "00001", "score": 50, "cover": 1 }]
+      "expect": [
+        {
+          "fips": "00001",
+          "score": 50,
+          "cover": 1
+        }
+      ]
     },
     {
       "name": "weights are ratios, so doubling every one changes nothing",
       "metrics": [
-        { "key": "a", "direction": "lower_better" },
-        { "key": "b", "direction": "higher_better" }
+        {
+          "key": "a",
+          "direction": "lower_better"
+        },
+        {
+          "key": "b",
+          "direction": "higher_better"
+        }
       ],
       "values": {
-        "a": { "00001": 1, "00002": 9 },
-        "b": { "00001": 1, "00002": 9 }
+        "a": {
+          "00001": 1,
+          "00002": 9
+        },
+        "b": {
+          "00001": 1,
+          "00002": 9
+        }
       },
-      "weights": { "a": 6, "b": 2 },
+      "weights": {
+        "a": 6,
+        "b": 2
+      },
       "min_coverage": 0,
       "expect": [
-        { "fips": "00001", "score": 75, "cover": 1 },
-        { "fips": "00002", "score": 25, "cover": 1 }
+        {
+          "fips": "00001",
+          "score": 75,
+          "cover": 1
+        },
+        {
+          "fips": "00002",
+          "score": 25,
+          "cover": 1
+        }
       ]
     },
     {
       "name": "a missing value renormalises the rest rather than scoring zero",
       "metrics": [
-        { "key": "a", "direction": "higher_better" },
-        { "key": "b", "direction": "higher_better" }
+        {
+          "key": "a",
+          "direction": "higher_better"
+        },
+        {
+          "key": "b",
+          "direction": "higher_better"
+        }
       ],
       "values": {
-        "a": { "00001": 9, "00002": 1, "00003": 5 },
-        "b": { "00001": 1, "00002": 9 }
+        "a": {
+          "00001": 9,
+          "00002": 1,
+          "00003": 5
+        },
+        "b": {
+          "00001": 1,
+          "00002": 9
+        }
       },
-      "weights": { "a": 1, "b": 1 },
+      "weights": {
+        "a": 1,
+        "b": 1
+      },
       "min_coverage": 0,
       "expect": [
-        { "fips": "00003", "score": 50, "cover": 0.5 },
-        { "fips": "00001", "score": 50, "cover": 1 },
-        { "fips": "00002", "score": 50, "cover": 1 }
+        {
+          "fips": "00003",
+          "score": 50,
+          "cover": 0.5
+        },
+        {
+          "fips": "00001",
+          "score": 50,
+          "cover": 1
+        },
+        {
+          "fips": "00002",
+          "score": 50,
+          "cover": 1
+        }
       ]
     },
     {
       "name": "min_coverage drops a thin row instead of scoring it",
       "metrics": [
-        { "key": "a", "direction": "higher_better" },
-        { "key": "b", "direction": "higher_better" }
+        {
+          "key": "a",
+          "direction": "higher_better"
+        },
+        {
+          "key": "b",
+          "direction": "higher_better"
+        }
       ],
       "values": {
-        "a": { "00001": 9, "00002": 1, "00003": 5 },
-        "b": { "00001": 1, "00002": 9 }
+        "a": {
+          "00001": 9,
+          "00002": 1,
+          "00003": 5
+        },
+        "b": {
+          "00001": 1,
+          "00002": 9
+        }
       },
-      "weights": { "a": 1, "b": 1 },
+      "weights": {
+        "a": 1,
+        "b": 1
+      },
       "min_coverage": 0.8,
       "expect": [
-        { "fips": "00001", "score": 50, "cover": 1 },
-        { "fips": "00002", "score": 50, "cover": 1 }
+        {
+          "fips": "00001",
+          "score": 50,
+          "cover": 1
+        },
+        {
+          "fips": "00002",
+          "score": 50,
+          "cover": 1
+        }
       ]
     },
     {
       "name": "a zero weight is not scored and does not count towards coverage",
       "metrics": [
-        { "key": "a", "direction": "higher_better" },
-        { "key": "b", "direction": "higher_better" }
+        {
+          "key": "a",
+          "direction": "higher_better"
+        },
+        {
+          "key": "b",
+          "direction": "higher_better"
+        }
       ],
-      "values": { "a": { "00001": 9, "00002": 1 } },
-      "weights": { "a": 1, "b": 0 },
+      "values": {
+        "a": {
+          "00001": 9,
+          "00002": 1
+        }
+      },
+      "weights": {
+        "a": 1,
+        "b": 0
+      },
       "min_coverage": 0.8,
       "expect": [
-        { "fips": "00001", "score": 100, "cover": 1 },
-        { "fips": "00002", "score": 0, "cover": 1 }
+        {
+          "fips": "00001",
+          "score": 100,
+          "cover": 1
+        },
+        {
+          "fips": "00002",
+          "score": 0,
+          "cover": 1
+        }
       ]
     },
     {
       "name": "a negative weight is ignored, since direction already carries the sign",
       "metrics": [
-        { "key": "a", "direction": "higher_better" },
-        { "key": "b", "direction": "higher_better" }
+        {
+          "key": "a",
+          "direction": "higher_better"
+        },
+        {
+          "key": "b",
+          "direction": "higher_better"
+        }
       ],
       "values": {
-        "a": { "00001": 9, "00002": 1 },
-        "b": { "00001": 1, "00002": 9 }
+        "a": {
+          "00001": 9,
+          "00002": 1
+        },
+        "b": {
+          "00001": 1,
+          "00002": 9
+        }
       },
-      "weights": { "a": 1, "b": -1 },
+      "weights": {
+        "a": 1,
+        "b": -1
+      },
       "min_coverage": 0,
       "expect": [
-        { "fips": "00001", "score": 100, "cover": 1 },
-        { "fips": "00002", "score": 0, "cover": 1 }
+        {
+          "fips": "00001",
+          "score": 100,
+          "cover": 1
+        },
+        {
+          "fips": "00002",
+          "score": 0,
+          "cover": 1
+        }
       ]
     },
     {
       "name": "a metric nobody has data for leaves every row at zero coverage",
-      "metrics": [{ "key": "a", "direction": "higher_better" }],
-      "values": { "a": {} },
-      "weights": { "a": 1 },
+      "metrics": [
+        {
+          "key": "a",
+          "direction": "higher_better"
+        }
+      ],
+      "values": {
+        "a": {}
+      },
+      "weights": {
+        "a": 1
+      },
       "min_coverage": 0,
       "expect": [
-        { "fips": "00001", "score": 0, "cover": 0 },
-        { "fips": "00002", "score": 0, "cover": 0 }
+        {
+          "fips": "00001",
+          "score": 0,
+          "cover": 0
+        },
+        {
+          "fips": "00002",
+          "score": 0,
+          "cover": 0
+        }
       ],
       "places": ["00001", "00002"]
     },
     {
       "name": "negative raw values rank like any other number",
-      "metrics": [{ "key": "a", "direction": "higher_better" }],
-      "values": { "a": { "00001": -10, "00002": 0, "00003": 10 } },
-      "weights": { "a": 1 },
+      "metrics": [
+        {
+          "key": "a",
+          "direction": "higher_better"
+        }
+      ],
+      "values": {
+        "a": {
+          "00001": -10,
+          "00002": 0,
+          "00003": 10
+        }
+      },
+      "weights": {
+        "a": 1
+      },
       "min_coverage": 0,
       "expect": [
-        { "fips": "00003", "score": 100, "cover": 1 },
-        { "fips": "00002", "score": 50, "cover": 1 },
-        { "fips": "00001", "score": 0, "cover": 1 }
+        {
+          "fips": "00003",
+          "score": 100,
+          "cover": 1
+        },
+        {
+          "fips": "00002",
+          "score": 50,
+          "cover": 1
+        },
+        {
+          "fips": "00001",
+          "score": 0,
+          "cover": 1
+        }
       ]
     },
     {
       "name": "every place identical means every place ties at the top",
-      "metrics": [{ "key": "a", "direction": "lower_better" }],
-      "values": { "a": { "00001": 4, "00002": 4, "00003": 4 } },
-      "weights": { "a": 1 },
+      "metrics": [
+        {
+          "key": "a",
+          "direction": "lower_better"
+        }
+      ],
+      "values": {
+        "a": {
+          "00001": 4,
+          "00002": 4,
+          "00003": 4
+        }
+      },
+      "weights": {
+        "a": 1
+      },
       "min_coverage": 0,
       "expect": [
-        { "fips": "00001", "score": 50, "cover": 1 },
-        { "fips": "00002", "score": 50, "cover": 1 },
-        { "fips": "00003", "score": 50, "cover": 1 }
+        {
+          "fips": "00001",
+          "score": 50,
+          "cover": 1
+        },
+        {
+          "fips": "00002",
+          "score": 50,
+          "cover": 1
+        },
+        {
+          "fips": "00003",
+          "score": 50,
+          "cover": 1
+        }
+      ]
+    },
+    {
+      "name": "a profile requirement removes a place on both sides",
+      "metrics": [
+        {
+          "key": "a",
+          "direction": "higher_better"
+        }
+      ],
+      "values": {
+        "a": {
+          "00001": 1,
+          "00002": 5,
+          "00003": 9
+        }
+      },
+      "weights": {
+        "a": 1
+      },
+      "min_coverage": 0,
+      "criteria": [
+        {
+          "field": "population",
+          "comparison": "min",
+          "value": 50
+        }
+      ],
+      "populations": {
+        "00001": 10,
+        "00002": 100,
+        "00003": 100
+      },
+      "expect": [
+        {
+          "fips": "00003",
+          "score": 100,
+          "cover": 1
+        },
+        {
+          "fips": "00002",
+          "score": 0,
+          "cover": 1
+        }
+      ]
+    },
+    {
+      "name": "removing a place re-spreads the survivors, so every score moves",
+      "metrics": [
+        {
+          "key": "a",
+          "direction": "higher_better"
+        }
+      ],
+      "values": {
+        "a": {
+          "00001": 1,
+          "00002": 5,
+          "00003": 9
+        }
+      },
+      "weights": {
+        "a": 1
+      },
+      "min_coverage": 0,
+      "criteria": [
+        {
+          "field": "a",
+          "comparison": "min",
+          "value": 5
+        }
+      ],
+      "expect": [
+        {
+          "fips": "00003",
+          "score": 100,
+          "cover": 1
+        },
+        {
+          "fips": "00002",
+          "score": 0,
+          "cover": 1
+        }
+      ]
+    },
+    {
+      "name": "a requirement on a metric a place has no value for removes it",
+      "metrics": [
+        {
+          "key": "a",
+          "direction": "higher_better"
+        }
+      ],
+      "values": {
+        "a": {
+          "00001": 9
+        }
+      },
+      "weights": {
+        "a": 1
+      },
+      "min_coverage": 0,
+      "criteria": [
+        {
+          "field": "a",
+          "comparison": "max",
+          "value": 100
+        }
+      ],
+      "places": ["00001", "00002"],
+      "expect": [
+        {
+          "fips": "00001",
+          "score": 50,
+          "cover": 1
+        }
+      ]
+    },
+    {
+      "name": "not_in excludes by state on both sides",
+      "metrics": [
+        {
+          "key": "a",
+          "direction": "higher_better"
+        }
+      ],
+      "values": {
+        "a": {
+          "00001": 1,
+          "00002": 9
+        }
+      },
+      "weights": {
+        "a": 1
+      },
+      "min_coverage": 0,
+      "criteria": [
+        {
+          "field": "state",
+          "comparison": "not_in",
+          "value": ["Excluded"]
+        }
+      ],
+      "states": {
+        "00001": "Excluded",
+        "00002": "Kept"
+      },
+      "expect": [
+        {
+          "fips": "00002",
+          "score": 50,
+          "cover": 1
+        }
+      ]
+    },
+    {
+      "name": "minmax keeps the spacing that percentile discards",
+      "metrics": [
+        {
+          "key": "a",
+          "direction": "higher_better"
+        }
+      ],
+      "values": {
+        "a": {
+          "00001": 0,
+          "00002": 1,
+          "00003": 100
+        }
+      },
+      "weights": {
+        "a": 1
+      },
+      "min_coverage": 0,
+      "normalization": "minmax",
+      "expect": [
+        {
+          "fips": "00003",
+          "score": 100,
+          "cover": 1
+        },
+        {
+          "fips": "00002",
+          "score": 1,
+          "cover": 1
+        },
+        {
+          "fips": "00001",
+          "score": 0,
+          "cover": 1
+        }
+      ]
+    },
+    {
+      "name": "minmax over a flat field is the midpoint, as percentile is",
+      "metrics": [
+        {
+          "key": "a",
+          "direction": "lower_better"
+        }
+      ],
+      "values": {
+        "a": {
+          "00001": 4,
+          "00002": 4
+        }
+      },
+      "weights": {
+        "a": 1
+      },
+      "min_coverage": 0,
+      "normalization": "minmax",
+      "expect": [
+        {
+          "fips": "00001",
+          "score": 50,
+          "cover": 1
+        },
+        {
+          "fips": "00002",
+          "score": 50,
+          "cover": 1
+        }
       ]
     }
   ]

@@ -82,7 +82,11 @@ A written adapter is for sources needing real logic, and owes tests.
   or `[]` and is not caught there, so each source guards its own write.
 - **Scoring exists twice** — Python in `scoring/`, JavaScript in
   `artifact/template.html`, because the page re-ranks with no server to ask. Change
-  both together. `tests/conformance/vectors.json` is executed by both and fails if
+  both together. Anything the _profile_ decides — weights, requirements,
+  normalisation, coverage — belongs inside the kernel markers, so the vectors run
+  the path the page runs: the page ignored `criteria` for a while precisely
+  because it was applied outside them.
+  `tests/conformance/vectors.json` is executed by both and fails if
   they disagree, and the JavaScript half lives between the `scoring kernel:
 BEGIN/END` markers in the template and must stay pure — no globals, no DOM — or
   it can no longer be lifted out and run.

@@ -58,7 +58,7 @@ try {
 
 // eslint-disable-next-line no-new-func
 const kernel = new Function(
-    `${page.slice(from, to)}\nreturn { percentile, normalizeAll, scoreAll };`,
+    `${page.slice(from, to)}\nreturn { percentile, minmax, normalizeAll, scoreAll, meetsCriteria };`,
 )();
 
 const { cases } = JSON.parse(
@@ -74,13 +74,20 @@ for (const c of cases) {
         [
             ...new Set(Object.values(c.values).flatMap((v) => Object.keys(v))),
         ].sort();
-    const places = fips.map((f) => ({ fips: f }));
+    const places = fips.map((f) => ({
+        fips: f,
+        population: (c.populations || {})[f] ?? 100000,
+        state: (c.states || {})[f] ?? "Testland",
+    }));
     const { ranked } = kernel.scoreAll(
         places,
         c.values,
         c.metrics,
         c.weights,
         c.min_coverage,
+        c.normalization || "percentile",
+        c.criteria || [],
+        null,
     );
 
     const got = ranked.map((r) => ({
