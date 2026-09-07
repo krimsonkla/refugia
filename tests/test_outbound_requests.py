@@ -11,9 +11,10 @@ from pathlib import Path
 import pytest
 
 SRC = Path(__file__).resolve().parents[1] / "src" / "refugia"
-# The planner talks to an Ollama on the reader's own machine, not to a public
-# endpoint that has to tolerate every fork of this project.
-EXEMPT = {"ask/planner.py"}
+# Nothing is exempt. The planner was, on the grounds that it talks to an Ollama on
+# the reader's own machine -- but `--host` makes that any machine, and a request
+# that identifies nobody is exactly as unwelcome there.
+EXEMPT: set[str] = set()
 
 
 VERBS = {"get", "post", "put", "patch", "delete", "head", "options", "request", "stream", "send"}

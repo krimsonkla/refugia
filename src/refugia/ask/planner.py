@@ -4,6 +4,8 @@ import json
 
 import httpx
 
+from refugia import USER_AGENT
+
 from refugia.metrics.metric import Metric
 from refugia.scoring.profile import Profile
 from refugia.scoring.scored_place import ScoredPlace
@@ -121,7 +123,12 @@ class QueryPlanner:
         if expect_json:
             body["format"] = "json"
         try:
-            response = httpx.post(f"{self._host}/api/chat", json=body, timeout=self._timeout)
+            response = httpx.post(
+                f"{self._host}/api/chat",
+                json=body,
+                headers={"User-Agent": USER_AGENT},
+                timeout=self._timeout,
+            )
             response.raise_for_status()
         except httpx.HTTPError as error:
             raise RuntimeError(

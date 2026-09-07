@@ -2809,8 +2809,19 @@
     '<a href="https://github.com/topojson/us-atlas" target="_blank" rel="noopener noreferrer">us-atlas</a>' +
     " — Copyright Michael Bostock, ISC licence — itself a redistribution of the Census cartographic boundary files.";
 
-  const CITATIONS = [...new Set(M.map((m) => m.citation).filter(Boolean))]
-    .map(esc)
+  /* Each citation links its own terms where the metric declares one, so a reader
+    who wants to know what they may do with the page can get there from the page
+    rather than from a file in the repository they do not have. */
+  const CITATIONS = [
+    ...new Map(
+      M.filter((m) => m.citation).map((m) => [m.citation, m.terms_url || ""]),
+    ),
+  ]
+    .map(([citation, terms]) =>
+      terms
+        ? `${esc(citation)} <a href="${esc(terms)}" target="_blank" rel="noopener noreferrer">Terms</a>.`
+        : esc(citation),
+    )
     .join(" ");
 
   /* Built when, from data how old. Both, because fetch is cache-first: a page

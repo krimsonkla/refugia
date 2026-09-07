@@ -111,7 +111,7 @@ paragraph explaining why there was no such test outlived the test.
 ## 6. `findings.jsonl`
 
 **146 rows across 2 cycles and 8 lenses.**
-`24 open, 106 fixed, 3 parked, 13 declined.`
+`16 open, 114 fixed, 3 parked, 13 declined.`
 
 - `cyc-release-audit` — the first public-release audit. Seven lenses plus a
   completeness critic, so eight `lens` values appear.
@@ -158,7 +158,7 @@ jq -c 'select(.batch == "scoring-parity" and .status == "open") | [.id, .effort,
   docs/data/findings.jsonl
 ```
 
-### `upstream-resilience` — 1 row (1 nice-to-have)
+### `upstream-resilience` — 1 rows (1 important)
 
 What happens when a source misbehaves. `fetch` survives one that raises and not one
 that returns empty; a saved dataset looks identical either way; `publish` has no
@@ -171,7 +171,7 @@ jq -c 'select(.batch == "upstream-resilience" and .status == "open") | [.id, .ef
   docs/data/findings.jsonl
 ```
 
-### `prose-guard` — 0 rows (done)
+### `prose-guard` — 1 rows (1 nice-to-have)
 
 Widen `tests/test_guide.py` first — it reads only the guide and the README, so every
 document the audit found wrong is outside it — then fix whatever turns red. Ordered
@@ -184,7 +184,7 @@ jq -c 'select(.batch == "prose-guard" and .status == "open") | [.id, .effort, .t
   docs/data/findings.jsonl
 ```
 
-### `attribution` — 5 rows (5 nice-to-have)
+### `attribution` — done
 
 The citation machinery works for the case it was built for and not for its edges: a
 dataset saved before the field existed publishes a page with no citations, nothing
@@ -197,7 +197,7 @@ jq -c 'select(.batch == "attribution" and .status == "open") | [.id, .effort, .t
   docs/data/findings.jsonl
 ```
 
-### `tests-that-bite` — 1 row (1 nice-to-have)
+### `tests-that-bite` — 1 rows (1 nice-to-have)
 
 Tests that cannot fail. A syntax error anywhere in the page passes the whole suite,
 the Throttle's lock can be deleted with nothing noticing, one spec assertion is a
@@ -209,7 +209,7 @@ jq -c 'select(.batch == "tests-that-bite" and .status == "open") | [.id, .effort
   docs/data/findings.jsonl
 ```
 
-### `packaging` — 4 rows (4 nice-to-have)
+### `packaging` — done
 
 The wheel is verified by hand and by nothing else, CI exercises one Python against a
 README that promises three, and an install-from-wheel user has no example profile

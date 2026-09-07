@@ -34,9 +34,9 @@ class Dataset:
         path.write_text(json.dumps(self.to_dict(), indent=1))
 
     @classmethod
-    def load(cls, path: Path) -> "Dataset":
+    def load(cls, path: Path, *, registry=None) -> "Dataset":
         """Read a dataset previously saved by `save`."""
-        return cls.from_dict(json.loads(path.read_text()))
+        return cls.from_dict(json.loads(path.read_text()), registry=registry)
 
     def to_dict(self) -> dict:
         """Plain-mapping form, used for both the file and the artifact payload."""
@@ -75,17 +75,32 @@ class Dataset:
         }
 
     @classmethod
-    def from_dict(cls, payload: dict) -> "Dataset":
-        """Rebuild from the mapping produced by `to_dict`."""
+    def from_dict(cls, payload: dict, *, registry=None) -> "Dataset":
+        """Rebuild from the mapping produced by `to_dict`.
+
+        `registry` re-binds a metric's descriptive fields from the code. A dataset
+        saved before `citation` existed carries none, and would otherwise publish a
+        page with no attribution at all -- provenance was made optional on load and
+        attribution was not, which is the same mistake in the other direction. The
+        values always come from the file; only what a column *means* comes from the
+        registry.
+        """
         return cls(
             places=tuple(cls._place(p) for p in payload["places"]),
-            metrics=tuple(Metric(**m) for m in payload["metrics"]),
+            metrics=tuple(cls._metric(m, registry) for m in payload["metrics"]),
             values={k: dict(v) for k, v in payload["values"].items()},
             # Absent in any dataset saved before provenance existed, and a stale
             # file should still load rather than becoming unreadable.
             built_at=payload.get("built_at", ""),
             oldest_response=payload.get("oldest_response", ""),
         )
+
+    @staticmethod
+    def _metric(row: dict, registry) -> Metric:
+        """One metric, preferring the registry's declaration where there is one."""
+        if registry is not None and row["key"] in registry:
+            return registry.metric(row["key"])
+        return Metric(**row)
 
     @staticmethod
     def _place(row: dict) -> Place:

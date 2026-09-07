@@ -137,6 +137,24 @@ Say **why** in the body, not what — the diff already carries the what. The mos
 useful commit message here is the one that explains the constraint you were under,
 because the next person to touch that code will be under it too.
 
+## Before publishing to a package index
+
+Nothing here blocks the repository being public; this is the list for the day
+somebody runs `uv publish`, because a wheel is read in a different place than a
+repository is.
+
+- **Rewrite the README's relative links.** The screenshots and every link into
+  `docs/guide/` are repository-relative, so on a package page they are dead. They
+  need absolute `https://github.com/krimsonkla/refugia/blob/main/...` URLs.
+- **Ship an example profile inside the package.** `profiles/example.json` sits
+  beside the project, so an installed copy has nothing to pass to `--profile` and
+  the quickstart's first real command fails. It belongs under `src/refugia/`,
+  resolved the way `Workspace.packaged_spec_dir` resolves the specs.
+- **Re-cut the tag at the commit you publish.** A tag behind HEAD publishes code
+  that is not the code the tag names.
+- Check the wheel still carries the specs and the page template. CI does this on
+  every push, so it should already be true.
+
 ## Do not commit
 
 Your own profile. `profiles/*.json` is gitignored with `profiles/example.json`

@@ -23,6 +23,13 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The README promises 3.12 or newer, and `filterwarnings = ["error"]` means a
+        # deprecation in a newer interpreter is a failure rather than a notice. Both
+        # ends of the promise get exercised.
+        python: ["3.12", "3.14"]
     steps:
       - uses: actions/checkout@v7
 
@@ -31,7 +38,7 @@ jobs:
           enable-cache: true
 
       - name: Install Python
-        run: uv python install 3.12
+        run: uv python install ${{ matrix.python }}
 
       # The conformance check runs the published page's own JavaScript, so node is
       # a hard requirement of the suite rather than a convenience of the image.
@@ -42,15 +49,18 @@ jobs:
       # --locked fails if pyproject.toml has moved on without a relock, which is
       # the one dependency mistake that reproduces on every machine but this one.
       - name: Sync
-        run: uv sync --all-groups --locked
+        run: uv sync --all-groups --locked --python ${{ matrix.python }}
 
       - name: Lint
+        if: matrix.python == '3.12'
         run: uv run ruff check .
 
       - name: Format
+        if: matrix.python == '3.12'
         run: uv run black --check .
 
       - name: Static analysis
+        if: matrix.python == '3.12'
         run: uv run pylint src/refugia
 
       # The suite is offline by construction: an autouse fixture makes httpx raise,
@@ -60,3 +70,18 @@ jobs:
       # it to make a red build green.
       - name: Test
         run: uv run pytest --cov=refugia --cov-report=term-missing --cov-fail-under=60
+
+      # The only step that sees the artifact. Every test above imports from src/
+      # because pytest puts it on the path, so none of them can observe a packaging
+      # regression -- the specs and the page template live inside the package and
+      # are carried by configuration, not by code.
+      - name: Install the wheel and run it from somewhere else
+        if: matrix.python == '3.12'
+        run: |
+          uv build --wheel -o dist
+          python -m venv /tmp/wheelcheck
+          /tmp/wheelcheck/bin/pip install --quiet dist/*.whl
+          cd /tmp
+          /tmp/wheelcheck/bin/refugia metrics | tee /tmp/metrics.txt
+          grep -q '21 metrics' /tmp/metrics.txt
+          grep -q 'wildfire_risk' /tmp/metrics.txt

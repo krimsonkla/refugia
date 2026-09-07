@@ -89,3 +89,22 @@ def test_the_oldest_cache_entry_is_the_one_reported(tmp_path):
     assert old is not None
     os.utime(old, (1_600_000_000, 1_600_000_000))  # 2020-09-13
     assert cache.oldest_entry() == "2020-09-13"
+
+
+def test_a_dataset_saved_before_citations_regains_them_from_the_registry():
+    """Provenance was made optional on load; attribution was left to rot."""
+
+    class _Registry:
+        def __contains__(self, key):
+            return key == "a"
+
+        def metric(self, key):
+            return _metric(citation="Cite me thus.", terms_url="https://example.invalid/t")
+
+    stale = _dataset().to_dict()
+    del stale["metrics"][0]["citation"]
+    del stale["metrics"][0]["terms_url"]
+    rebuilt = Dataset.from_dict(stale, registry=_Registry())
+    assert rebuilt.metrics[0].citation == "Cite me thus."
+    # And the values still come from the file, not from anywhere else.
+    assert rebuilt.values == {"a": {"00001": 1.0}}

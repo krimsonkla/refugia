@@ -101,7 +101,9 @@ def _load_dataset(workspace: Workspace) -> Dataset:
             fg="red",
         )
         raise typer.Exit(code=1)
-    return Dataset.load(workspace.dataset_path)
+    # The registry re-supplies what a column means, so a dataset saved before a
+    # descriptive field existed still publishes with it.
+    return Dataset.load(workspace.dataset_path, registry=workspace.build_registry())
 
 
 def _report_failures(failures) -> None:

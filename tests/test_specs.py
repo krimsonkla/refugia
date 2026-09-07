@@ -101,3 +101,33 @@ def test_a_user_can_add_a_spec_beside_the_project(tmp_path):
     keys = [m.key for m in Workspace(tmp_path).build_registry().metrics]
     assert "extra" in keys
     assert len(keys) == 22
+
+
+# The publishers whose terms this project has read and found to require attribution.
+# A source under one of these that arrives without a citation is the failure mode:
+# the page builds its credits from the metrics, so a missing one is silently absent
+# rather than visibly wrong.
+OWES_ATTRIBUTION = ("countyhealthrankings.org", "zillow")
+
+
+@pytest.mark.parametrize("spec", SPECS, ids=[s.stem for s in SPECS])
+def test_a_spec_from_a_publisher_that_requires_attribution_carries_it(spec):
+    payload = json.loads(spec.read_text(encoding="utf-8"))
+    url = payload.get("url", "").lower()
+    if any(host in url for host in OWES_ATTRIBUTION):
+        assert payload.get("citation"), (
+            f"{spec.name} draws on a publisher whose terms require attribution and "
+            "declares no citation; the page would credit it nowhere"
+        )
+
+
+def test_every_adapter_metric_from_such_a_publisher_carries_one():
+    """Adapters are not specs, and the same rule has to reach them."""
+    registry = Workspace(ROOT).build_registry()
+    missing = [
+        m.key
+        for m in registry.metrics
+        if any(host in m.source.lower() for host in ("zillow", "county health rankings"))
+        and not m.citation
+    ]
+    assert not missing, f"attribution-owing metrics with no citation: {missing}"
