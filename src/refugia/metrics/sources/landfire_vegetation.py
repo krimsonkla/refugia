@@ -11,8 +11,11 @@ from collections import Counter
 
 import httpx
 
+from refugia import USER_AGENT
+
 from refugia.metrics.metric import Metric
 from refugia.metrics.sources.sampling import Sampling
+from refugia.metrics.sources.throttle import Throttle
 from refugia.places.place import Place
 from refugia.store.cache import Cache
 
@@ -69,6 +72,9 @@ class LandfireVegetationSource:
     def __init__(self, cache: Cache, *, sampling: Sampling | None = None) -> None:
         self._cache = cache
         self._sampling = sampling or Sampling()
+        # Shared by every worker, so the limit is the source's and not each
+        # thread's -- see Throttle.
+        self._throttle = Throttle(self._sampling.min_interval)
         self._failures: list[tuple[str, str]] = []
         self._outside: list[tuple[str, str]] = []
         self._classes: dict[str, frozenset[int]] | None = None
@@ -229,8 +235,10 @@ class LandfireVegetationSource:
             "ymax": lat + lat_span,
             "spatialReference": {"wkid": 4326},
         }
+        self._throttle.wait()
         response = httpx.post(
             SERVICE,
+            headers={"User-Agent": USER_AGENT},
             data={
                 "geometry": json.dumps(geometry),
                 "geometryType": "esriGeometryEnvelope",

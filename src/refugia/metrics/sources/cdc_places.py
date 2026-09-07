@@ -4,6 +4,8 @@ import json
 
 import httpx
 
+from refugia import USER_AGENT
+
 from refugia.metrics.metric import Metric
 from refugia.places.place import Place
 from refugia.store.cache import Cache
@@ -103,6 +105,7 @@ class CdcPlacesSource:
         while True:
             response = httpx.get(
                 ENDPOINT,
+                headers={"User-Agent": USER_AGENT},
                 params={
                     "$select": "locationid,data_value",
                     "$where": (
@@ -125,5 +128,8 @@ class CdcPlacesSource:
             for r in rows
             if r.get("locationid") and r.get("data_value") not in (None, "")
         }
-        self._cache.write(cache_key, json.dumps(values).encode(), ".json")
+        # An empty mapping serialises to a perfectly valid `{}`, which the next
+        # run would read back as "this measure has no data anywhere".
+        if values:
+            self._cache.write(cache_key, json.dumps(values).encode(), ".json")
         return values

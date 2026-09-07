@@ -5,6 +5,8 @@ import json
 
 import httpx
 
+from refugia import USER_AGENT
+
 from refugia.metrics.sources.landfire_vegetation import LandfireVegetationSource
 from refugia.store.cache import Cache
 
@@ -102,7 +104,9 @@ class CityProfile:
             rows = json.loads(self._cache.read(key, ".json"))
         else:
             rows = self._download()
-            self._cache.write(key, json.dumps(rows).encode(), ".json")
+            # `[]` is valid JSON and reads back as "no city has any of this".
+            if rows:
+                self._cache.write(key, json.dumps(rows).encode(), ".json")
         wanted = set(geoids)
         out: dict[str, dict[str, float]] = {}
         for row in rows:
@@ -130,6 +134,7 @@ class CityProfile:
         while True:
             response = httpx.get(
                 PLACES_ENDPOINT,
+                headers={"User-Agent": USER_AGENT},
                 params={"$select": columns, "$limit": 20000, "$offset": offset},
                 timeout=180.0,
             )

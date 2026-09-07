@@ -5,6 +5,8 @@ from pathlib import Path
 
 import httpx
 
+from refugia import USER_AGENT
+
 
 class Cache:
     """Stores raw downloads so re-scoring never re-fetches.
@@ -34,8 +36,16 @@ class Cache:
         """Read a stored entry."""
         return self.path_for(key, suffix).read_bytes()
 
-    def write(self, key: str, payload: bytes, suffix: str = "") -> Path:
-        """Store an entry and return where it landed."""
+    def write(self, key: str, payload: bytes, suffix: str = "") -> Path | None:
+        """Store an entry and return where it landed, or None if there was nothing.
+
+        An empty payload is never stored. On disk it is indistinguishable from a
+        real answer, so caching one turns a transient failure into a permanent
+        wrong result that survives every later run -- and the runs that would have
+        corrected it never make the request.
+        """
+        if not payload:
+            return None
         target = self.path_for(key, suffix)
         target.write_bytes(payload)
         return target
@@ -53,7 +63,9 @@ class Cache:
         cache_key = key or url
         if not refresh and self.has(cache_key, suffix):
             return self.read(cache_key, suffix)
-        response = httpx.get(url, timeout=timeout, follow_redirects=True)
+        response = httpx.get(
+            url, timeout=timeout, follow_redirects=True, headers={"User-Agent": USER_AGENT}
+        )
         response.raise_for_status()
         self.write(cache_key, response.content, suffix)
         return response.content

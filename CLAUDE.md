@@ -74,9 +74,15 @@ A written adapter is for sources needing real logic, and owes tests.
   which is national and matches the crosswalk CSV. An error body arrives with
   HTTP 200, so `raise_for_status` never sees it; check for an `error` key.
 - **Never cache an empty result.** A cached failure is indistinguishable from data
-  and survives every later run. Empty sample sets are retried, not stored.
+  and survives every later run. `Cache.write` refuses an empty payload, which covers
+  the zero-byte case everywhere; an empty _parsed_ result serialises to a valid `{}`
+  or `[]` and is not caught there, so each source guards its own write.
 - **Scoring exists twice** — Python in `scoring/`, JavaScript in
   `artifact/template.html`. Change both together; nothing enforces their agreement.
+- **Every outbound request carries `USER_AGENT`** from `refugia/__init__.py`, and a
+  source that fans out over a worker pool takes a `Throttle` so the rate belongs to
+  the source rather than to each thread. `tests/test_outbound_requests.py` parses the
+  tree and fails on a request that identifies nobody.
 - **Coverage is the signal that matters** for a new source. A half-failing source
   returns plausible numbers for what it reached and silence for the rest; `fetch`
   flags anything under 75%.

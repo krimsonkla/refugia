@@ -7,6 +7,8 @@ import time
 
 import httpx
 
+from refugia import USER_AGENT
+
 from refugia.metrics.metric import Metric
 from refugia.places.place import Place
 from refugia.store.cache import Cache
@@ -180,11 +182,12 @@ class NasaPowerClimateSource:
             stored = json.loads(self._cache.read(key, ".json"))
             return {tuple(map(float, k.split(","))): v for k, v in stored.items()}
         points = self._request(parameter, lat, lon)
-        self._cache.write(
-            key,
-            json.dumps({f"{a},{b}": v for (a, b), v in points.items()}).encode(),
-            ".json",
-        )
+        if points:
+            self._cache.write(
+                key,
+                json.dumps({f"{a},{b}": v for (a, b), v in points.items()}).encode(),
+                ".json",
+            )
         return points
 
     def _request(self, parameter: str, lat: float, lon: float) -> dict[tuple[float, float], float]:
@@ -194,6 +197,7 @@ class NasaPowerClimateSource:
             try:
                 response = httpx.get(
                     ENDPOINT,
+                    headers={"User-Agent": USER_AGENT},
                     params={
                         "latitude-min": lat,
                         "latitude-max": lat + TILE,
