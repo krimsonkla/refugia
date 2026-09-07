@@ -65,9 +65,14 @@ USGS and USDA Forest Service ·
 Three metrics: `juniper_cover`, `sagebrush_cover`, `populus_cover`, sampled as
 land-cover fractions in a radius around each county's population-weighted centre.
 
-**Terms — inferred, not confirmed.** LANDFIRE is a federal interagency programme
-and its products are routinely treated as public domain, but this project has not
-checked that against a published statement. Treat it as unverified.
+**Terms — checked, and no licence is published.** LANDFIRE's data and citation
+pages were read on 2026-09-07. They give a citation model — author, year, title,
+edition, publisher, access date and URL — and a disclaimer that it is the user's
+responsibility to understand a product's assumptions and limitations, but they make
+no statement about copyright, public domain status or redistribution. It is a
+federal interagency programme and its products are routinely treated as public
+domain; that remains an inference, now a checked one, rather than something
+LANDFIRE says.
 
 LF2025 is a partial release: it returns NoData across the eastern US. LF2024 is
 national and is what the code uses.

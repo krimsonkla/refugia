@@ -12,6 +12,22 @@ dependencies = [
     "openpyxl>=3.1",
 ]
 
+authors = [{ name = "Jason Risch" }]
+keywords = ["counties", "relocation", "allergens", "census", "data"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: GIS",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+
+[project.urls]
+Homepage = "https://github.com/krimsonkla/refugia"
+Source = "https://github.com/krimsonkla/refugia"
+Issues = "https://github.com/krimsonkla/refugia/issues"
+
 [project.scripts]
 refugia = "refugia.cli:app"
 
@@ -33,8 +49,16 @@ packages = ["src/refugia"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=refugia --cov-report=term-missing"
 pythonpath = ["src"]
+# Coverage is not in addopts: with it there, running one file reports a
+# project-wide total measured from that file alone, which reads as a collapse and
+# is only an artefact. CI passes the flags explicitly, so the number is produced
+# exactly once, over the whole suite.
+filterwarnings = ["error"]
+
+[tool.coverage.run]
+source = ["refugia"]
+branch = true
 
 [tool.ruff]
 line-length = 100

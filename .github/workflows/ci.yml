@@ -41,7 +41,10 @@ jobs:
       - name: Static analysis
         run: uv run pylint src/refugia
 
-      # The suite is offline by construction: the tests that use a URL pre-seed the
-      # cache, so nothing here reaches the network or needs a key.
+      # The suite is offline by construction: an autouse fixture makes httpx raise,
+      # so a test that tries to reach the network fails here rather than hanging.
+      # Coverage is measured once, over the whole suite, and the floor is a ratchet
+      # rather than a target — raise it when it is comfortably cleared, never lower
+      # it to make a red build green.
       - name: Test
-        run: uv run pytest
+        run: uv run pytest --cov=refugia --cov-report=term-missing --cov-fail-under=54

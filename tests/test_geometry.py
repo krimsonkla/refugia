@@ -55,4 +55,4 @@ def test_non_conus_states_are_off_the_map():
     """Alaska and Hawaii have no CONUS vegetation layer, so they cannot be coloured."""
     assert "02" in OFF_MAP_STATES
     assert "15" in OFF_MAP_STATES
-    assert "41" not in OFF_MAP_STATES
+    assert "06" not in OFF_MAP_STATES

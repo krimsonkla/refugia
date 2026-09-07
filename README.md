@@ -6,6 +6,12 @@ wellbeing, hazard and cost.
 _Refugia_ is the ecological term for the pockets where a species persists through
 conditions that eliminated it everywhere else. That is the search.
 
+A personal project, published because it may be useful. US counties only, and the
+map is CONUS-only because the vegetation layer is. Pre-1.0: the profile format and
+the saved dataset are both things you might depend on, and neither is frozen —
+`CHANGELOG.md` records what moves. Issues and pull requests are welcome,
+`CONTRIBUTING.md` says how, and there is no support promise.
+
 ## The answer is a page, not a table
 
 `refugia publish` writes one self-contained HTML file. The ranking is not baked
@@ -399,6 +405,12 @@ licenses its content for personal and non-profit use only and requires a specifi
 citation; commercial use needs their prior written consent. **Zillow** requires
 clear attribution. Both citations are in the footer of every page `publish`
 writes, along with the ISC notice for the county outlines.
+
+One thing the page does that a self-contained file might not lead you to expect:
+it loads its typefaces from Google Fonts, so every viewer's browser contacts
+`fonts.googleapis.com`. Nothing about the viewer or the data is sent — it is a
+request for a font file — but it is a third party, and offline the page falls back
+to system faces and works unchanged.
 
 That footer matters because a published page embeds the values for every county it
 ranks. Running the tool is not redistribution; sharing the page is, and the same
