@@ -44,16 +44,41 @@ Rules:
   when it is the stable head of a heading, so `#use` matches `## Use`. A prefix
   survives a heading being reworded; a full slug does not.
 
-## 2. Why `declined` rows are here
+## 2. Read this before trusting the rows
 
-Twelve rows are `declined` — checked and found clean, or raised by an audit lens
-and then refuted by its verifier. They are the most re-raisable kind of finding,
-which is exactly why they are recorded with their evidence: `fnd-047` says the
-cachix cache is publicly readable, `fnd-048` says the tracked `.claude` symlink
-does not expose a permissions blob, `fnd-049` says a fresh clone runs the suite
-in 0.27s off `uv.lock`. Each cost real verification. None should cost it twice.
+**3 blockers are open.** fnd-003, fnd-067, fnd-068 — the
+pre-rewrite git history is still served by GitHub, so the personal profile it was
+rewritten to remove is fetchable today. Nothing else in this file matters until
+that is done.
 
-## 3. Severity and release gate
+That statement exists here because of how this file failed once. After the first
+cycle it recorded four blockers, all fixed, and two open rows, both cosmetic. A
+reader running §7's own recommended query would have concluded the repository was
+ready. A second cycle then found a blocker and sixteen important items, none of
+which existed as rows.
+
+The mechanism is worth naming, because the rule that let it happen is still in §1:
+**`evidence` is required to close a row, and that checks presence, never accuracy.**
+Every one of the first cycle's 48 closures satisfied it, and the second cycle
+contradicted the content of ten. Those ten now carry a correction in `notes` and a
+`related` link to the row that disputed them.
+
+So: `verified_by` says who established a row, as distinct from who would fix it. A
+row reading `self (the change's author)` is a claim by the person who made the
+change. A row reading `cyc-release-audit-2 adversarial verifier` was found by one
+agent and reproduced by a second before it was written down. Neither is proof, and
+the difference is the most useful thing on the row.
+
+## 3. Why `declined` rows are here
+
+13 declined rows — checked and found clean, or raised by a lens and
+then refuted by its verifier. They are the most re-raisable kind of finding, which
+is exactly why they are kept with their evidence rather than dropped: `fnd-047`
+says the cachix cache is publicly readable, `fnd-049` says a fresh clone runs the
+suite off `uv.lock`. Each cost real verification. None should cost it twice — and
+note that the second cycle amended three of them, so declined is not immune either.
+
+## 4. Severity and release gate
 
 `severity` is the project's own scale and says how bad the defect is:
 
@@ -67,7 +92,7 @@ is `P1` but a `blocker`, and the unescaped `innerHTML` sites are `P1` but only
 `important`, because no shipped path reaches them until the first outside spec
 PR merges.
 
-## 4. Adopted from `recension`, and what is not here
+## 5. Adopted from `recension`, and what is not here
 
 Adopted: the envelope, permanent ids, the closed status vocabulary, the
 evidence-to-close rule, `refs`-as-section-anchor, append-and-amend.
@@ -79,17 +104,23 @@ these rules are convention rather than enforcement; and there is no
 lookup data. Add the integrity test before adding a second stream — a rule that
 nothing checks is a rule that drifts.
 
-## 5. `findings.jsonl`
+## 6. `findings.jsonl`
 
-62 rows from `cyc-release-audit`, the public-release readiness audit of
-2026-09-07. Seven lenses found; each lens's findings were then adversarially
-verified against the repo by a second pass, which corrected severities, merged
-duplicates and refuted six. `lens` records which one raised the row:
+**145 rows across 2 cycles and 8 lenses.**
+`82 open, 47 fixed, 3 parked, 13 declined.`
 
-`personal-data` · `tests` · `user-docs` · `contributor-docs` ·
-`reproducibility` · `data-licensing` · `security-quality` · `critique`
+- `cyc-release-audit` — the first public-release audit. Seven lenses plus a
+  completeness critic, so eight `lens` values appear.
+- `cyc-release-audit-2` — a re-audit over the same lenses, told to treat every
+  `fixed` row as a claim by whoever made the change and to verify it. Its rows carry
+  a `finding_kind`: `fix-overstated` where a closure did not hold, `new-defect`
+  where the intervening work introduced something, `still-open` where nothing had
+  been claimed.
 
-## 6. Working with the file
+Both cycles ran the same shape: each lens found, a second agent reproduced or
+refuted, then a critic looked for what no lens covered.
+
+## 7. Working with the file
 
 ```bash
 # What blocks the repo going public, in order
