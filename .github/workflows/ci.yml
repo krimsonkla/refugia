@@ -1,0 +1,47 @@
+name: CI
+
+# Deliberately the uv path rather than devenv. A pull request from a fork has no
+# credential for anything private, and running what an outside contributor runs
+# means CI fails when their path breaks rather than only when the maintainer's
+# does.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install Python
+        run: uv python install 3.12
+
+      # --locked fails if pyproject.toml has moved on without a relock, which is
+      # the one dependency mistake that reproduces on every machine but this one.
+      - name: Sync
+        run: uv sync --all-groups --locked
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Format
+        run: uv run black --check .
+
+      - name: Static analysis
+        run: uv run pylint src/refugia
+
+      # The suite is offline by construction: the tests that use a URL pre-seed the
+      # cache, so nothing here reaches the network or needs a key.
+      - name: Test
+        run: uv run pytest

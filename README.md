@@ -101,6 +101,59 @@ uv run refugia ask "cheapest places with almost no juniper"
 re-weighting costs nothing. Copy `profiles/example.json` and edit it — the weights
 are yours, and that is the point.
 
+### Every option
+
+Each command also takes `--root`, which defaults to the working directory and is
+where `data/`, `specs/` and `out/` are looked for.
+
+| Command   | Option        | Default                  | What it does                                 |
+| --------- | ------------- | ------------------------ | -------------------------------------------- |
+| `fetch`   | `--universe`  | `metro_micro`            | `metro_micro`, `metro` or `all`              |
+|           | `--radius-km` | `25.0`                   | Vegetation sampling radius around each place |
+|           | `--only`      | every metric             | Comma-separated keys to refresh              |
+| `rank`    | `--profile`   | required                 | The profile JSON                             |
+|           | `--top`       | `20`                     | How many rows to print                       |
+|           | `--explain`   | off                      | Each metric's contribution and the raw value |
+| `publish` | `--profile`   | required                 | The profile JSON                             |
+|           | `--out`       | `out/refugia.html`       | Where to write the page                      |
+| `ask`     | `--model`     | `qwen3:30b-a3b`          | Ollama model tag                             |
+|           | `--host`      | `http://localhost:11434` | Ollama host                                  |
+| `metrics` | —             | —                        | Prints the registered keys; needs no dataset |
+
+**The universe is not every county.** `metro_micro`, the default, is the 1,906
+counties inside a Census metro or micropolitan area — the places with a town in
+them. `all` is every US county, and `metro` narrows to metro areas only. It
+decides what gets downloaded, so changing it means fetching again.
+
+### What a fetch costs
+
+Roughly 90 MB across about 6,900 files under `data/cache/`, and a `data/dataset.json`
+of around 1.3 MB. Expect it to take a while: the vegetation layer alone is
+thousands of individual samples.
+
+It is cache-first and therefore resumable — interrupt it and run it again and it
+picks up where it stopped. `--only wildfire_risk` refreshes one metric without
+touching the rest, which is what you want when a single upstream has published a
+new year.
+
+## Reading the output
+
+**The score is a position, not a measurement.** `score` in the CLI, `FIT` on the
+page, is a 0–100 percentile rank _among the places that survived your filters_. So
+it is not comparable between two profiles, and not comparable to itself before and
+after you change a requirement — tightening a filter re-spreads everything that is
+left. A place at 71 is not "71% good"; it is near the top of this particular
+field.
+
+**`cover`** — `Data` on the page — is the share of your weighted metrics that this
+place actually has a value for. Anything below `min_coverage` never appears at
+all. A row at 90% is scored on nine tenths of what you asked for, and the missing
+tenth is not counted against it.
+
+`rank --explain` breaks a place's score into each metric's contribution alongside
+the raw value, which is the fastest way to see whether a result is real or an
+artefact of one metric doing all the work.
+
 ## Writing a profile
 
 A profile is the whole of your preference, as data. `profiles/example.json` is a
@@ -247,6 +300,20 @@ deterministic engine ranks, and the model then narrates rows it has been handed.
 never holds the numbers it would otherwise be tempted to invent. Default
 `qwen3:30b-a3b` — a mixture-of-experts model, so only ~3B parameters are active per
 token: 30B-class quality at speed in about 18GB. Override with `--model`.
+
+This is the one part of refugia with a prerequisite outside `uv sync`. It needs
+[Ollama](https://ollama.com) installed and running, and the model pulled:
+
+```bash
+ollama serve
+ollama pull qwen3:30b-a3b        # about 18 GB
+uv run refugia ask "cheapest places with almost no juniper"
+```
+
+Everything else — `fetch`, `rank`, `publish` — works without it. By default the
+model runs on your own machine against a dataset already on disk, so the question
+and the rows never leave it; `--host` will point at another Ollama instance if you
+want it to, and then they do.
 
 ## Known gaps
 
