@@ -1,10 +1,39 @@
 """Shared fixtures: a small hand-built world with known answers."""
 
+import httpx
 import pytest
 
 from refugia.metrics.metric import Metric
 from refugia.places.cbsa import Cbsa
 from refugia.places.place import Place
+
+
+@pytest.fixture(autouse=True)
+def _no_network(monkeypatch, request):
+    """Make a real request impossible, so the suite cannot quietly grow one.
+
+    Every test here is meant to be offline: the ones that use a URL pre-seed the
+    cache, stub the client, or never get as far as requesting. Nothing enforced
+    that, and the way it would break is a new adapter test that passes on the
+    author's machine and hangs in CI -- or worse, silently depends on an upstream
+    still being up.
+
+    A test that needs to stub `httpx` itself does so after this fixture runs, so
+    its own monkeypatch wins. Mark a test `allow_network` to opt out; nothing does
+    today, and adding the first one should be a deliberate act.
+    """
+    if "allow_network" in request.keywords:
+        return
+
+    def _refuse(*args, **kwargs):
+        raise AssertionError(
+            "this test tried to make a real request. Pre-seed the cache or stub "
+            "httpx: the suite has to run offline, on a plane, with no keys."
+        )
+
+    for name in ("get", "post", "request", "stream"):
+        monkeypatch.setattr(httpx, name, _refuse)
+    monkeypatch.setattr(httpx.Client, "send", _refuse)
 
 
 @pytest.fixture

@@ -1,6 +1,7 @@
 """The normaliser is where `direction` stops mattering to everything downstream."""
 
 from refugia.scoring.normalizer import Normalizer
+from refugia.statistics import percentile_rank
 
 
 def test_lower_better_inverts_the_scale(juniper):
@@ -42,3 +43,13 @@ def test_percentile_resists_an_outlier(juniper):
 def test_empty_input_yields_no_scores(parks):
     """A metric nobody has data for produces an empty mapping, not an error."""
     assert Normalizer().normalize(parks, {}) == {}
+
+
+def test_percentile_rank_of_nothing_is_nothing():
+    """A metric no surviving place has data for reaches the normaliser empty."""
+    assert percentile_rank({}) == {}
+
+
+def test_percentile_rank_of_one_value_is_the_midpoint():
+    """With nobody to compare against, neither end of the scale is honest."""
+    assert percentile_rank({"00001": 7.0}) == {"00001": 50.0}
