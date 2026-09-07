@@ -111,7 +111,7 @@ paragraph explaining why there was no such test outlived the test.
 ## 6. `findings.jsonl`
 
 **146 rows across 2 cycles and 8 lenses.**
-`11 open, 119 fixed, 3 parked, 13 declined.`
+`10 open, 120 fixed, 3 parked, 13 declined.`
 
 - `cyc-release-audit` — the first public-release audit. Seven lenses plus a
   completeness critic, so eight `lens` values appear.
@@ -144,14 +144,17 @@ jq -c 'select(.batch == "publish-the-repo" and .status == "open") | [.id, .effor
   docs/data/findings.jsonl
 ```
 
-### `scoring-parity` — 1 row (1 important)
+### `scoring-parity` — done
 
-The page and the CLI rank differently for the shipped example profile, because the
-page reads the whole profile now, the vectors cover requirements and normalisation,
-the mutants die, and direction inversion is one function. What is left is the last
-thing outside the markers: the maximum-home-value box is per-metric code in a page
-the guide says has none, so it is neither covered by the vectors nor honest in the
-docs.
+Closed. The page and the CLI ranked differently for the shipped example profile
+because the page read half the profile and filtered the other half outside the
+kernel markers, where nothing compared it to anything. Everything that removes a
+place is now a criterion handed to the kernel — the profile's own, the population
+floor, the state exclusion, the cut against home and the per-metric typed limit
+that replaced the hard-coded home-value box — so one path does the filtering and
+the vectors run it. Direction inversion is one function; the mutants die; the
+claim that the page contains no per-metric code is a test rather than a
+sentence.
 
 ```bash
 jq -c 'select(.batch == "scoring-parity" and .status == "open") | [.id, .effort, .title] | @tsv' -r \

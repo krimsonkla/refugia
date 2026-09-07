@@ -21,10 +21,15 @@ you write:
 - **a slider**, inside the group named by its `category`
 - **a table column**, labelled and formatted by its `label` and `unit`
 - **an entry in the map's metric selector**, so the choropleth can shade on it
+- **two requirement controls**, under its slider: rule out anywhere worse than home,
+  and a floor or ceiling you type, whichever way its `direction` points
 
-All three come from iterating the dataset's metric list. There is no per-metric code
+All of it comes from iterating the dataset's metric list. There is no per-metric code
 anywhere in `src/refugia/artifact/template.html`, and adding one should never
-require editing it.
+require editing it — `test_the_page_names_no_metric_of_its_own` fails the build if a
+registered metric's key ever appears in that file, so this is a check rather than a
+promise. It was a promise for a while, and untrue: a maximum home value had a box of
+its own, written into the page nine times over.
 
 Two things qualify that.
 

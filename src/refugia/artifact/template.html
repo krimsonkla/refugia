@@ -300,6 +300,22 @@
     font-family: var(--mono);
     font-size: 11.5px;
   }
+  .w label.cut.lim {
+    align-items: center;
+    cursor: default;
+  }
+  .w label.cut.lim input {
+    width: 12ch;
+    flex: none;
+    margin: 0;
+    padding: 3px 6px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: var(--surface-2);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 11.5px;
+  }
   .w .hint {
     grid-column: 1/-1;
     font-size: 11.5px;
@@ -1155,7 +1171,12 @@
   const PROFILE = D.profile || {};
   let weights = { ...D.profile.weights };
   const defaults = { ...D.profile.weights };
-  let filters = { population: 0, home_value: 0, states: [] };
+  let filters = { population: 0, states: [] };
+  /* An absolute bound the reader typed, per metric, in the metric's own unit.
+    A maximum home value used to be the only one of these and was written into
+    the page four times over, in a page that is otherwise built from the
+    registry alone. Every metric can carry one now, and none of them by name. */
+  let limits = {};
   const HOME = D.profile.home_fips || null;
   const HOME_PLACE = HOME ? PL.find((p) => p.fips === HOME) : null;
   const HOME_NAME = HOME_PLACE ? `${HOME_PLACE.name} County` : "";
@@ -1378,36 +1399,46 @@
   }
   /* ---- scoring kernel: END ------------------------------------------------ */
 
-  function cutsAllow(p) {
-    for (const key of Object.keys(cuts)) {
-      if (!cuts[key]) continue;
-      const metric = M.find((x) => x.key === key);
-      const homeValue = (V[key] || {})[HOME];
-      const value = (V[key] || {})[p.fips];
-      if (homeValue == null) continue;
-      // No data is not a pass: a place cannot be shown to clear a bar it has no
-      // measurement for.
-      if (value == null) return false;
-      // Equal passes, so home always clears its own cuts.
-      if (
-        metric.direction === "lower_better"
-          ? value > homeValue
-          : value < homeValue
-      )
-        return false;
-    }
-    return true;
+  /* Whether high or low is good belongs to the Normalizer, but a control that
+    offers to rule out "anywhere worse" has to know which way that points. This is
+    the one place outside normalisation that reads `direction`, and it reads it to
+    choose a comparison, never to change a number. */
+  function bound(metric) {
+    return metric.direction === "lower_better" ? "max" : "min";
   }
 
-  function passes(p) {
-    if (p.population < filters.population) return false;
-    if (filters.states.length && filters.states.includes(p.state)) return false;
-    if (!cutsAllow(p)) return false;
-    if (filters.home_value > 0) {
-      const hv = (V.home_value || {})[p.fips];
-      if (hv == null || hv > filters.home_value) return false;
+  /* Everything that removes a place, in the one form the kernel understands.
+    The page had five mechanisms -- the profile's own criteria, a population
+    floor, a state exclusion, a per-metric cut against home, and a hard-coded
+    maximum home value -- and only the first ran inside the markers. So only the
+    first was covered by the vectors, and only the first was guaranteed to agree
+    with the engine. A cut is a criterion whose value is home's own reading; a
+    limit is a criterion whose value the reader typed. */
+  function liveCriteria() {
+    const out = [...(PROFILE.criteria || [])];
+    if (filters.population > 0)
+      out.push({
+        field: "population",
+        comparison: "min",
+        value: filters.population,
+      });
+    if (filters.states.length)
+      out.push({
+        field: "state",
+        comparison: "not_in",
+        value: [...filters.states],
+      });
+    for (const m of M) {
+      const limit = limits[m.key];
+      if (limit != null && limit !== "")
+        out.push({ field: m.key, comparison: bound(m), value: +limit });
+      if (!cuts[m.key]) continue;
+      // Without a reading for home the cut has no threshold to be measured against.
+      const homeValue = HOME ? (V[m.key] || {})[HOME] : null;
+      if (homeValue != null)
+        out.push({ field: m.key, comparison: bound(m), value: homeValue });
     }
-    return true;
+    return out;
   }
 
   /* Where you live is a reference point, not a candidate. It has to be scored on
@@ -1415,18 +1446,17 @@
     than home silently removes the thing every comparison is made against. It is
     scored with the field and then taken back out of the ranking. */
   function compute() {
-    const passers = PL.filter(passes);
+    const criteria = liveCriteria();
     const homePlace = HOME ? PL.find((p) => p.fips === HOME) : null;
-    homeExcluded = !!homePlace && !passers.some((p) => p.fips === HOME);
-    const live = homeExcluded ? [...passers, homePlace] : passers;
+    homeExcluded = !!homePlace && !meetsCriteria(homePlace, V, criteria);
     const { norm, ranked } = scoreAll(
-      live,
+      PL,
       V,
       M,
       weights,
       minCoverage,
       PROFILE.normalization,
-      PROFILE.criteria,
+      criteria,
       HOME,
     );
     lastNorm = norm;
@@ -1496,8 +1526,69 @@
     );
   }
 
+  /* A step of one across a range of a million is an arrow that does nothing, so
+    it is read off the spread of the data rather than written per metric. Read off
+    the middle eighty per cent rather than the full range: a handful of counties
+    an order of magnitude above the rest would otherwise set the step for
+    everyone, which is what the full range did to home value. */
+  function limitStep(m) {
+    const vals = Object.values(V[m.key] || {})
+      .filter((v) => v != null)
+      .sort((a, b) => a - b);
+    if (!vals.length) return "any";
+    const at = (q) =>
+      vals[Math.min(vals.length - 1, Math.floor(q * vals.length))];
+    const span = at(0.9) - at(0.1);
+    if (!(span > 0)) return "any";
+    const want = span / 20;
+    const decade = Math.pow(10, Math.floor(Math.log10(want)));
+    for (const mult of [1, 2, 5])
+      if (want < mult * decade * 1.5) return mult * decade;
+    return 10 * decade;
+  }
+
+  /* The absolute counterpart to the cut: a number the metric may not be worse
+    than, in the metric's own unit. Offered on a metric that is switched on, for
+    the same reason the cut is -- a live requirement inside a row that reads as
+    disabled is a control that has stopped meaning what it says. */
+  function limitControl(m) {
+    if (!((weights[m.key] || 0) > 0)) return "";
+    const word = m.direction === "lower_better" ? "at most" : "at least";
+    const set = limits[m.key];
+    return (
+      `<label class="cut lim" title="Removes places rather than reordering them">` +
+      `<span>Require ${word}</span>` +
+      `<input type="number" id="l-${esc(m.key)}" data-limit="${esc(m.key)}"` +
+      ` value="${set == null ? "" : esc(String(set))}" placeholder="none"` +
+      ` step="${limitStep(m)}">` +
+      `<span class="cv">${esc(m.unit)}</span></label>`
+    );
+  }
+
   function activeCount(metrics) {
     return metrics.filter((m) => (weights[m.key] || 0) > 0).length;
+  }
+
+  /* Delegated from the panel, which outlives every re-render of its contents.
+    Bound inside `renderWeights` these would stack up one deep per call. */
+  function bindRequirementControls() {
+    const panel = document.getElementById("weights");
+    panel.addEventListener("change", (e) => {
+      const key = e.target.dataset.cut;
+      if (!key) return;
+      cuts[key] = e.target.checked;
+      renderCutSummary();
+      draw();
+    });
+    panel.addEventListener("input", (e) => {
+      const key = e.target.dataset.limit;
+      if (!key) return;
+      const raw = e.target.value.trim();
+      if (raw === "") delete limits[key];
+      else limits[key] = +raw;
+      renderCutSummary();
+      draw();
+    });
   }
 
   function renderWeights() {
@@ -1528,7 +1619,7 @@
               value="${weights[m.key] || parked[m.key] || 1}" data-k="${esc(m.key)}"
               data-cat="${esc(c)}"${(weights[m.key] || 0) > 0 ? "" : " disabled"}>
         <div class="hint">${esc(m.description)}</div>
-        ${cutControl(m)}
+        <div class="reqs" id="reqs-${esc(m.key)}">${cutControl(m)}${limitControl(m)}</div>
       </div>`,
             )
             .join("") +
@@ -1549,6 +1640,13 @@
         .getElementById("row-" + k)
         .classList.toggle("off", !(weights[k] > 0));
       document.getElementById("w-" + k).disabled = !(weights[k] > 0);
+      /* Both requirement controls are offered only on a metric that is on, so
+        they have to be rebuilt when that changes -- rendered once at load, the
+        cut never appeared on a metric switched on afterwards. Their listeners
+        are delegated from #weights, so replacing the markup does not orphan them. */
+      const metric = M.find((x) => x.key === k);
+      document.getElementById("reqs-" + k).innerHTML =
+        cutControl(metric) + limitControl(metric);
       const n = activeCount(M.filter((m) => m.category === c));
       const badge = document.getElementById("cnt-" + c);
       badge.textContent = `${n} on`;
@@ -1568,13 +1666,6 @@
     // The checkbox is the on/off; the slider only says how much. Turning a metric
     // off drops it from the score exactly as a zero weight did, so nothing about
     // the arithmetic changes - it is the state that was previously invisible.
-    document.querySelectorAll("#weights input[data-cut]").forEach((el) =>
-      el.addEventListener("change", (e) => {
-        cuts[e.target.dataset.cut] = e.target.checked;
-        renderCutSummary();
-        draw();
-      }),
-    );
 
     document
       .querySelectorAll('#weights input[data-k][type="checkbox"]')
@@ -1594,8 +1685,9 @@
               while its cut keeps removing places reads as a control that ignored
               being turned off. Switching a metric off means stop using it, and a
               cut is a use of it. */
-            if (cuts[k]) {
+            if (cuts[k] || limits[k] != null) {
               cuts[k] = false;
+              delete limits[k];
               renderCutSummary();
             }
           }
@@ -1609,8 +1701,6 @@
     document.getElementById("filters").innerHTML = `
     <div class="filt"><label for="f-pop">Minimum population</label>
       <input type="number" id="f-pop" value="${filters.population || 0}" min="0" step="10000"></div>
-    <div class="filt"><label for="f-hv">Maximum home value (USD, 0 = no limit)</label>
-      <input type="number" id="f-hv" value="${filters.home_value || 0}" min="0" step="25000"></div>
     <div class="filt"><label for="f-st">Rule out states (ctrl-click for several)</label>
       <select id="f-st" multiple size="6">${states
         .map(
@@ -1654,10 +1744,6 @@
       filters.population = +e.target.value || 0;
       draw();
     });
-    document.getElementById("f-hv").addEventListener("input", (e) => {
-      filters.home_value = +e.target.value || 0;
-      draw();
-    });
     document.getElementById("f-st").addEventListener("change", (e) => {
       filters.states = [...e.target.selectedOptions].map((o) => o.value);
       draw();
@@ -1688,23 +1774,39 @@
   function renderCutSummary() {
     const box = document.getElementById("cutsummary");
     if (!box) return;
-    const active = Object.keys(cuts).filter((k) => cuts[k]);
-    if (!active.length) {
-      box.innerHTML = `<p class="note">No metric cuts. Each metric can also rule out
-        anywhere worse than ${esc(HOME_NAME)}; the control sits under that metric.</p>`;
+    const label = (k) => M.find((m) => m.key === k)?.label;
+    const cutOn = Object.keys(cuts)
+      .filter((k) => cuts[k])
+      .map(label)
+      .filter(Boolean);
+    const limited = M.filter((m) => limits[m.key] != null).map(
+      (m) =>
+        `${m.label} ${m.direction === "lower_better" ? "at most" : "at least"} ` +
+        `${fmt(limits[m.key], m.unit)}`,
+    );
+    if (!cutOn.length && !limited.length) {
+      box.innerHTML = `<p class="note">No per-metric requirements. Each metric can
+        rule out places on its own, by a number you set${
+          HOME_NAME ? ` or by ${esc(HOME_NAME)}'s own reading` : ""
+        }; the controls sit under that metric.</p>`;
       return;
     }
-    const names = active
-      .map((k) => M.find((m) => m.key === k)?.label)
-      .filter(Boolean)
-      .map(esc)
-      .join(", ");
+    const lines = [];
+    if (cutOn.length)
+      lines.push(
+        `<p class="note">Ruling out anywhere worse than ${esc(HOME_NAME)} on: ` +
+          `<strong>${cutOn.map(esc).join(", ")}</strong>.</p>`,
+      );
+    if (limited.length)
+      lines.push(
+        `<p class="note">Requiring <strong>${limited.map(esc).join("</strong>, <strong>")}</strong>.</p>`,
+      );
     box.innerHTML =
-      `<p class="note">Ruling out anywhere worse than ${esc(HOME_NAME)} on: ` +
-      `<strong>${names}</strong>.</p>` +
-      `<button class="btn" id="clearcuts">Clear metric cuts</button>`;
+      lines.join("") +
+      `<button class="btn" id="clearcuts">Clear metric requirements</button>`;
     document.getElementById("clearcuts").addEventListener("click", () => {
       cuts = {};
+      limits = {};
       renderWeights();
       renderCutSummary();
       draw();
@@ -2854,7 +2956,8 @@
     return {
       weights: { ...defaults },
       cuts: {},
-      filters: { population: 0, home_value: 0, states: [] },
+      filters: { population: 0, states: [] },
+      limits: {},
       anchorHome: !!HOME_PLACE,
       minFit: 0,
       minCoverage: D.profile.min_coverage ?? 0.8,
@@ -3140,7 +3243,12 @@
       ),
       requirements: {
         min_population: filters.population,
-        max_home_value: filters.home_value || "none",
+        metric_limits: Object.fromEntries(
+          M.filter((m) => limits[m.key] != null).map((m) => [
+            m.key,
+            `${bound(m)} ${limits[m.key]}`,
+          ]),
+        ),
         states_ruled_out: filters.states.length ? filters.states : "none",
         min_data_coverage: Math.round(minCoverage * 100) + "%",
       },
@@ -3288,6 +3396,7 @@
     cuts: { ...cuts },
     weights: { ...weights },
     filters: { ...filters },
+    limits: { ...limits },
     anchorHome,
     minFit,
     minCoverage,
@@ -3299,9 +3408,16 @@
     cuts = { ...(setup.cuts || {}) };
     filters = {
       population: setup.filters?.population || 0,
-      home_value: setup.filters?.home_value || 0,
       states: [...(setup.filters?.states || [])],
     };
+    limits = { ...(setup.limits || {}) };
+    /* A setup saved before limits were general carried its one metric beside the
+      place attributes, because that metric had a box of its own. Anything in
+      there that the registry knows as a metric means what a limit means, so it
+      is read as one -- by asking the registry, not by naming the metric. */
+    for (const [key, value] of Object.entries(setup.filters || {}))
+      if (limits[key] == null && value > 0 && M.some((m) => m.key === key))
+        limits[key] = value;
     anchorHome = !!setup.anchorHome;
     minFit = setup.minFit || 0;
     minCoverage = setup.minCoverage ?? minCoverage;
@@ -3393,6 +3509,7 @@
     if (chosen) applySetup(chosen.setup);
   })();
 
+  bindRequirementControls();
   renderWeights();
   renderFilters();
   renderMapSelect();

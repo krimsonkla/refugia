@@ -15,18 +15,23 @@ contacts `fonts.googleapis.com` — no server of ours, but a third party. Offlin
 falls back to system faces and works unchanged.
 
 **Weights reorder, requirements remove.** Most of the requirements panel drops
-places out of the running entirely — a minimum population, a maximum home value,
-states you will not consider, and the per-metric "rule out anywhere worse than
-home".
+places out of the running entirely — a minimum population, states you will not
+consider, and two controls that sit under each metric rather than in the panel:
+"rule out anywhere worse than home", and a number the metric must be at least or
+at most. Both of those are per-metric and every metric has them, so a maximum
+home value is set under Home value, a minimum life expectancy under Life
+expectancy, and so on.
 
 Two controls in that panel are not requirements and do not remove anything: the
 minimum-fit slider hides rows below a score, and the coverage slider hides rows
 with too much missing data. They change what you are shown, not what is ranked.
 
-The per-metric cut is offered only while that metric is switched on and you have set
-a home county — there is nothing to compare against otherwise — and switching a
-metric off clears its cut, because a requirement sitting inside a row that reads as
-disabled is a requirement still quietly removing places.
+Both per-metric requirements are offered only while that metric is switched on, and
+switching it off clears them, because a requirement sitting inside a row that reads
+as disabled is a requirement still quietly removing places. The cut additionally
+needs a home county — without one there is nothing to compare against — while the
+typed limit does not. What is set is summarised in the requirements panel, so a
+requirement folded away inside a collapsed group is never invisible from there.
 
 **The map shades on whichever metric you pick**, from the selector above it, not
 only on the overall fit. That is how you see a single metric's geography rather

@@ -106,10 +106,23 @@ def test_every_metric_key_the_guide_names_is_registered():
         for path in (ROOT / "src").rglob("*")
         if path.suffix in {".py", ".html", ".json"}
     )
+    # A doc may point at the test that enforces what it claims, which is the
+    # strongest form the claim can take. Only names that are actually defined
+    # count, so a guide citing a test that was renamed or deleted fails here --
+    # narrowed to `def test_...` rather than all of `tests/`, or the guard would
+    # accept every local variable in the suite as vocabulary.
+    test_names = set(
+        re.findall(
+            r"^def (test_\w+)",
+            "\n".join(path.read_text(encoding="utf-8") for path in (ROOT / "tests").rglob("*.py")),
+            re.M,
+        )
+    )
     field_names = (
         set(UNIVERSES)
         | place_fields
         | set(ledger)
+        | test_names
         | {
             "key",
             "label",
@@ -166,3 +179,24 @@ def test_the_spec_the_guide_quotes_in_full_is_the_shipped_one():
         (ROOT / "src" / "refugia" / "specs" / "life_expectancy.json").read_text(encoding="utf-8")
     )
     assert json.loads(quoted.group(1)) == shipped
+
+
+def test_the_page_names_no_metric_of_its_own():
+    """`adding-a-spec.md` says a registered metric appears in the page without a
+    page change. That was untrue for a long time -- the maximum-home-value box was
+    written into the template nine times over -- and nothing could tell, because
+    the claim lived only in prose. This is the claim as a test: the template may
+    not contain any registered metric's key, so the next special case fails here
+    rather than in a sentence nobody re-reads.
+    """
+    from refugia.workspace import Workspace
+
+    keys = sorted(m.key for m in Workspace(ROOT).build_registry().metrics)
+    assert keys, "no metrics registered; the check would pass vacuously"
+    template = (ROOT / "src" / "refugia" / "artifact" / "template.html").read_text(encoding="utf-8")
+    named = {
+        key: [n for n, line in enumerate(template.splitlines(), 1) if key in line] for key in keys
+    }
+    assert not {
+        k: v for k, v in named.items() if v
+    }, f"template.html names metrics: {({k: v for k, v in named.items() if v})}"

@@ -697,6 +697,172 @@
           "cover": 1
         }
       ]
+    },
+    {
+      "name": "a population floor removes places and renormalises over the rest",
+      "metrics": [
+        {
+          "key": "a",
+          "direction": "higher_better"
+        }
+      ],
+      "values": {
+        "a": {
+          "00001": 10,
+          "00002": 20,
+          "00003": 30
+        }
+      },
+      "populations": {
+        "00001": 5000,
+        "00002": 50000,
+        "00003": 90000
+      },
+      "weights": {
+        "a": 1
+      },
+      "min_coverage": 0,
+      "criteria": [
+        {
+          "field": "population",
+          "comparison": "min",
+          "value": 40000
+        }
+      ],
+      "expect": [
+        {
+          "fips": "00003",
+          "score": 100,
+          "cover": 1
+        },
+        {
+          "fips": "00002",
+          "score": 0,
+          "cover": 1
+        }
+      ]
+    },
+    {
+      "name": "a ruled-out state is gone before anything is normalised",
+      "metrics": [
+        {
+          "key": "a",
+          "direction": "higher_better"
+        }
+      ],
+      "values": {
+        "a": {
+          "00001": 10,
+          "00002": 20,
+          "00003": 30
+        }
+      },
+      "states": {
+        "00001": "Alpha",
+        "00002": "Beta",
+        "00003": "Beta"
+      },
+      "weights": {
+        "a": 1
+      },
+      "min_coverage": 0,
+      "criteria": [
+        {
+          "field": "state",
+          "comparison": "not_in",
+          "value": ["Alpha"]
+        }
+      ],
+      "expect": [
+        {
+          "fips": "00003",
+          "score": 100,
+          "cover": 1
+        },
+        {
+          "fips": "00002",
+          "score": 0,
+          "cover": 1
+        }
+      ]
+    },
+    {
+      "name": "an absolute limit on a metric key is a criterion like any other",
+      "metrics": [
+        {
+          "key": "cost",
+          "direction": "lower_better"
+        }
+      ],
+      "values": {
+        "cost": {
+          "00001": 100,
+          "00002": 400,
+          "00003": 900
+        }
+      },
+      "weights": {
+        "cost": 1
+      },
+      "min_coverage": 0,
+      "criteria": [
+        {
+          "field": "cost",
+          "comparison": "max",
+          "value": 400
+        }
+      ],
+      "expect": [
+        {
+          "fips": "00001",
+          "score": 100,
+          "cover": 1
+        },
+        {
+          "fips": "00002",
+          "score": 0,
+          "cover": 1
+        }
+      ]
+    },
+    {
+      "name": "a place with no reading for a limited metric never clears the limit",
+      "metrics": [
+        {
+          "key": "cost",
+          "direction": "lower_better"
+        }
+      ],
+      "places": ["00001", "00002", "00003"],
+      "values": {
+        "cost": {
+          "00001": 100,
+          "00002": 400
+        }
+      },
+      "weights": {
+        "cost": 1
+      },
+      "min_coverage": 0,
+      "criteria": [
+        {
+          "field": "cost",
+          "comparison": "max",
+          "value": 900
+        }
+      ],
+      "expect": [
+        {
+          "fips": "00001",
+          "score": 100,
+          "cover": 1
+        },
+        {
+          "fips": "00002",
+          "score": 0,
+          "cover": 1
+        }
+      ]
     }
   ]
 }

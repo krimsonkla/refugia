@@ -108,10 +108,12 @@ have not read.
   `artifact/template.html`, because the page's sliders re-rank with no server to
   ask. A change to ranking semantics has to be made in both, in the same commit,
   and `tests/conformance/vectors.json` will fail you if it is not — it covers
-  everything the profile decides: weights, requirements, normalisation and
-  coverage. It does not cover the page's own interactive controls or its
-  treatment of home, which genuinely differ. Add a vector for
-  the behaviour you changed. The JavaScript half sits between the `scoring kernel:
+  everything that decides a ranking: weights, requirements, normalisation and
+  coverage, including the requirements the page's own controls set, which are
+  handed to the kernel as criteria rather than applied around it. What it does not
+  cover is the part that only hides rows — the fit and coverage sliders — and the
+  page's treatment of home, which genuinely differs. Add a vector for the behaviour
+  you changed. The JavaScript half sits between the `scoring kernel:
 BEGIN/END` markers and must stay pure, since the test lifts it out of the file
   and runs it.
 - **No `if metric.key == ...` outside a source.** Scoring, the CLI and the page are
