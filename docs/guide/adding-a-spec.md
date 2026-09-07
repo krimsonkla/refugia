@@ -76,7 +76,7 @@ metric exists.
 
 | Field         | What it does                                                                                     |
 | ------------- | ------------------------------------------------------------------------------------------------ |
-| `key`         | The identifier a profile weights. Must be a valid Python identifier                              |
+| `key`         | The identifier a profile weights. Lowercase, digits and underscores                              |
 | `label`       | Shown on the slider, the column header and the map selector                                      |
 | `unit`        | Shown beside values. Free text — `years`, `% of adults`, `ug/m3 annual mean`                     |
 | `direction`   | `higher_better` or `lower_better`. **The only place the sign lives**                             |

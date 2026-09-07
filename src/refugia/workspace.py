@@ -82,7 +82,12 @@ class Workspace:
         registry.register(EpaAirQualitySource(self._cache))
         registry.register(ZillowHomeValueSource(self._cache))
         for spec in self.spec_files:
-            registry.register(DeclarativeSource.from_file(spec, self._cache))
+            try:
+                registry.register(DeclarativeSource.from_file(spec, self._cache))
+            except ValueError as error:
+                # Both sides of a duplicate-key collision are specs, and the bare
+                # message names neither file. The one you can act on is this one.
+                raise ValueError(f"{spec}: {error}") from error
         return registry
 
     def build_places(self, *, universe: str = "metro_micro", refresh: bool = False):

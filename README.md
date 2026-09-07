@@ -261,8 +261,8 @@ want it to, and then they do.
   the page has no server to ask. `tests/conformance/vectors.json` runs the same
   cases through both and fails the build if they disagree, so the duplication
   remains but the drift does not.
-- **The network adapters are thinly tested.** The scoring core, the store and
-  the declarative tier are all above 92%; the adapters are the modules whose
+- **The network adapters are thinly tested.** The scoring core and the store are
+  at or near 100% and the declarative tier is at 87%; the adapters are the modules whose
   behaviour is defined by an upstream's quirks, and testing them properly means
   recording real payloads as fixtures. The suite runs offline and refuses to
   make a real request, so what is covered is covered honestly.

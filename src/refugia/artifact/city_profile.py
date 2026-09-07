@@ -15,6 +15,10 @@ PLACES_ENDPOINT = "https://data.cdc.gov/resource/vgc8-iyc4.json"
 
 # The place release is published wide, a column per measure, keyed on place FIPS -
 # which is the same GEOID the city markers already carry.
+# 3,143 counties at 20,000 rows a page leaves room for the release to grow
+# several times over before this is the thing that stops a fetch.
+MAX_PAGES = 50
+
 PLACES_COLUMNS = {
     "depression_crudeprev": "depression",
     "mhlth_crudeprev": "mental_distress",
@@ -133,9 +137,15 @@ class CityProfile:
         columns = ",".join(["placefips", *PLACES_COLUMNS])
         rows: list[dict] = []
         offset = 0
-        while True:
+        # Bounded, and the page's type is checked: an endpoint answering 200 with a
+        # dict envelope would otherwise extend `rows` with its keys and then run the
+        # loop until something further down failed on a string.
+        for _ in range(MAX_PAGES):
             page = self._retry.run(lambda offset=offset: self._page(columns, offset))
+            if not isinstance(page, list):
+                raise ValueError(f"expected a list of rows, got {type(page).__name__}")
             rows.extend(page)
             if len(page) < 20000:
                 return rows
             offset += 20000
+        raise ValueError(f"more than {MAX_PAGES} pages; the query is probably wrong")

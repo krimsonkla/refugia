@@ -107,7 +107,7 @@ nothing checks is a rule that drifts.
 ## 6. `findings.jsonl`
 
 **145 rows across 2 cycles and 8 lenses.**
-`82 open, 47 fixed, 3 parked, 13 declined.`
+`45 open, 84 fixed, 3 parked, 13 declined.`
 
 - `cyc-release-audit` — the first public-release audit. Seven lenses plus a
   completeness critic, so eight `lens` values appear.

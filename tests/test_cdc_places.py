@@ -123,3 +123,10 @@ def test_the_declared_metrics_match_the_requested_measures(tmp_path):
     source = _source(tmp_path)
     assert [m.key for m in source.metrics] == ["depression"]
     assert json.dumps([m.direction for m in source.metrics])
+
+
+def test_a_dict_envelope_is_refused_rather_than_iterated(tmp_path, api):
+    """A 200 carrying an object would otherwise extend rows with its keys."""
+    api({"error": "bad query"})
+    with pytest.raises(ValueError, match="expected a list of rows"):
+        _source(tmp_path).fetch(_places("00001"))

@@ -36,9 +36,11 @@ class ArtifactBuilder:
 
     The page re-implements scoring rather than receiving a precomputed ranking,
     because the sliders have to re-rank without a round trip. That duplication is
-    a real hazard: the JavaScript and the Python engine can drift, and nothing in
-    this repo currently executes both to compare them. Any change to ranking
-    semantics has to be made in `scoring/` and in `template.html` together.
+    a real hazard: the JavaScript and the Python engine can drift. Any change to
+    ranking semantics has to be made in `scoring/` and in `template.html` together,
+    and `tests/conformance/vectors.json` runs the same cases through both. Note
+    what that does not cover: the vectors pass weights and coverage only, so the
+    page's handling of `criteria` and `normalization` is outside them.
     """
 
     def __init__(self, cache: Cache) -> None:

@@ -3,6 +3,7 @@
 import csv
 import io
 import json
+import re
 import statistics
 from pathlib import Path
 from typing import Any
@@ -75,8 +76,14 @@ class DeclarativeSource:
         if scheme != "https":
             raise ValueError(f"url must be https, got {scheme or 'no'} scheme: {spec['url']!r}")
         for field in DISPLAYED:
-            if "<" in str(spec[field]) or ">" in str(spec[field]):
+            # Quotes as well as angle brackets: these land in quoted attributes as
+            # well as text nodes, so a value carrying a `"` can close the attribute
+            # and open an event handler without ever needing a `<`.
+            if any(c in str(spec[field]) for c in "<>\"'"):
                 raise ValueError(f"{field} must not contain markup: {spec[field]!r}")
+        if not re.fullmatch(r"[a-z0-9_]+", str(spec["key"])):
+            # The key is interpolated into element ids and data attributes.
+            raise ValueError(f"key must be lowercase, digits and underscores: {spec['key']!r}")
         if spec["format"] not in FORMATS:
             raise ValueError(f"format must be one of {FORMATS}, got {spec['format']!r}")
         if spec["direction"] not in ("higher_better", "lower_better"):

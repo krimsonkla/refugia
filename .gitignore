@@ -23,8 +23,10 @@ coverage.xml
 .idea/
 .vscode/
 
-# a profile is personal: the example is the only one that ships
-profiles/*.json
+# a profile is personal: the example is the only one that ships. The glob covers
+# subdirectories and any extension, because `profiles/mine/home.json` and
+# `profiles/draft.json.bak` are the same mistake as `profiles/mine.json`.
+profiles/**
 !profiles/example.json
 
 # generated data — `refugia fetch` rebuilds these

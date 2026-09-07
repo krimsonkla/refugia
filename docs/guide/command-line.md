@@ -1,6 +1,6 @@
 # The command line
 
-Four commands. `fetch` is slow and network-bound; everything else reads the saved
+Five commands. `metrics` needs no dataset and is the one to run first; `fetch` is slow and network-bound; everything else reads the saved
 dataset, so re-weighting costs nothing.
 
 ```bash
@@ -34,7 +34,8 @@ doing all the work.
 ## Every option
 
 Each command also takes `--root`, which defaults to the working directory and is
-where `data/` and `out/` live, and where a `specs/` of your own is looked for.
+where `data/` lives and where a `specs/` of your own is looked for. It does not
+move `out/` — `publish --out` takes the path it writes to.
 
 | Command   | Option        | Default                  | What it does                                 |
 | --------- | ------------- | ------------------------ | -------------------------------------------- |
@@ -71,6 +72,10 @@ these are pinned to a dated path — a filename with a year in it, a release
 directory — so expect it eventually. The run continues, those metrics keep
 whatever the last successful fetch saved, and the failure is repeated in red after
 the coverage table so an hour of scrollback cannot hide it.
+
+`ask` is the one command with a prerequisite outside `uv sync`: it needs Ollama
+running locally and the model pulled (`ollama serve`, then
+`ollama pull qwen3:30b-a3b`, about 18 GB). Everything else works without it.
 
 ---
 

@@ -7,6 +7,7 @@ import math
 import httpx
 
 from refugia import USER_AGENT
+from refugia.metrics.sources.throttle import Throttle
 from refugia.retry import Retry
 
 from refugia.metrics.metric import Metric
@@ -46,12 +47,23 @@ class NasaPowerClimateSource:
     threshold this project would be inventing.
     """
 
-    def __init__(self, cache: Cache, *, workers: int = 6, retries: int = 4) -> None:
+    def __init__(
+        self,
+        cache: Cache,
+        *,
+        workers: int = 6,
+        retries: int = 4,
+        min_interval: float = 0.05,
+    ) -> None:
         self._cache = cache
         self._workers = workers
         # ValueError and KeyError are declared transient because this endpoint
         # answers 200 with an error body and with partly-shaped features.
         self._retry = Retry(retries, 1.5, also_transient=(KeyError, ValueError))
+        # A worker pool with no floor between starts is the thing the project's own
+        # rule forbids, and this one was opening six. Shared, so the limit belongs
+        # to the source rather than to each thread.
+        self._throttle = Throttle(min_interval)
         self._failures: list[tuple[str, str]] = []
 
     @property
@@ -200,6 +212,7 @@ class NasaPowerClimateSource:
         self, parameter: str, lat: float, lon: float
     ) -> dict[tuple[float, float], float]:
         """A single unretried regional call."""
+        self._throttle.wait()
         response = httpx.get(
             ENDPOINT,
             headers={"User-Agent": USER_AGENT},

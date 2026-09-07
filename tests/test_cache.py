@@ -80,3 +80,15 @@ def test_requests_identify_themselves(tmp_path, server):
     Cache(tmp_path).fetch_url("https://example.invalid/d")
     assert stub.calls[0][1]["headers"]["User-Agent"] == USER_AGENT
     assert "refugia" in USER_AGENT and "github.com" in USER_AGENT
+
+
+def test_the_cache_directory_is_not_created_until_something_is_written(tmp_path):
+    """`refugia metrics` reads the registry and should leave no data/ behind."""
+    root = tmp_path / "data" / "cache"
+    Cache(root)
+    assert not root.exists()
+
+
+def test_the_oldest_entry_of_an_uncreated_cache_is_empty(tmp_path):
+    """Asking a cache that has never been written to must not raise."""
+    assert Cache(tmp_path / "never").oldest_entry() == ""

@@ -36,7 +36,7 @@ A key that is not in it stops the run and says so.
 **`criteria`** — hard filters, each `{field, comparison, value}`. `comparison` is
 one of `min`, `max`, `in`, `not_in`; the last two take a list. `field` is either a
 metric key or an attribute of the place itself — `population`, `state`, `name`,
-`lat`, `lon`, `fips`, or `metro`. A place with no value for the field never
+`lat`, `lon`, `fips`, `metro` or `cbsa_type`. A place with no value for the field never
 passes, which is deliberate: an unknown is not a pass.
 
 ```json

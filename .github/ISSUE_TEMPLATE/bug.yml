@@ -33,7 +33,7 @@ body:
     attributes:
       label: Version and data age
       description: >
-        `refugia --version` if you have it, or the commit; plus the "Built ... /
+        The commit you are on (`git rev-parse --short HEAD`), plus the "Built ... /
         oldest cached response ..." line from the foot of a published page.
       render: text
 

@@ -10,6 +10,12 @@ on:
     branches: [main]
   pull_request:
 
+# The job reads the tree and reports a status; it needs nothing else. Without this
+# the token takes the repository default, which on a public repo is whatever the
+# org settings happen to be.
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -26,6 +32,12 @@ jobs:
 
       - name: Install Python
         run: uv python install 3.12
+
+      # The conformance check runs the published page's own JavaScript, so node is
+      # a hard requirement of the suite rather than a convenience of the image.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
 
       # --locked fails if pyproject.toml has moved on without a relock, which is
       # the one dependency mistake that reproduces on every machine but this one.

@@ -113,3 +113,11 @@ def test_declaring_one_shape_does_not_widen_the_others():
     with pytest.raises(TypeError):
         retry.run(_flaky([TypeError("a bug")], result=None))
     assert clock.slept == []
+
+
+def test_a_protocol_error_is_not_retried():
+    """A URL the client cannot speak will still be unspeakable in ten seconds."""
+    clock = _Clock()
+    with pytest.raises(httpx.UnsupportedProtocol):
+        Retry(sleep=clock.sleep).run(_flaky([httpx.UnsupportedProtocol("no scheme")], result=None))
+    assert clock.slept == []

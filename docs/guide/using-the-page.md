@@ -8,6 +8,12 @@ Hand the file to somebody and they get the same thing, with the weights it was
 published with. They can re-weight it to their own priorities without installing
 anything.
 
+Two things travel with it. The page embeds the profile it was built from, including
+your home county if you set one, so sharing a page says something about you as well
+as about the places. And it loads its typefaces from Google, so a viewer's browser
+contacts `fonts.googleapis.com` — no server of ours, but a third party. Offline it
+falls back to system faces and works unchanged.
+
 **The sliders are the point.** Move one and everything re-ranks immediately: the
 table reorders, the map reshades, the scores change. Nothing is precomputed, so
 there is no wrong question to ask of it.

@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from refugia.places.place import Place
 from refugia.places.registry import UNIVERSES
 from refugia.workspace import Workspace
 
@@ -71,35 +72,42 @@ def test_every_metric_key_the_guide_names_is_registered():
     # that is not a field name, a command, or a Python attribute.
     # Universe names come from the code, so renaming one fails this rather than
     # quietly leaving the guide naming something that no longer exists.
-    field_names = set(UNIVERSES) | {
-        "key",
-        "label",
-        "unit",
-        "direction",
-        "category",
-        "description",
-        "source",
-        "url",
-        "format",
-        "fips_column",
-        "value_column",
-        "aggregate",
-        "where",
-        "scale",
-        "sheet",
-        "records_path",
-        "citation",
-        "terms_url",
-        "min_coverage",
-        "home_fips",
-        "normalization",
-        "higher_better",
-        "lower_better",
-        "not_in",
-        "also_transient",
-        "cov_fail_under",
-        "blank_issues_enabled",
-    }
+    # A criterion may name a Place attribute, so those are vocabulary too and are
+    # read from the class rather than listed.
+    place_fields = {f for f in dir(Place) if not f.startswith("_")}
+    field_names = (
+        set(UNIVERSES)
+        | place_fields
+        | {
+            "key",
+            "label",
+            "unit",
+            "direction",
+            "category",
+            "description",
+            "source",
+            "url",
+            "format",
+            "fips_column",
+            "value_column",
+            "aggregate",
+            "where",
+            "scale",
+            "sheet",
+            "records_path",
+            "citation",
+            "terms_url",
+            "min_coverage",
+            "home_fips",
+            "normalization",
+            "higher_better",
+            "lower_better",
+            "not_in",
+            "also_transient",
+            "cov_fail_under",
+            "blank_issues_enabled",
+        }
+    )
     unknown = set()
     for page in PAGES:
         for token in re.findall(

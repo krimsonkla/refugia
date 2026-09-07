@@ -22,7 +22,6 @@ class Cache:
 
     def __init__(self, root: Path, *, retry: Retry | None = None) -> None:
         self._root = root
-        self._root.mkdir(parents=True, exist_ok=True)
         # Every declarative spec, Zillow, the EPA summaries and the map topology
         # come through fetch_url, and none of them used to survive a dropped
         # connection. Since a failing source now costs its own metrics rather than
@@ -53,6 +52,10 @@ class Cache:
         """
         if not payload:
             return None
+        # Created on first write rather than on construction: `refugia metrics`
+        # builds a Workspace to read the registry and is documented as needing no
+        # dataset, so it should not leave a data/cache behind wherever it was run.
+        self._root.mkdir(parents=True, exist_ok=True)
         target = self.path_for(key, suffix)
         target.write_bytes(payload)
         return target
@@ -64,6 +67,8 @@ class Cache:
         data it used is: a run that hits every entry stamps today onto figures a
         year old. This is the number that tells the difference.
         """
+        if not self._root.exists():
+            return ""
         times = [entry.stat().st_mtime for entry in self._root.iterdir() if entry.is_file()]
         if not times:
             return ""

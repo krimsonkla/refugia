@@ -13,6 +13,10 @@ from refugia.store.cache import Cache
 
 ENDPOINT = "https://data.cdc.gov/resource/swc5-untb.json"
 
+# One measure over every county fits in a page today; the cap is a runaway guard
+# rather than a limit anybody should reach.
+MAX_PAGES = 50
+
 # measure id -> (metric key, label, direction, category, description)
 MEASURES: dict[str, tuple[str, str, str, str, str]] = {
     "DEPRESSION": (
@@ -129,12 +133,19 @@ class CdcPlacesSource:
             return json.loads(self._cache.read(cache_key, ".json"))
         rows: list[dict] = []
         offset = 0
-        while True:
+        # Bounded, and the page's type is checked: an endpoint answering 200 with a
+        # dict envelope would otherwise extend `rows` with its keys and then run the
+        # loop until something further down failed on a string.
+        for _ in range(MAX_PAGES):
             page = self._retry.run(lambda offset=offset: self._page(measure, offset))
+            if not isinstance(page, list):
+                raise ValueError(f"expected a list of rows, got {type(page).__name__}")
             rows.extend(page)
             if len(page) < 50000:
                 break
             offset += 50000
+        else:
+            raise ValueError(f"more than {MAX_PAGES} pages; the query is probably wrong")
         values = {
             r["locationid"]: float(r["data_value"])
             for r in rows

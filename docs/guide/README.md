@@ -7,7 +7,7 @@ Six pages, in the order most people need them.
 - **[Using the page](using-the-page.md)** — the published HTML file: sliders,
   requirements, the map, the county and city panels, the keyboard route, and where
   saved setups live.
-- **[The command line](command-line.md)** — the four commands, every option and
+- **[The command line](command-line.md)** — the five commands, every option and
   default, what a cold fetch costs, and what happens when an upstream moves.
 - **[Writing a profile](writing-a-profile.md)** — the whole schema. Weights,
   requirements, normalisation, coverage, home. This is the tool's primary input.

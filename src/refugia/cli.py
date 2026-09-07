@@ -130,6 +130,13 @@ def _sharing_note(dataset: Dataset, profile: Profile) -> str:
             f"{len(cited)} source(s) require attribution and their citations travel in the "
             "page footer. DATA_SOURCES.md says what each one's terms permit."
         )
+    # Counted from the metrics, the county outlines are invisible here: they are not
+    # a metric, and theirs is the one licence in the set that conditions
+    # redistribution rather than merely asking to be credited.
+    lines.append(
+        "The county outlines are ISC-licensed and the page carries their notice; keep "
+        "the footer intact if you share it."
+    )
     return "\n".join(lines)
 
 

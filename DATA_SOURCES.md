@@ -6,10 +6,17 @@ ignored. So the terms below govern what you do with what you fetch, and in
 particular what you do with a page you publish from it, rather than governing
 this repository.
 
-**Two carry real obligations.** County Health Rankings licenses its content for
+**Three carry real obligations.** County Health Rankings licenses its content for
 personal and non-profit use only and requires a specific citation; Zillow requires
-clear attribution. Both citations are in the footer of every published page. The
-rest are US federal works, public domain, where attribution is courtesy.
+clear attribution; and us-atlas is ISC-licensed, which _conditions_ redistribution
+on carrying its copyright notice — the only binding condition in the list, since
+the other two are a licence scope and an attribution request. All three are in the
+footer of every published page. The rest are US federal works, public domain, where
+attribution is courtesy, though LANDFIRE and NASA POWER both request a citation.
+
+**One endpoint is contacted that supplies no data.** The published page loads its
+typefaces from `fonts.googleapis.com`, so every viewer's browser reaches Google. No
+data about the viewer is sent, and offline the page falls back to system faces.
 
 **Two positions are inferred rather than confirmed**, and are marked as such
 below. Do not restate them as fact without checking.

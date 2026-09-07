@@ -55,7 +55,11 @@ class Retry:
             return True
         if isinstance(error, httpx.HTTPStatusError):
             return error.response.status_code in RETRY_STATUSES
-        return isinstance(error, (httpx.TransportError, OSError))
+        # A malformed URL or a protocol the client cannot speak will fail the same
+        # way in ten seconds, so these are transport errors that are not transient.
+        if isinstance(error, (httpx.UnsupportedProtocol, httpx.LocalProtocolError)):
+            return False
+        return isinstance(error, (httpx.TransportError, ConnectionError, TimeoutError))
 
     def run(self, work: Callable[[], T]) -> T:
         """Call `work`, repeating it while it fails transiently."""

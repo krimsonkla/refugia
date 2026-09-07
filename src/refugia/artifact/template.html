@@ -1435,20 +1435,20 @@
         const n = activeCount(ms);
         return (
           `<details class="grp" data-cat="${esc(c)}"${openGroups.has(c) ? " open" : ""}>` +
-          `<summary>${c}` +
-          `<span class="cnt" id="cnt-${c}"${n ? "" : " hidden"}>${n} on</span>` +
+          `<summary>${esc(c)}` +
+          `<span class="cnt" id="cnt-${esc(c)}"${n ? "" : " hidden"}>${n} on</span>` +
           `</summary><div class="inner">` +
           ms
             .map(
               (m) => `
       <div class="w${(weights[m.key] || 0) > 0 ? "" : " off"}" id="row-${esc(m.key)}">
         <label class="use"><input type="checkbox" id="u-${esc(m.key)}" data-k="${esc(m.key)}"
-              data-cat="${c}"${(weights[m.key] || 0) > 0 ? " checked" : ""}>
+              data-cat="${esc(c)}"${(weights[m.key] || 0) > 0 ? " checked" : ""}>
           <span>${esc(m.label)}</span></label>
         <span class="val" id="v-${esc(m.key)}">${weightLabel(weights[m.key])}</span>
         <input type="range" id="w-${esc(m.key)}" min="0.5" max="5" step="0.5"
-              value="${weights[m.key] || parked[m.key] || 1}" data-k="${m.key}"
-              data-cat="${c}"${(weights[m.key] || 0) > 0 ? "" : " disabled"}>
+              value="${weights[m.key] || parked[m.key] || 1}" data-k="${esc(m.key)}"
+              data-cat="${esc(c)}"${(weights[m.key] || 0) > 0 ? "" : " disabled"}>
         <div class="hint">${esc(m.description)}</div>
         ${cutControl(m)}
       </div>`,
@@ -1979,7 +1979,7 @@
     }
     document.getElementById("map").innerHTML =
       `<svg class="map" viewBox="${view.x} ${view.y} ${view.w} ${view.h}"` +
-      ` role="img" aria-label="US counties by ${mapMetric}">` +
+      ` role="img" aria-label="US counties by ${esc(mapMetric)}">` +
       `<g>${paths}</g><g class="borders">${borders}</g>` +
       `<g class="cities">${markers}</g></svg>`;
     bindMapView();
@@ -3092,7 +3092,7 @@
     document.getElementById("askcard").hidden = false;
 
     document.getElementById("chips").innerHTML = CHIPS.map(
-      (c, i) => `<button data-i="${i}">${c}</button>`,
+      (c, i) => `<button data-i="${i}">${esc(c)}</button>`,
     ).join("");
     document.querySelectorAll("#chips button").forEach((b) =>
       b.addEventListener("click", () => {

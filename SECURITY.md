@@ -36,10 +36,13 @@ ranks and the profile it was built with, including a home county if one was set.
 That is by design and `publish` says so, but a way for a page to disclose more than
 its author intended is worth reporting.
 
-**`ask` talks to a model.** By default a local Ollama on your own machine, which is
-where the question and the rows stay. `--host` will point it somewhere else, and
-then they go there. A path that sends data to a model without the operator choosing
-it would be a finding.
+**`ask` talks to a model, and so does the page.** On the command line it is a local
+Ollama by default, which is where the question and the rows stay; `--host` will
+point it somewhere else, and then they go there. The published page has its own Ask
+panel, which requests a capability from whatever host it is opened in and sends that
+host's model the viewer's weights, requirements and the rows on screen. Both are
+opt-in — nothing is sent until somebody asks a question — and a path that reached a
+model without the operator choosing it would be a finding.
 
 ## What is not a vulnerability
 

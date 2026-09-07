@@ -95,3 +95,7 @@ ignore-paths = ["tests/.*"]
 
 [tool.black]
 line-length = 100
+# Pinned, or black targets the newest Python it knows and then warns that the
+# running interpreter cannot parse what it just formatted -- which also means it
+# skips the AST-equivalence check it prints the warning about.
+target-version = ["py312"]

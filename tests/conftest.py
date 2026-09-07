@@ -40,7 +40,7 @@ def _no_network(monkeypatch, request):
 def places() -> tuple[Place, ...]:
     """Four places whose ordering under each metric is obvious by inspection."""
     return (
-        Place("00001", "Alpha", "Oregon", 44.0, -121.0, 100_000, Cbsa("1", "Alpha, OR", "metro")),
+        Place("00001", "Alpha", "Oregon", 39.0, -98.0, 100_000, Cbsa("1", "Alpha, OR", "metro")),
         Place("00002", "Bravo", "Idaho", 43.0, -116.0, 50_000, Cbsa("2", "Bravo, ID", "micro")),
         Place("00003", "Delta", "Maine", 44.5, -69.0, 20_000, Cbsa("3", "Delta, ME", "micro")),
         Place("00004", "Echo", "Ohio", 40.0, -83.0, 800_000, Cbsa("4", "Echo, OH", "metro")),
