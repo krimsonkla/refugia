@@ -1,7 +1,9 @@
 # Contributing
 
 This is a personal project that happens to be public. Issues and pull requests are
-welcome; there is no support promise and no release schedule. If you are about to
+welcome; there is no support promise and no release schedule. `CODE_OF_CONDUCT.md`
+asks you to be decent to people, and `SECURITY.md` says where the trust boundaries
+are and how to report something exploitable privately. If you are about to
 spend a weekend on something, open an issue first so it does not turn out to be a
 weekend spent on something I was never going to merge.
 

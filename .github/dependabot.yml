@@ -1,0 +1,24 @@
+version: 2
+updates:
+  # The actions in ci.yml. This one has already earned its place: both actions
+  # were pinned to majors that had moved onto a deprecated Node runtime, and
+  # nothing but the deprecation warning in a green build said so.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "ci"
+
+  # Three runtime dependencies and five dev ones, pinned in uv.lock. Monthly,
+  # grouped, because a personal project does not want eight separate pull
+  # requests and CI runs for a patch bump.
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "build"
+    groups:
+      python-dependencies:
+        patterns: ["*"]

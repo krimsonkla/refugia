@@ -391,7 +391,9 @@ want it to, and then they do.
 ## Contributing
 
 `CONTRIBUTING.md` has the setup, the checks CI runs, and the conventions that will
-get a pull request sent back. The most useful contributions are a new metric or a
+get a pull request sent back. `SECURITY.md` describes what this tool actually
+trusts — a spec is a network request in data clothing, and every upstream is
+untrusted — and how to report something exploitable in private. The most useful contributions are a new metric or a
 source that has stopped working — this is a thin layer over ten public datasets,
 and those datasets move.
 

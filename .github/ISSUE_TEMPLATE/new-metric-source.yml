@@ -1,0 +1,67 @@
+name: New metric source
+description: Propose a dataset refugia should rank on
+labels: ["metric"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Most sources need no code — a JSON spec names the URL and two columns. See
+        "Adding a metric" in `CONTRIBUTING.md` before filing, since the answers
+        below are what decides whether that tier can express it.
+
+  - type: input
+    id: url
+    attributes:
+      label: The URL
+      description: The exact file or endpoint, not the landing page it is linked from.
+      placeholder: https://example.gov/data/county_measure_2026.csv
+    validations:
+      required: true
+
+  - type: input
+    id: measure
+    attributes:
+      label: What it measures, and in what units
+      placeholder: Annual mean PM2.5, ug/m3
+    validations:
+      required: true
+
+  - type: dropdown
+    id: direction
+    attributes:
+      label: Which way is better?
+      description: Every metric declares this, and it is the only place the sign lives.
+      options: ["lower is better", "higher is better"]
+    validations:
+      required: true
+
+  - type: input
+    id: geography
+    attributes:
+      label: How does it identify a county?
+      description: A 5-digit FIPS is ideal. Anything else needs a written adapter.
+      placeholder: GEOID column, 5-digit county FIPS
+    validations:
+      required: true
+
+  - type: textarea
+    id: coverage
+    attributes:
+      label: How many counties does it actually cover?
+      description: >
+        The number that decides it. A source reaching 60% of counties returns
+        plausible figures for those and silence for the rest, which reads as
+        success. `fetch` flags anything under 75%.
+    validations:
+      required: true
+
+  - type: textarea
+    id: terms
+    attributes:
+      label: Terms of use, and whether you read them or inferred them
+      description: >
+        A published page redistributes what it embeds, so a source that requires a
+        citation has to carry one. Please do not assert a licence you have not read
+        — "inferred, not checked" is a useful answer.
+    validations:
+      required: true

@@ -1,0 +1,46 @@
+name: Bug
+description: Something behaves differently from what the docs say
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: The command you ran
+      render: shell
+      placeholder: uv run refugia rank --profile profiles/example.json --top 20
+    validations:
+      required: true
+
+  - type: textarea
+    id: coverage
+    attributes:
+      label: The coverage table from your last fetch
+      description: >
+        Paste the per-metric percentages `fetch` prints at the end. Most surprising
+        rankings are a thin metric rather than a scoring bug, and this is the
+        fastest way to tell the two apart. Skip it if the problem is not a ranking.
+      render: text
+
+  - type: textarea
+    id: provenance
+    attributes:
+      label: Version and data age
+      description: >
+        `refugia --version` if you have it, or the commit; plus the "Built ... /
+        oldest cached response ..." line from the foot of a published page.
+      render: text
+
+  - type: input
+    id: install
+    attributes:
+      label: How did you install it?
+      placeholder: uv sync --all-groups / pip install from a wheel / devenv
+    validations:
+      required: true
