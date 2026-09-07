@@ -118,7 +118,10 @@ them, the registration model has failed somewhere and that is the bug.
 
 ## If the page needs to change
 
-It should not. The page builds itself from the registry, so a new metric arrives
+It should not. A registered metric already gets a slider, a column and a map layer
+— see [what a registered metric gets for
+free](adding-a-spec.md#what-a-registered-metric-gets-for-free), including the two
+conditions on that. The page builds itself from the registry, so a new metric arrives
 with a slider, a column and a map layer already. If you find yourself editing
 `template.html` to accommodate one metric, stop — that is the design failure the
 registry exists to prevent, and it is worth raising as an issue instead.

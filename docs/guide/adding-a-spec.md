@@ -3,15 +3,45 @@
 Three tiers, and this is the middle one. Take the cheapest that can express your
 source.
 
-**Tier 1 — already registered.** Nothing to do. The page builds its sliders, table
-columns and map layers from the registry, reading each metric's `direction`, `unit`
-and `category`. No presentation code is written per metric, so a metric that exists
-is already visualised.
+**Tier 1 — already registered.** Nothing to do. See below for what that means.
 
 **Tier 2 — a JSON spec.** No code. This page.
 
 **Tier 3 — [a written adapter](adding-an-adapter.md).** For sources that need real
 logic: constructed geometry, pagination, a class crosswalk, retry semantics.
+
+## What a registered metric gets for free
+
+This is the part worth being precise about, because "no presentation code" is easy
+to hear as "it appears by magic".
+
+A registered metric arrives in the published page with three things, none of which
+you write:
+
+- **a slider**, inside the group named by its `category`
+- **a table column**, labelled and formatted by its `label` and `unit`
+- **an entry in the map's metric selector**, so the choropleth can shade on it
+
+All three come from iterating the dataset's metric list. There is no per-metric code
+anywhere in `src/refugia/artifact/template.html`, and adding one should never
+require editing it.
+
+Two things qualify that.
+
+**It has to be in the saved dataset.** `publish` reads `data/dataset.json`, not the
+registry, so a metric you registered but never fetched is simply absent from the
+page. `refugia fetch --only <key>` is enough: `--only` narrows which sources run,
+but the dataset's metric list is rewritten from the whole registry every time.
+
+**It arrives switched off.** The page shows it dimmed, with its checkbox clear and
+its slider parked at 1, unless the profile that built the page weights it. Switching
+it on re-ranks everything immediately.
+
+That second one is deliberate rather than an oversight. An unweighted metric stays
+visible because a column that disappeared when its weight went to zero took the
+evidence with it — a reader could no longer look at the thing they had just decided
+not to rank by, which is exactly where an unwelcome surprise hides. Weighting
+decides the ranking; it does not decide what can be looked at.
 
 ## The whole of it
 
