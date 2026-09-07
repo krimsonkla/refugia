@@ -164,6 +164,9 @@ whether your use is commercial: if it is, the County Health Rankings licence nee
 their prior written consent, or those five metrics need to come from the federal
 sources underneath them.
 
-Attribution currently travels as prose in this file and as a footer string built
-from each metric's `source` field. A metric cannot carry its own citation or terms
-URL, which is why this file has to be kept in step by hand.
+A metric carries its own `citation` and `terms_url`, and the published page builds
+its citation list from them, so a source added later arrives with its obligation
+attached rather than depending on someone remembering to add it here. This file is
+still the fuller record — the terms, and whether they were verified or inferred,
+have nowhere else to live — but the part that must reach a reader travels on its
+own.

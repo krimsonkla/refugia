@@ -10,5 +10,7 @@
   "format": "csv",
   "fips_column": "5-digit FIPS Code",
   "value_column": "Poor Mental Health Days raw value",
-  "aggregate": "first"
+  "aggregate": "first",
+  "citation": "University of Wisconsin Population Health Institute. County Health Rankings & Roadmaps. www.countyhealthrankings.org — licensed for personal and non-profit use.",
+  "terms_url": "https://www.countyhealthrankings.org/terms-use"
 }

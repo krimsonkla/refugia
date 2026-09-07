@@ -1,6 +1,7 @@
 """Command line surface: fetch, rank, publish, ask."""
 
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
 
@@ -151,7 +152,13 @@ def fetch(
     wanted = {k.strip() for k in only.split(",") if k.strip()}
     values, failures = _collect(registry, places, existing, wanted)
 
-    dataset = Dataset(places=places, metrics=registry.metrics, values=values)
+    dataset = Dataset(
+        places=places,
+        metrics=registry.metrics,
+        values=values,
+        built_at=datetime.now(tz=UTC).date().isoformat(),
+        oldest_response=workspace.cache.oldest_entry(),
+    )
     dataset.save(workspace.dataset_path)
     typer.echo(f"\nsaved {workspace.dataset_path}")
     _report_coverage(dataset)

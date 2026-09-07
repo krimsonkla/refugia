@@ -1,6 +1,7 @@
 """On-disk cache for fetched source data."""
 
 import hashlib
+from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
@@ -49,6 +50,18 @@ class Cache:
         target = self.path_for(key, suffix)
         target.write_bytes(payload)
         return target
+
+    def oldest_entry(self) -> str:
+        """The date of the oldest stored response, or "" when nothing is stored.
+
+        `fetch` is cache-first, so when it last ran says nothing about how old the
+        data it used is: a run that hits every entry stamps today onto figures a
+        year old. This is the number that tells the difference.
+        """
+        times = [entry.stat().st_mtime for entry in self._root.iterdir() if entry.is_file()]
+        if not times:
+            return ""
+        return datetime.fromtimestamp(min(times), tz=UTC).date().isoformat()
 
     def fetch_url(
         self,

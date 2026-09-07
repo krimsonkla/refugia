@@ -82,9 +82,14 @@ below 75%, because the characteristic failure of a data source is not an error: 
 is a tidy set of plausible numbers for the places it reached, and silence for the
 rest. Say what coverage you measured in the pull request.
 
-`DATA_SOURCES.md` gets an entry for any new publisher, including whether you
-verified its terms or inferred them. Please do not assert a licence you have not
-read.
+If the source requires a citation or attribution, put it in the metric's
+`citation` and `terms_url` — a spec may declare both — and the published page will
+carry it automatically. Attribution that lives only in a markdown file never
+reaches the person who was handed the page.
+
+`DATA_SOURCES.md` gets an entry for any new publisher regardless, including
+whether you verified its terms or inferred them. Please do not assert a licence you
+have not read.
 
 ## Things that will get a pull request sent back
 

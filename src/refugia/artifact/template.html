@@ -2718,25 +2718,31 @@
   document.getElementById("reset").addEventListener("click", resetToDefault);
 
   document.getElementById("sub").textContent = D.subtitle;
-  /* The sources line is built from the registry, so anything that is not a
-    registered metric - the geography, the city files, the map topology - cannot
-    appear in it and is named here instead. us-atlas is ISC-licensed and its
-    notice has to travel with any page built from its topology; Zillow asks for
-    clear attribution by name rather than an abbreviation. */
+  /* Required citations come from the metrics themselves, so a source added later
+    arrives carrying its own and cannot be left out of this list by someone who
+    did not know it owed one. Only the sources that are not metrics have to be
+    named by hand here: the geography, the city files and the map topology cannot
+    appear in a line built from the registry. us-atlas is ISC-licensed and its
+    notice has to travel with any page built from its topology. */
   const CREDITS =
     "County and place geography, and the city population and gazetteer files, from the US Census Bureau. " +
     "County and state outlines from " +
     '<a href="https://github.com/topojson/us-atlas" target="_blank" rel="noopener noreferrer">us-atlas</a>' +
-    " — Copyright Michael Bostock, ISC licence — itself a redistribution of the Census cartographic boundary files. " +
-    "Home values are the " +
-    '<a href="https://www.zillow.com/research/data/" target="_blank" rel="noopener noreferrer">Zillow Home Value Index</a>' +
-    ", used with attribution. " +
-    // Required verbatim by the CHR&R terms, which licence their content for
-    // personal and non-profit use only. It has to travel with the page, not sit
-    // in a file back in the repository.
-    "University of Wisconsin Population Health Institute. County Health Rankings & Roadmaps. " +
-    '<a href="https://www.countyhealthrankings.org" target="_blank" rel="noopener noreferrer">www.countyhealthrankings.org</a>' +
-    " — licensed for personal and non-profit use.";
+    " — Copyright Michael Bostock, ISC licence — itself a redistribution of the Census cartographic boundary files.";
+
+  const CITATIONS = [...new Set(M.map((m) => m.citation).filter(Boolean))]
+    .map(esc)
+    .join(" ");
+
+  /* Built when, from data how old. Both, because fetch is cache-first: a page
+    assembled this morning can be made entirely of responses cached last year, and
+    without the second date the two are indistinguishable. */
+  const PROVENANCE = D.built_at
+    ? `Built ${esc(D.built_at)}` +
+      (D.oldest_response
+        ? `; oldest cached response ${esc(D.oldest_response)}.`
+        : ".")
+    : "";
 
   /* What the numbers are, and what they are not. This page travels: whoever
     opens it did not choose the weights that built it, and it names real places
@@ -2747,13 +2753,17 @@
     "sliders will change — so this is a way to narrow a list rather than advice, and not a verdict on these " +
     "places or the people who live in them.";
 
-  document.getElementById("srcs").innerHTML =
+  document.getElementById("srcs").innerHTML = [
     "Sources — " +
-    [...new Set(M.map((m) => esc(m.source)))].join(" · ") +
-    ". Places are US counties in a Census metro or micropolitan area; vegetation is sampled around each county’s population-weighted centre, so it describes the inhabited part rather than empty acreage. " +
-    CREDITS +
-    " " +
-    CAVEAT;
+      [...new Set(M.map((m) => esc(m.source)))].join(" · ") +
+      ". Places are US counties in a Census metro or micropolitan area; vegetation is sampled around each county’s population-weighted centre, so it describes the inhabited part rather than empty acreage.",
+    CREDITS,
+    CITATIONS,
+    PROVENANCE,
+    CAVEAT,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   /* ---- ask ----------------------------------------------------------------
     The model is given functions over the live view rather than a precomputed

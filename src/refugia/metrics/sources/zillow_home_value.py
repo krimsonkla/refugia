@@ -39,6 +39,8 @@ class ZillowHomeValueSource:
                     "month available."
                 ),
                 source="Zillow Home Value Index (ZHVI)",
+                citation="Zillow Home Value Index (ZHVI), used with attribution.",
+                terms_url="https://www.zillow.com/research/data/",
             ),
         )
 

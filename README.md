@@ -260,7 +260,8 @@ Three tiers, in increasing order of what they can express and of what they cost.
 
 2. **A tabular source is a JSON spec in `specs/`** — no code. Name the URL, the
    format (`csv`, `json`, `xlsx`), the column holding a county FIPS and the column
-   holding the value. `specs/wildfire_risk.json` is a worked example. Nothing in a
+   holding the value, plus a `citation` and `terms_url` if the publisher requires
+   one. `specs/life_expectancy.json` is a worked example. Nothing in a
    spec executes, and it is validated on load — the URL must be `https`, and the
    fields that reach the published page may not contain markup — so a model can
    draft one and the blast radius stays bounded: a wrong spec produces a metric

@@ -48,6 +48,8 @@ class DeclarativeSource:
             category=spec["category"],
             description=spec["description"],
             source=spec["source"],
+            citation=spec.get("citation", ""),
+            terms_url=spec.get("terms_url", ""),
         )
 
     @staticmethod

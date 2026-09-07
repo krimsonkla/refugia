@@ -22,6 +22,11 @@ class Dataset:
     places: tuple[Place, ...]
     metrics: tuple[Metric, ...]
     values: dict[str, dict[str, float]]
+    # When this file was assembled, and the date of the oldest cached response
+    # behind it. Both, because they answer different questions: a build can be an
+    # hour old and made entirely of figures cached last year.
+    built_at: str = ""
+    oldest_response: str = ""
 
     def save(self, path: Path) -> None:
         """Write the whole dataset as JSON."""
@@ -59,10 +64,14 @@ class Dataset:
                     "category": m.category,
                     "description": m.description,
                     "source": m.source,
+                    "citation": m.citation,
+                    "terms_url": m.terms_url,
                 }
                 for m in self.metrics
             ],
             "values": self.values,
+            "built_at": self.built_at,
+            "oldest_response": self.oldest_response,
         }
 
     @classmethod
@@ -72,6 +81,10 @@ class Dataset:
             places=tuple(cls._place(p) for p in payload["places"]),
             metrics=tuple(Metric(**m) for m in payload["metrics"]),
             values={k: dict(v) for k, v in payload["values"].items()},
+            # Absent in any dataset saved before provenance existed, and a stale
+            # file should still load rather than becoming unreadable.
+            built_at=payload.get("built_at", ""),
+            oldest_response=payload.get("oldest_response", ""),
         )
 
     @staticmethod

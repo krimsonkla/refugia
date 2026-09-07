@@ -11,5 +11,7 @@
   "fips_column": "5-digit FIPS Code",
   "value_column": "Poor or Fair Health raw value",
   "aggregate": "first",
-  "scale": 100
+  "scale": 100,
+  "citation": "University of Wisconsin Population Health Institute. County Health Rankings & Roadmaps. www.countyhealthrankings.org — licensed for personal and non-profit use.",
+  "terms_url": "https://www.countyhealthrankings.org/terms-use"
 }
