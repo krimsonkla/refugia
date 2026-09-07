@@ -136,3 +136,12 @@ def test_min_coverage_zero_keeps_everything(registry, places):
     profile = Profile("t", {"juniper_cover": 1.0, "parks": 1.0}, min_coverage=0.0)
     ranked = ScoringEngine(registry).rank(places, values, profile)
     assert "00004" in {s.place.fips for s in ranked}
+
+
+def test_an_unknown_metric_key_names_the_valid_ones(places, registry):
+    """A typo in a profile is the most likely error, and the fix is a key list."""
+    profile = Profile("t", {"juniper_covr": 1.0})
+    with pytest.raises(KeyError) as caught:
+        ScoringEngine(registry).rank(places, {}, profile)
+    assert "juniper_covr" in str(caught.value)
+    assert "refugia metrics" in str(caught.value)

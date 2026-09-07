@@ -37,7 +37,12 @@ class ScoringEngine:
         normalized: dict[str, dict[str, float]] = {}
         for key in weights:
             if key not in self._registry:
-                raise KeyError(f"profile weights an unknown metric {key!r}")
+                # A typo in a hand-written profile is the likeliest way to get
+                # here, and the only useful answer is where to find the real keys.
+                raise KeyError(
+                    f"profile weights an unknown metric {key!r}; "
+                    "run `refugia metrics` for the registered keys"
+                )
             observed = {
                 fips: value for fips, value in values.get(key, {}).items() if fips in surviving_fips
             }

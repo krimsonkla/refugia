@@ -103,6 +103,34 @@ def fetch(
 
 
 @app.command()
+def metrics(
+    root: Annotated[
+        Path | None, typer.Option(help="Project root; defaults to the working directory.")
+    ] = None,
+) -> None:
+    """List every registered metric key, for writing a profile against.
+
+    Printed from the registry rather than a written list, so it cannot drift from
+    what the tool actually knows. Reads no dataset, so it works before a fetch.
+    """
+    workspace = _workspace(root)
+    registry = workspace.build_registry()
+    if not workspace.spec_dir.exists():
+        # The declarative tier lives in files beside the project, so running from
+        # anywhere else lists a short registry that looks complete.
+        typer.secho(
+            f"no specs/ under {workspace.spec_dir.parent}; "
+            "the metrics declared there are missing from this list",
+            fg="yellow",
+        )
+    typer.echo(f"{'key':26s} {'direction':16s} {'category':11s} unit")
+    for metric in sorted(registry.metrics, key=lambda m: (m.category, m.key)):
+        way = "lower is better" if metric.direction == "lower_better" else "higher is better"
+        typer.echo(f"{metric.key:26s} {way:16s} {metric.category:11s} {metric.unit}")
+    typer.echo(f"\n{len(registry.metrics)} metrics. Weight any of these in a profile's `weights`.")
+
+
+@app.command()
 def rank(
     profile: Annotated[Path, typer.Option(help="Profile JSON with weights and criteria.")],
     root: Annotated[
