@@ -101,6 +101,23 @@ uv run refugia ask "cheapest places with almost no juniper"
 re-weighting costs nothing. Copy `profiles/example.json` and edit it — the weights
 are yours, and that is the point.
 
+`--explain` breaks a place's score into what actually produced it:
+
+```
+  #  place                                         score  cover
+  1  Lincoln County, South Dakota                   69.2    90%
+       populus_cover          +  6.4   raw=0.2
+       juniper_cover          +  6.3   raw=0.0
+       sagebrush_cover        +  6.3   raw=0.0
+       air_pollution          +  6.2   raw=6.5
+       poor_mental_health_days +  4.8   raw=3.5
+       life_expectancy        +  4.7   raw=83.8
+       ...
+```
+
+Read down the contributions and you can see whether a result is real or one metric
+doing all the work.
+
 ### Every option
 
 Each command also takes `--root`, which defaults to the working directory and is
@@ -355,7 +372,11 @@ want it to, and then they do.
   the page has no server to ask. `tests/conformance/vectors.json` runs the same
   cases through both and fails the build if they disagree, so the duplication
   remains but the drift does not.
-- Network adapters are thinly tested; the scoring core is not.
+- **The network adapters are thinly tested.** The scoring core, the store and
+  the declarative tier are all above 92%; the adapters are the modules whose
+  behaviour is defined by an upstream's quirks, and testing them properly means
+  recording real payloads as fixtures. The suite runs offline and refuses to
+  make a real request, so what is covered is covered honestly.
 - Alaska and Hawaii appear in the table but not the map: the vegetation layer is
   CONUS-only.
 
