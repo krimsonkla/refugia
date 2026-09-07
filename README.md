@@ -38,6 +38,35 @@ re-weight it to their own priorities without installing anything.
 > this a way to narrow a list — not advice, and not a verdict on these places or
 > the people who live in them.
 
+### Using the page
+
+**The sliders are the point.** Move one and everything re-ranks immediately: the
+table reorders, the map reshades, the scores change. Nothing is precomputed, so
+there is no wrong question to ask of it.
+
+**Weights reorder, requirements remove.** The requirements panel drops places out
+of the running entirely — a minimum population, a maximum home value, states you
+will not consider — and each metric additionally offers "rule out anywhere worse
+than home", which is the cut you cannot express by weighting however heavily.
+
+**The map shades on whichever metric you pick**, from the selector above it, not
+only on the overall fit. That is how you see a single metric's geography rather
+than the answer's.
+
+**Click a county** for the comparison panel: every metric against home, ordered by
+how much it actually moved the score. **Click a town marker** for the city panel,
+where land cover and the health estimates are measured at the town rather than
+averaged over the county.
+
+**By keyboard:** tab to the results table and it is one stop, not three hundred.
+Arrows move between rows, Home and End jump to either end, Enter opens a county and
+Escape closes it and puts you back on the row you came from. Column headers are
+reachable and sortable with Enter, and announce their direction.
+
+**Saved setups live in your browser**, under `refugia.setups.v1` in `localStorage`.
+They are per-browser and per-device: they do not travel with a page you share, and
+somebody you send it to sees the weights it was published with, not yours.
+
 ## Why it works the way it does
 
 **Allergen exposure is structural, not forecast.** Pollen APIs answer "should I go

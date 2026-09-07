@@ -356,6 +356,7 @@
   .btn:focus-visible,
   select:focus-visible,
   input:focus-visible,
+  th:focus-visible,
   tr:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
@@ -1056,7 +1057,7 @@
 
   <div id="scrim" hidden></div>
 
-  <dialog id="citydlg">
+  <dialog id="citydlg" tabindex="-1">
     <div class="cmphead">
       <div>
         <div class="eyebrow" id="cityeyebrow">City detail</div>
@@ -1076,7 +1077,7 @@
     </div>
   </dialog>
 
-  <dialog id="cmp">
+  <dialog id="cmp" tabindex="-1">
     <div class="cmphead">
       <div>
         <div class="eyebrow" id="cmpeyebrow">Compared with home</div>
@@ -2052,12 +2053,23 @@
         dim: !((weights[m.key] || 0) > 0),
       })),
     ];
+    /* Rank counts up while everything else counts down, so the direction a reader
+      sees is not the sign the comparator uses. aria-sort has to describe the order
+      on screen, not the implementation. */
+    const ariaSort = (k) =>
+      k !== sortKey
+        ? "none"
+        : (k === "rank" ? -sortDir : sortDir) === 1
+          ? "ascending"
+          : "descending";
     document.getElementById("thead").innerHTML = cols
       .map(
         (c) =>
           `<th class="${c.k === "place" || c.k === "rank" ? "" : "num"}${
             c.dim ? " dim" : ""
-          }" data-k="${esc(c.k)}"${c.dim ? ' title="Not part of the score"' : ""}>${esc(c.l)}</th>`,
+          }" data-k="${esc(c.k)}" tabindex="0" role="button" aria-sort="${ariaSort(c.k)}"${
+            c.dim ? ' title="Not part of the score"' : ""
+          }>${esc(c.l)}</th>`,
       )
       .join("");
     const sorted = [...rows].sort((a, b) => {
@@ -2086,7 +2098,7 @@
     document.getElementById("tbody").innerHTML = slice
       .map(
         (r) => `
-    <tr data-f="${esc(r.p.fips)}" class="${[r.p.fips === selected ? "sel" : "", r.p.fips === HOME ? "home" : ""].join(" ").trim()}">
+    <tr data-f="${esc(r.p.fips)}" tabindex="-1" class="${[r.p.fips === selected ? "sel" : "", r.p.fips === HOME ? "home" : ""].join(" ").trim()}">
       <td class="rk">${r.rank}</td>
       <td>${esc(countyLabel(r.p))}<br><span style="color:var(--muted);font-size:12px">${r.p.cbsa_name ? esc(r.p.cbsa_name) : "&mdash;"}</span></td>
       <td class="num">${r.score.toFixed(1)}
@@ -2102,41 +2114,108 @@
     </tr>`,
       )
       .join("");
-    document.querySelectorAll("#thead th").forEach((th) =>
-      th.addEventListener("click", () => {
-        const k = th.dataset.k;
-        if (sortKey === k) sortDir *= -1;
-        else {
-          sortKey = k;
-          sortDir = -1;
+    /* draw() replaces every th and tr, so whatever had focus stops existing the
+      moment you act on it. Without putting it back, sorting from the keyboard
+      throws you to the top of the document and selecting a county does the same -
+      a route that exists and is unusable. */
+    const restore = (selector) => {
+      const next = document.querySelector(selector);
+      if (next) next.focus();
+    };
+    const sortBy = (k, refocus = false) => {
+      if (sortKey === k) sortDir *= -1;
+      else {
+        sortKey = k;
+        sortDir = -1;
+      }
+      draw();
+      if (refocus) restore(`#thead th[data-k="${CSS.escape(k)}"]`);
+    };
+    document.querySelectorAll("#thead th").forEach((th) => {
+      th.addEventListener("click", () => sortBy(th.dataset.k));
+      th.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        // Space scrolls the page otherwise, which moves the thing you just sorted
+        // out from under you.
+        e.preventDefault();
+        sortBy(th.dataset.k, true);
+      });
+    });
+
+    const pick = (fips, refocus = false) => {
+      selected = fips;
+      draw();
+      if (refocus) restore(`#tbody tr[data-f="${CSS.escape(fips)}"]`);
+      revealOnMap(fips);
+      showDetail(lastAll.find((r) => r.p.fips === fips));
+    };
+    /* A roving tabindex rather than a focusable row each. Three hundred bodyRows means
+      three hundred tab stops between the table and anything after it, which is a
+      worse answer than no keyboard route at all: the table becomes something to
+      escape. One stop gets you in, arrows move within, Enter opens a county. */
+    const bodyRows = [...document.querySelectorAll("#tbody tr")];
+    const entry = bodyRows.findIndex((tr) => tr.dataset.f === selected);
+    const focusRow = (i) => {
+      const next = bodyRows[Math.max(0, Math.min(bodyRows.length - 1, i))];
+      if (!next) return;
+      bodyRows.forEach((tr) => tr.setAttribute("tabindex", "-1"));
+      next.setAttribute("tabindex", "0");
+      next.focus();
+    };
+    if (bodyRows.length)
+      bodyRows[entry >= 0 ? entry : 0].setAttribute("tabindex", "0");
+    bodyRows.forEach((tr, i) => {
+      tr.addEventListener("click", () => pick(tr.dataset.f));
+      tr.addEventListener("keydown", (e) => {
+        const moves = {
+          ArrowDown: i + 1,
+          ArrowUp: i - 1,
+          Home: 0,
+          End: bodyRows.length - 1,
+          PageDown: i + 10,
+          PageUp: i - 10,
+        };
+        if (e.key in moves) {
+          e.preventDefault();
+          focusRow(moves[e.key]);
+          return;
         }
-        draw();
-      }),
-    );
-    document.querySelectorAll("#tbody tr").forEach((tr) =>
-      tr.addEventListener("click", () => {
-        selected = tr.dataset.f;
-        draw();
-        revealOnMap(selected);
-        showDetail(lastAll.find((r) => r.p.fips === selected));
-      }),
-    );
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          pick(tr.dataset.f, true);
+        }
+      });
+    });
   }
 
   const scrim = () => document.getElementById("scrim");
 
+  /* showModal() would move focus into the dialog and return it on close, but the
+    artifact frame is sandboxed without allow-modals so these open by attribute
+    instead and nothing does it for us. Without this a keyboard reader opens a
+    county and lands on the body: the panel is on screen and out of reach. */
   function openPanel(dlg) {
     document.querySelectorAll("dialog[open]").forEach((d) => {
       if (d !== dlg) d.removeAttribute("open");
     });
     dlg.setAttribute("open", "");
     scrim().hidden = false;
+    const first = dlg.querySelector("button, [href], input, select, textarea");
+    (first || dlg).focus();
   }
 
   function closePanel(dlg) {
     dlg.removeAttribute("open");
     if (!document.querySelector("dialog[open]")) scrim().hidden = true;
     if (dlg.id === "cmp") afterCompareClosed();
+    /* Focus followed the reader into the panel, so it has to come back out with
+      them. The row for the place they were looking at, rather than whatever
+      element opened it: the panel is about a county, closing it returns you to
+      that county, and afterCompareClosed has just replaced every row anyway. */
+    if (!selected) return;
+    document
+      .querySelector(`#tbody tr[data-f="${CSS.escape(selected)}"]`)
+      ?.focus();
   }
 
   function afterCompareClosed() {
