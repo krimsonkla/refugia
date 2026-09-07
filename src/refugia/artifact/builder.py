@@ -4,7 +4,8 @@ import json
 from pathlib import Path
 
 from refugia.artifact.city_markers import CityMarkers
-from refugia.artifact.city_profile import CITY_ONLY, CityProfile
+from refugia.artifact.city_profile import CityProfile
+from refugia.metrics.city_only import CITY_ONLY
 from refugia.artifact.geometry import CountyShapes
 from refugia.scoring.profile import Profile
 from refugia.store.cache import Cache

@@ -127,7 +127,7 @@ doing all the work.
 ### Every option
 
 Each command also takes `--root`, which defaults to the working directory and is
-where `data/`, `specs/` and `out/` are looked for.
+where `data/` and `out/` live, and where a `specs/` of your own is looked for.
 
 | Command   | Option        | Default                  | What it does                                 |
 | --------- | ------------- | ------------------------ | -------------------------------------------- |
@@ -281,10 +281,12 @@ Three tiers, in increasing order of what they can express and of what they cost.
    sliders, table columns and map layers from the registry, reading each metric's
    `direction`, `unit` and `category`. Nothing is hard-coded per metric.
 
-2. **A tabular source is a JSON spec in `specs/`** — no code. Name the URL, the
+2. **A tabular source is a JSON spec** — no code. The six shipped ones live in
+   `src/refugia/specs/` so an installed copy carries them; drop your own in a
+   `specs/` directory beside the project and they register alongside. Name the URL, the
    format (`csv`, `json`, `xlsx`), the column holding a county FIPS and the column
    holding the value, plus a `citation` and `terms_url` if the publisher requires
-   one. `specs/life_expectancy.json` is a worked example. Nothing in a
+   one. `src/refugia/specs/life_expectancy.json` is a worked example. Nothing in a
    spec executes, and it is validated on load — the URL must be `https`, and the
    fields that reach the published page may not contain markup — so a model can
    draft one and the blast radius stays bounded: a wrong spec produces a metric

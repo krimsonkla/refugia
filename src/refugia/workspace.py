@@ -39,9 +39,32 @@ class Workspace:
         return self._root / "data" / "dataset.json"
 
     @property
+    def packaged_spec_dir(self) -> Path:
+        """The specs that ship with refugia itself.
+
+        Inside the package rather than beside it, because a wheel carries what is
+        under `src/refugia/` and nothing else. When they lived at the project root
+        an installed copy registered fifteen metrics instead of twenty-one and said
+        nothing about the six that had vanished.
+        """
+        return Path(__file__).parent / "specs"
+
+    @property
     def spec_dir(self) -> Path:
-        """Where declarative metric specs live."""
+        """Where a user's own specs go, beside the project rather than inside it."""
         return self._root / "specs"
+
+    @property
+    def spec_files(self) -> tuple[Path, ...]:
+        """Every spec to register: the shipped ones, then any the user added.
+
+        Both, not one or the other. A key declared twice raises at registration,
+        which is the right answer -- shadowing a shipped metric with a local file
+        of the same name should be loud rather than silent.
+        """
+        shipped = sorted(self.packaged_spec_dir.glob("*.json"))
+        local = sorted(self.spec_dir.glob("*.json")) if self.spec_dir.exists() else []
+        return tuple(shipped) + tuple(local)
 
     def build_registry(self) -> MetricRegistry:
         """Register every built-in source, then every declarative spec on disk.
@@ -58,7 +81,7 @@ class Workspace:
         registry.register(NasaPowerClimateSource(self._cache))
         registry.register(EpaAirQualitySource(self._cache))
         registry.register(ZillowHomeValueSource(self._cache))
-        for spec in sorted(self.spec_dir.glob("*.json")) if self.spec_dir.exists() else []:
+        for spec in self.spec_files:
             registry.register(DeclarativeSource.from_file(spec, self._cache))
         return registry
 

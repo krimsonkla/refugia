@@ -5,6 +5,7 @@ import json
 import httpx
 
 from refugia import USER_AGENT
+from refugia.retry import Retry
 
 from refugia.metrics.metric import Metric
 from refugia.places.place import Place
@@ -61,8 +62,15 @@ class CdcPlacesSource:
     the whole design here is that the weighting is the user's to set.
     """
 
-    def __init__(self, cache: Cache, *, measures: tuple[str, ...] | None = None) -> None:
+    def __init__(
+        self,
+        cache: Cache,
+        *,
+        measures: tuple[str, ...] | None = None,
+        retry: Retry | None = None,
+    ) -> None:
         self._cache = cache
+        self._retry = retry or Retry()
         self._measures = measures or tuple(MEASURES)
         unknown = set(self._measures) - set(MEASURES)
         if unknown:
@@ -95,6 +103,25 @@ class CdcPlacesSource:
             }
         return out
 
+    def _page(self, measure: str, offset: int) -> list[dict]:
+        """One page of a measure. Paged because Socrata caps a response at 50,000."""
+        response = httpx.get(
+            ENDPOINT,
+            headers={"User-Agent": USER_AGENT},
+            params={
+                "$select": "locationid,data_value",
+                "$where": (
+                    f"measureid='{measure}' AND datavaluetypeid='CrdPrv' "
+                    "AND data_value IS NOT NULL"
+                ),
+                "$limit": 50000,
+                "$offset": offset,
+            },
+            timeout=120.0,
+        )
+        response.raise_for_status()
+        return response.json()
+
     def _measure(self, measure: str) -> dict[str, float]:
         """All counties for one measure, cached."""
         cache_key = f"cdc-places-{measure}"
@@ -103,22 +130,7 @@ class CdcPlacesSource:
         rows: list[dict] = []
         offset = 0
         while True:
-            response = httpx.get(
-                ENDPOINT,
-                headers={"User-Agent": USER_AGENT},
-                params={
-                    "$select": "locationid,data_value",
-                    "$where": (
-                        f"measureid='{measure}' AND datavaluetypeid='CrdPrv' "
-                        "AND data_value IS NOT NULL"
-                    ),
-                    "$limit": 50000,
-                    "$offset": offset,
-                },
-                timeout=120.0,
-            )
-            response.raise_for_status()
-            page = response.json()
+            page = self._retry.run(lambda offset=offset: self._page(measure, offset))
             rows.extend(page)
             if len(page) < 50000:
                 break

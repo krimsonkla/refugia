@@ -6,6 +6,7 @@ import json
 import httpx
 
 from refugia import USER_AGENT
+from refugia.retry import Retry
 
 from refugia.metrics.sources.landfire_vegetation import LandfireVegetationSource
 from refugia.store.cache import Cache
@@ -25,27 +26,6 @@ PLACES_COLUMNS = {
 }
 
 
-# Measures the place release carries that the county release does not, so they
-# have no definition among the county metrics and would otherwise be collected and
-# never shown.
-CITY_ONLY = (
-    {
-        "key": "social_isolation",
-        "label": "Social isolation",
-        "unit": "% of adults",
-        "direction": "lower_better",
-        "category": "community",
-        "description": (
-            "Adults reporting they rarely or never get the social and emotional "
-            "support they need. Published per place only, and only where the state "
-            "ran the survey module it comes from - eleven states did not, Oregon "
-            "among them, so a town there has no figure and nothing to compare against."
-        ),
-        "source": "CDC PLACES 2025 release, place data",
-    },
-)
-
-
 class CityProfile:
     """Builds the per-city metric table the city panel reads.
 
@@ -60,10 +40,21 @@ class CityProfile:
     came from rather than presenting a mixture as though it were uniform.
     """
 
-    def __init__(self, cache: Cache, *, workers: int = 8) -> None:
+    def __init__(
+        self,
+        cache: Cache,
+        *,
+        workers: int = 8,
+        vegetation: LandfireVegetationSource | None = None,
+        retry: Retry | None = None,
+    ) -> None:
         self._cache = cache
         self._workers = workers
-        self._vegetation = LandfireVegetationSource(cache)
+        # Injected rather than constructed, so a caller can hand in a source
+        # sampling at a different radius and a test can hand in one that answers
+        # without a network. The default keeps the common case a one-liner.
+        self._vegetation = vegetation or LandfireVegetationSource(cache)
+        self._retry = retry or Retry()
 
     def build(self, cities: dict[str, list[dict]]) -> dict[str, dict[str, float]]:
         """Return {place geoid: {metric key: value}} for every mapped city."""
@@ -126,20 +117,24 @@ class CityProfile:
                 out[geoid] = values
         return out
 
+    def _page(self, columns: str, offset: int) -> list[dict]:
+        """One page of the place release."""
+        response = httpx.get(
+            PLACES_ENDPOINT,
+            headers={"User-Agent": USER_AGENT},
+            params={"$select": columns, "$limit": 20000, "$offset": offset},
+            timeout=180.0,
+        )
+        response.raise_for_status()
+        return response.json()
+
     def _download(self) -> list[dict]:
         """Page through the place release, taking only the columns used."""
         columns = ",".join(["placefips", *PLACES_COLUMNS])
         rows: list[dict] = []
         offset = 0
         while True:
-            response = httpx.get(
-                PLACES_ENDPOINT,
-                headers={"User-Agent": USER_AGENT},
-                params={"$select": columns, "$limit": 20000, "$offset": offset},
-                timeout=180.0,
-            )
-            response.raise_for_status()
-            page = response.json()
+            page = self._retry.run(lambda offset=offset: self._page(columns, offset))
             rows.extend(page)
             if len(page) < 20000:
                 return rows

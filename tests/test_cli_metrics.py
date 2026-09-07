@@ -17,12 +17,16 @@ def test_metrics_lists_every_registered_key():
         assert key in result.stdout
 
 
-def test_metrics_says_when_the_spec_tier_is_absent(tmp_path):
-    """A short list that looks complete is worse than a short list that says so."""
+def test_the_shipped_metrics_are_listed_from_anywhere(tmp_path):
+    """Specs ship inside the package, so an install lists all of them.
+
+    This asserts the opposite of what it used to: when the specs lived at the
+    project root, running from anywhere else quietly listed fifteen of twenty-one.
+    """
     result = runner.invoke(app, ["metrics", "--root", str(tmp_path)])
     assert result.exit_code == 0
-    assert "wildfire_risk" not in result.stdout
-    assert "no specs/" in result.stdout
+    assert "wildfire_risk" in result.stdout
+    assert "21 metrics" in result.stdout
 
 
 def test_metrics_says_which_way_is_better():

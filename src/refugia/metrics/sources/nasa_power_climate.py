@@ -3,11 +3,11 @@
 import concurrent.futures
 import json
 import math
-import time
 
 import httpx
 
 from refugia import USER_AGENT
+from refugia.retry import Retry
 
 from refugia.metrics.metric import Metric
 from refugia.places.place import Place
@@ -49,7 +49,9 @@ class NasaPowerClimateSource:
     def __init__(self, cache: Cache, *, workers: int = 6, retries: int = 4) -> None:
         self._cache = cache
         self._workers = workers
-        self._retries = retries
+        # ValueError and KeyError are declared transient because this endpoint
+        # answers 200 with an error body and with partly-shaped features.
+        self._retry = Retry(retries, 1.5, also_transient=(KeyError, ValueError))
         self._failures: list[tuple[str, str]] = []
 
     @property
@@ -192,39 +194,40 @@ class NasaPowerClimateSource:
 
     def _request(self, parameter: str, lat: float, lon: float) -> dict[tuple[float, float], float]:
         """One regional call, retried with backoff."""
-        last: Exception | None = None
-        for attempt in range(self._retries):
-            try:
-                response = httpx.get(
-                    ENDPOINT,
-                    headers={"User-Agent": USER_AGENT},
-                    params={
-                        "latitude-min": lat,
-                        "latitude-max": lat + TILE,
-                        "longitude-min": lon,
-                        "longitude-max": lon + TILE,
-                        "community": "ag",
-                        "parameters": parameter,
-                        "format": "json",
-                    },
-                    timeout=180.0,
-                )
-                response.raise_for_status()
-                body = response.json()
-                if "features" not in body:
-                    raise ValueError(str(body.get("messages") or body)[:160])
-                points = {}
-                for feature in body["features"]:
-                    x, y = feature["geometry"]["coordinates"][:2]
-                    value = feature["properties"]["parameter"][parameter]["ANN"]
-                    # POWER marks absent cells, chiefly open ocean, with a fill value.
-                    if value is not None and value > -900:
-                        points[(float(y), float(x))] = float(value)
-                return points
-            except (httpx.HTTPError, OSError, KeyError, ValueError) as error:
-                last = error
-                time.sleep(1.5 * (2**attempt))
-        raise last if last else RuntimeError("unreachable")
+        return self._retry.run(lambda: self._request_once(parameter, lat, lon))
+
+    def _request_once(
+        self, parameter: str, lat: float, lon: float
+    ) -> dict[tuple[float, float], float]:
+        """A single unretried regional call."""
+        response = httpx.get(
+            ENDPOINT,
+            headers={"User-Agent": USER_AGENT},
+            params={
+                "latitude-min": lat,
+                "latitude-max": lat + TILE,
+                "longitude-min": lon,
+                "longitude-max": lon + TILE,
+                "community": "ag",
+                "parameters": parameter,
+                "format": "json",
+            },
+            timeout=180.0,
+        )
+        response.raise_for_status()
+        body = response.json()
+        # A 200 carrying an error payload rather than data: transient, and the
+        # reason this source declares ValueError and KeyError retryable.
+        if "features" not in body:
+            raise ValueError(str(body.get("messages") or body)[:160])
+        points = {}
+        for feature in body["features"]:
+            x, y = feature["geometry"]["coordinates"][:2]
+            value = feature["properties"]["parameter"][parameter]["ANN"]
+            # POWER marks absent cells, chiefly open ocean, with a fill value.
+            if value is not None and value > -900:
+                points[(float(y), float(x))] = float(value)
+        return points
 
     @staticmethod
     def _nearest(bucket: dict[tuple[int, int], list], lat: float, lon: float) -> float | None:

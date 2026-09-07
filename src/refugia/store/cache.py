@@ -7,6 +7,7 @@ from pathlib import Path
 import httpx
 
 from refugia import USER_AGENT
+from refugia.retry import Retry
 
 
 class Cache:
@@ -19,9 +20,14 @@ class Cache:
     mid-analysis.
     """
 
-    def __init__(self, root: Path) -> None:
+    def __init__(self, root: Path, *, retry: Retry | None = None) -> None:
         self._root = root
         self._root.mkdir(parents=True, exist_ok=True)
+        # Every declarative spec, Zillow, the EPA summaries and the map topology
+        # come through fetch_url, and none of them used to survive a dropped
+        # connection. Since a failing source now costs its own metrics rather than
+        # the run, that silence was the expensive kind.
+        self._retry = retry or Retry()
 
     def path_for(self, key: str, suffix: str = "") -> Path:
         """The file backing one cache key."""
@@ -76,9 +82,14 @@ class Cache:
         cache_key = key or url
         if not refresh and self.has(cache_key, suffix):
             return self.read(cache_key, suffix)
-        response = httpx.get(
-            url, timeout=timeout, follow_redirects=True, headers={"User-Agent": USER_AGENT}
-        )
-        response.raise_for_status()
+
+        def request() -> httpx.Response:
+            response = httpx.get(
+                url, timeout=timeout, follow_redirects=True, headers={"User-Agent": USER_AGENT}
+            )
+            response.raise_for_status()
+            return response
+
+        response = self._retry.run(request)
         self.write(cache_key, response.content, suffix)
         return response.content

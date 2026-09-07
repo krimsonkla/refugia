@@ -15,7 +15,10 @@ from refugia.metrics.sources.declarative import DeclarativeSource
 from refugia.store.cache import Cache
 from refugia.workspace import Workspace
 
-SPEC_DIR = Path(__file__).resolve().parents[1] / "specs"
+ROOT = Path(__file__).resolve().parents[1]
+# Inside the package, because that is what a wheel carries. A user's own specs go
+# in <root>/specs and are registered alongside these.
+SPEC_DIR = ROOT / "src" / "refugia" / "specs"
 SPECS = sorted(SPEC_DIR.glob("*.json"))
 
 
@@ -56,7 +59,7 @@ def test_a_spec_citing_a_source_also_links_its_terms(spec):
 
 def test_the_registry_accepts_every_spec_beside_the_adapters():
     """Duplicate keys raise at registration, which is the composition root's job."""
-    registry = Workspace(SPEC_DIR.parent).build_registry()
+    registry = Workspace(ROOT).build_registry()
     keys = [m.key for m in registry.metrics]
     assert len(keys) == len(set(keys))
     assert set(s.stem for s in SPECS) <= set(keys)
@@ -64,5 +67,36 @@ def test_the_registry_accepts_every_spec_beside_the_adapters():
 
 def test_the_registry_holds_every_metric_the_project_ships():
     """A source silently dropping out is the failure this is here to catch."""
-    registry = Workspace(SPEC_DIR.parent).build_registry()
+    registry = Workspace(ROOT).build_registry()
     assert len(registry.metrics) == 21
+
+
+def test_the_shipped_specs_are_found_from_an_unrelated_directory(tmp_path):
+    """The whole point of moving them: an install has no project root to look in."""
+    assert len(Workspace(tmp_path).build_registry().metrics) == 21
+
+
+def test_a_user_can_add_a_spec_beside_the_project(tmp_path):
+    """<root>/specs still works, and its files are registered after the shipped ones."""
+    local = tmp_path / "specs"
+    local.mkdir()
+    (local / "extra.json").write_text(
+        json.dumps(
+            {
+                "key": "extra",
+                "label": "Extra",
+                "unit": "u",
+                "direction": "lower_better",
+                "category": "test",
+                "description": "d",
+                "source": "s",
+                "url": "https://example.invalid/x.csv",
+                "format": "csv",
+                "fips_column": "GEOID",
+                "value_column": "val",
+            }
+        )
+    )
+    keys = [m.key for m in Workspace(tmp_path).build_registry().metrics]
+    assert "extra" in keys
+    assert len(keys) == 22

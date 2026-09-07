@@ -48,7 +48,10 @@ Four layers, each depending only on the one below.
 - `artifact/`, `ask/`, `cli.py` — front ends. All read the same `Dataset` and `Profile`.
 
 `workspace.py` is the composition root and the only module that knows the full
-source set exists.
+source set exists. Declarative specs ship in `src/refugia/specs/` — inside the
+package, because a wheel carries nothing outside it — and a `specs/` beside the
+project is registered after them, so a user's own spec cannot silently shadow a
+shipped one.
 
 ## Local Conventions
 

@@ -6,7 +6,6 @@ import io
 import json
 import math
 import re
-import time
 from collections import Counter
 
 import httpx
@@ -16,6 +15,7 @@ from refugia import USER_AGENT
 from refugia.metrics.metric import Metric
 from refugia.metrics.sources.sampling import Sampling
 from refugia.metrics.sources.throttle import Throttle
+from refugia.retry import Retry
 from refugia.places.place import Place
 from refugia.store.cache import Cache
 
@@ -75,6 +75,7 @@ class LandfireVegetationSource:
         # Shared by every worker, so the limit is the source's and not each
         # thread's -- see Throttle.
         self._throttle = Throttle(self._sampling.min_interval)
+        self._retry = Retry(self._sampling.retries, self._sampling.backoff)
         self._failures: list[tuple[str, str]] = []
         self._outside: list[tuple[str, str]] = []
         self._classes: dict[str, frozenset[int]] | None = None
@@ -212,17 +213,11 @@ class LandfireVegetationSource:
         use. Without this a single reset ends a run of nineteen hundred requests,
         which is how the whole fetch was lost two places from the end.
         """
-        # OutsideCoverage is deliberately not caught below: it is permanent, and
-        # Alaska and the territories would otherwise spend minutes of backoff on
-        # every run re-confirming a fixed fact.
-        last: Exception | None = None
-        for attempt in range(self._sampling.retries):
-            try:
-                return self._request_once(lat, lon)
-            except (httpx.HTTPError, OSError) as error:
-                last = error
-                time.sleep(self._sampling.backoff * (2**attempt))
-        raise last if last else RuntimeError("unreachable")
+        # OutsideCoverage is permanent, and Retry raises anything it does not
+        # recognise as transient at once -- so Alaska and the territories no longer
+        # spend minutes of backoff on every run re-confirming a fixed fact. Neither
+        # does a 404 from a service that has moved, which the old loop retried.
+        return self._retry.run(lambda: self._request_once(lat, lon))
 
     def _request_once(self, lat: float, lon: float) -> Counter:
         """A single unretried getSamples call."""

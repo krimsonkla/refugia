@@ -66,9 +66,9 @@ is a fix nobody can prove stays fixed.
 
 Three tiers, cheapest first — the README has the reasoning, this is the mechanics.
 
-**A JSON spec in `specs/`** needs no code. Name the URL, the format (`csv`, `json`,
+**A JSON spec** needs no code. The shipped ones live in `src/refugia/specs/`, inside the package so a wheel carries them; a `specs/` beside the project is where a user's own go, and both are registered. Name the URL, the format (`csv`, `json`,
 `xlsx`), the column holding a county FIPS and the column holding the value.
-`specs/wildfire_risk.json` is a worked example. Specs are validated on load: the
+`src/refugia/specs/wildfire_risk.json` is a worked example. Specs are validated on load: the
 URL must be `https`, and `key`, `label`, `unit`, `category`, `description` and
 `source` may not contain angle brackets, because all six are interpolated into the
 published page.

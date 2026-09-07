@@ -209,12 +209,12 @@ def metrics(
     """
     workspace = _workspace(root)
     registry = workspace.build_registry()
-    if not workspace.spec_dir.exists():
-        # The declarative tier lives in files beside the project, so running from
-        # anywhere else lists a short registry that looks complete.
+    if not workspace.packaged_spec_dir.exists():
+        # Shipped specs are inside the package, so this only fires on a broken
+        # install -- but a short list that looks complete is the failure mode.
         typer.secho(
-            f"no specs/ under {workspace.spec_dir.parent}; "
-            "the metrics declared there are missing from this list",
+            f"no specs under {workspace.packaged_spec_dir}; this install is missing "
+            "the metrics they declare",
             fg="yellow",
         )
     typer.echo(f"{'key':26s} {'direction':16s} {'category':11s} unit")
