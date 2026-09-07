@@ -24,29 +24,29 @@ from refugia.artifact.city_markers import (
 from refugia.places.place import Place
 from refugia.store.cache import Cache
 
-DESCHUTES = Place(
-    fips="41017", name="Deschutes", state="Oregon", lat=44.08, lon=-121.35, population=198253
+LARIMER = Place(
+    fips="08069", name="Larimer", state="Colorado", lat=40.66, lon=-105.46, population=198253
 )
-JEFFERSON = Place(
-    fips="41031", name="Jefferson", state="Oregon", lat=44.63, lon=-121.17, population=25000
+BOULDER = Place(
+    fips="08013", name="Boulder", state="Colorado", lat=40.09, lon=-105.36, population=25000
 )
 
 POPULATION_COLUMNS = ["SUMLEV", "STATE", "COUNTY", "PLACE", "NAME", "POPESTIMATE2024"]
 # SUMLEV 157 is place-within-county; 162 is the whole place, which double-counts.
 POPULATION_ROWS = [
-    ["157", "41", "017", "05800", "Bend city", "104557"],
-    ["157", "41", "017", "60650", "Redmond city", "39000"],
-    ["157", "41", "017", "72700", "Sisters city", "3500"],
-    ["157", "41", "017", "39700", "La Pine city", "2600"],
-    ["162", "41", "000", "05800", "Bend city", "104557"],
+    ["157", "08", "069", "27425", "Fort Collins city", "104557"],
+    ["157", "08", "069", "45255", "Loveland city", "39000"],
+    ["157", "08", "069", "24785", "Estes Park city", "3500"],
+    ["157", "08", "069", "06640", "Berthoud town", "2600"],
+    ["162", "08", "000", "27425", "Fort Collins city", "104557"],
 ]
 
 GAZETTEER_COLUMNS = ["USPS", "GEOID", "NAME", "INTPTLAT", "INTPTLONG    "]
 GAZETTEER_ROWS = [
-    ["OR", "4105800", "Bend city", "44.0582", "-121.3153"],
-    ["OR", "4160650", "Redmond city", "44.2726", "-121.1739"],
-    ["OR", "4172700", "Sisters city", "44.2909", "-121.5490"],
-    ["OR", "4139700", "La Pine city", "43.6704", "-121.5039"],
+    ["CO", "0827425", "Fort Collins city", "40.5853", "-105.0844"],
+    ["CO", "0845255", "Loveland city", "40.4166", "-105.0621"],
+    ["CO", "0824785", "Estes Park city", "40.3772", "-105.5217"],
+    ["CO", "0806640", "Berthoud town", "40.3083", "-105.0811"],
 ]
 
 # scale, offset x, offset y -- the same shape CountyShapes hands over.
@@ -85,25 +85,26 @@ def _seeded(tmp_path):
 
 def test_the_biggest_towns_in_a_county_come_back_biggest_first(seeded):
     """The page labels the first few, so the order is what is actually shown."""
-    markers = CityMarkers(seeded()).for_places((DESCHUTES,), TRANSFORM)
-    assert [c["name"] for c in markers["41017"]] == ["Bend", "Redmond", "Sisters"]
+    markers = CityMarkers(seeded()).for_places((LARIMER,), TRANSFORM)
+    assert [c["name"] for c in markers["08069"]] == ["Fort Collins", "Loveland", "Estes Park"]
 
 
 def test_only_the_first_few_towns_per_county_are_kept(seeded):
     """Four towns were seeded for one county; the map cannot label them all."""
-    assert (
-        len(CityMarkers(seeded(), per_county=2).for_places((DESCHUTES,), TRANSFORM)["41017"]) == 2
-    )
+    assert len(CityMarkers(seeded(), per_county=2).for_places((LARIMER,), TRANSFORM)["08069"]) == 2
 
 
 def test_the_legal_type_is_dropped_from_the_label(seeded):
-    """ "Bend city" is a Census legal name, not what anyone calls the place."""
-    assert CityMarkers(seeded()).for_places((DESCHUTES,), TRANSFORM)["41017"][0]["name"] == "Bend"
+    """ "Fort Collins city" is a Census legal name, not what anyone calls the place."""
+    assert (
+        CityMarkers(seeded()).for_places((LARIMER,), TRANSFORM)["08069"][0]["name"]
+        == "Fort Collins"
+    )
 
 
 def test_a_county_that_was_not_asked_for_is_not_returned(seeded):
     """The universe decides the candidates, and the markers must not widen it."""
-    assert set(CityMarkers(seeded()).for_places((JEFFERSON,), TRANSFORM)) == set()
+    assert set(CityMarkers(seeded()).for_places((BOULDER,), TRANSFORM)) == set()
 
 
 def test_a_place_split_across_counties_is_counted_once_in_the_larger_share(seeded):
@@ -125,73 +126,73 @@ def test_a_place_split_across_counties_is_counted_once_in_the_larger_share(seede
 
 def test_whole_place_rows_are_ignored_so_towns_are_not_counted_twice(seeded):
     """The same file carries a summary row per place with no county on it."""
-    names = [c["name"] for c in CityMarkers(seeded()).for_places((DESCHUTES,), TRANSFORM)["41017"]]
-    assert names.count("Bend") == 1
+    names = [c["name"] for c in CityMarkers(seeded()).for_places((LARIMER,), TRANSFORM)["08069"]]
+    assert names.count("Fort Collins") == 1
 
 
 def test_a_row_whose_population_will_not_parse_is_skipped(seeded):
     """The estimates use (X) for a suppressed figure rather than leaving it blank."""
-    rows = [*POPULATION_ROWS[:1], ["157", "41", "017", "60650", "Redmond city", "(X)"]]
+    rows = [*POPULATION_ROWS[:1], ["157", "08", "069", "45255", "Loveland city", "(X)"]]
     markers = CityMarkers(seeded(population=_population_csv(rows))).for_places(
-        (DESCHUTES,), TRANSFORM
+        (LARIMER,), TRANSFORM
     )
-    assert [c["name"] for c in markers["41017"]] == ["Bend"]
+    assert [c["name"] for c in markers["08069"]] == ["Fort Collins"]
 
 
 def test_a_town_with_no_coordinate_is_left_off_the_map(seeded):
     """A marker at (0, 0) is a town in the Gulf of Guinea."""
     gazetteer = _gazetteer_zip(rows=GAZETTEER_ROWS[1:])
-    markers = CityMarkers(seeded(gazetteer=gazetteer)).for_places((DESCHUTES,), TRANSFORM)
-    assert "Bend" not in [c["name"] for c in markers["41017"]]
+    markers = CityMarkers(seeded(gazetteer=gazetteer)).for_places((LARIMER,), TRANSFORM)
+    assert "Fort Collins" not in [c["name"] for c in markers["08069"]]
 
 
 def test_the_gazetteer_header_is_padded_and_has_to_be_stripped(seeded):
     """The final column arrives as "INTPTLONG    ". Indexed unstripped, every
     lookup raises KeyError and no town gets a coordinate at all."""
     assert GAZETTEER_COLUMNS[-1] != GAZETTEER_COLUMNS[-1].strip(), "the fixture must keep the pad"
-    assert CityMarkers(seeded()).for_places((DESCHUTES,), TRANSFORM)["41017"]
+    assert CityMarkers(seeded()).for_places((LARIMER,), TRANSFORM)["08069"]
 
 
 def test_a_truncated_gazetteer_row_is_skipped_rather_than_raising(seeded):
     """The file ends with a short line often enough to matter."""
-    rows = [*GAZETTEER_ROWS, ["OR", "4100000"]]
+    rows = [*GAZETTEER_ROWS, ["CO", "4100000"]]
     assert CityMarkers(seeded(gazetteer=_gazetteer_zip(rows=rows))).for_places(
-        (DESCHUTES,), TRANSFORM
-    )["41017"]
+        (LARIMER,), TRANSFORM
+    )["08069"]
 
 
 def test_an_unparseable_coordinate_is_skipped_rather_than_raising(seeded):
     """Every value in this file is text until it parses."""
-    rows = [["OR", "4105800", "Bend city", "", ""], *GAZETTEER_ROWS[1:]]
+    rows = [["CO", "0827425", "Fort Collins city", "", ""], *GAZETTEER_ROWS[1:]]
     names = [
         c["name"]
         for c in CityMarkers(seeded(gazetteer=_gazetteer_zip(rows=rows))).for_places(
-            (DESCHUTES,), TRANSFORM
-        )["41017"]
+            (LARIMER,), TRANSFORM
+        )["08069"]
     ]
-    assert "Bend" not in names and "Redmond" in names
+    assert "Fort Collins" not in names and "Loveland" in names
 
 
 def test_a_marker_carries_both_the_map_position_and_the_real_coordinate(seeded):
     """x and y draw it; lat and lon are what the city panel resamples at."""
-    bend = CityMarkers(seeded()).for_places((DESCHUTES,), TRANSFORM)["41017"][0]
-    assert bend["lat"] == pytest.approx(44.0582) and bend["lon"] == pytest.approx(-121.3153)
-    assert isinstance(bend["x"], float) and isinstance(bend["y"], float)
+    town = CityMarkers(seeded()).for_places((LARIMER,), TRANSFORM)["08069"][0]
+    assert town["lat"] == pytest.approx(40.5853) and town["lon"] == pytest.approx(-105.0844)
+    assert isinstance(town["x"], float) and isinstance(town["y"], float)
 
 
 def test_the_transform_moves_and_scales_the_projected_point(seeded):
     """The markers and the county outlines have to land in the same coordinate
     space, and they are projected by different code."""
-    plain = CityMarkers(seeded()).for_places((DESCHUTES,), TRANSFORM)["41017"][0]
-    moved = CityMarkers(seeded()).for_places((DESCHUTES,), (2.0, 100.0, 50.0))["41017"][0]
+    plain = CityMarkers(seeded()).for_places((LARIMER,), TRANSFORM)["08069"][0]
+    moved = CityMarkers(seeded()).for_places((LARIMER,), (2.0, 100.0, 50.0))["08069"][0]
     assert moved["x"] == pytest.approx(plain["x"] * 2 + 100.0, abs=0.11)
     assert moved["y"] == pytest.approx(plain["y"] * 2 + 50.0, abs=0.11)
 
 
 def test_the_place_geoid_travels_with_the_marker(seeded):
     """It is the join key for everything published per town, the city panel first."""
-    assert CityMarkers(seeded()).for_places((DESCHUTES,), TRANSFORM)["41017"][0]["geoid"] == (
-        "4105800"
+    assert CityMarkers(seeded()).for_places((LARIMER,), TRANSFORM)["08069"][0]["geoid"] == (
+        "0827425"
     )
 
 
@@ -202,13 +203,13 @@ def test_neither_census_file_is_downloaded_twice(seeded, monkeypatch):
         raise AssertionError("both files were seeded; nothing should reach the network")
 
     monkeypatch.setattr(httpx, "get", explode)
-    assert CityMarkers(seeded()).for_places((DESCHUTES,), TRANSFORM)["41017"]
+    assert CityMarkers(seeded()).for_places((LARIMER,), TRANSFORM)["08069"]
 
 
 @pytest.mark.parametrize(
     ("raw", "expected"),
     [
-        ("Bend city", "Bend"),
+        ("Fort Collins city", "Fort Collins"),
         # The suffixes stack: a split place is published with both.
         ("Portland city (pt.)", "Portland"),
         ("Athens-Clarke County unified government (balance)", "Athens-Clarke County"),

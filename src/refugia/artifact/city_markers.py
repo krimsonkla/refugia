@@ -23,8 +23,8 @@ PLACE_IN_COUNTY = "157"
 
 # The legal type the Census appends is always lower case, which is what makes it
 # separable from the name: "Carson City" is a place called Carson City, while
-# "Bend city" is Bend. Matching is therefore case sensitive, and longest first so
-# that "urban county" is not mistaken for "county".
+# "Sioux Falls city" is Sioux Falls. Matching is therefore case sensitive, and
+# longest first so that "urban county" is not mistaken for "county".
 SUFFIXES = tuple(
     sorted(
         (

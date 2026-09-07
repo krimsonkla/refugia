@@ -69,32 +69,32 @@ def _seeded(tmp_path):
 
 def test_only_the_counties_asked_for_are_projected(seeded):
     """The universe decides the candidates; the map must not widen or narrow it."""
-    cache = seeded(_topology({"41017": [0], "41031": [1]}))
-    shapes = CountyShapes(cache).build({"41017"})
-    assert set(shapes.counties) == {"41017"}
+    cache = seeded(_topology({"08069": [0], "08013": [1]}))
+    shapes = CountyShapes(cache).build({"08069"})
+    assert set(shapes.counties) == {"08069"}
 
 
 def test_every_state_border_is_drawn_whichever_counties_were_asked_for(seeded):
     """The borders are context. Restricted to the requested counties the map would
     lose the outline of a state the user has ruled out, and stop being a map."""
-    cache = seeded(_topology({"41017": [0]}, states={"41": [1]}))
-    shapes = CountyShapes(cache).build({"41017"})
-    assert set(shapes.states) == {"41"}
+    cache = seeded(_topology({"08069": [0]}, states={"08": [1]}))
+    shapes = CountyShapes(cache).build({"08069"})
+    assert set(shapes.states) == {"08"}
 
 
 def test_alaska_hawaii_and_the_territories_are_left_off_the_map(seeded):
     """The vegetation layer is CONUS-only, so these would render as permanently
     blank shapes. They stay in the table, where the numbers they do have show."""
-    cache = seeded(_topology({"02020": [0], "41017": [1]}, states={"15": [2]}))
-    shapes = CountyShapes(cache).build({"02020", "41017"})
-    assert set(shapes.counties) == {"41017"}
+    cache = seeded(_topology({"02020": [0], "08069": [1]}, states={"15": [2]}))
+    shapes = CountyShapes(cache).build({"02020", "08069"})
+    assert set(shapes.counties) == {"08069"}
     assert not shapes.states
     assert "02" in OFF_MAP_STATES and "15" in OFF_MAP_STATES
 
 
 def test_a_path_is_emitted_as_a_closed_svg_ring(seeded):
     """The page sets a fill on these, and an unclosed path fills unpredictably."""
-    path = CountyShapes(seeded(_topology({"41017": [0]}))).build({"41017"}).counties["41017"]
+    path = CountyShapes(seeded(_topology({"08069": [0]}))).build({"08069"}).counties["08069"]
     assert path.startswith("M") and path.endswith("Z") and "L" in path
 
 
@@ -102,9 +102,9 @@ def test_counties_and_borders_share_one_transform(seeded):
     """Fitted separately the two layers land at different scales, and the borders
     stop bounding the counties they are drawn around."""
     # The same ring in both layers: under one transform it lands in one place.
-    cache = seeded(_topology({"41017": [0], "41031": [2]}, states={"41": [0]}))
-    shapes = CountyShapes(cache).build({"41017", "41031"})
-    assert shapes.states["41"] == shapes.counties["41017"]
+    cache = seeded(_topology({"08069": [0], "08013": [2]}, states={"08": [0]}))
+    shapes = CountyShapes(cache).build({"08069", "08013"})
+    assert shapes.states["08"] == shapes.counties["08069"]
 
 
 def _xs(path: str) -> list[float]:
@@ -117,8 +117,8 @@ def _ys(path: str) -> list[float]:
 
 def test_the_drawing_fits_inside_the_viewbox(seeded):
     """Anything outside is clipped by the SVG and simply not there."""
-    cache = seeded(_topology({"41017": [0], "41031": [1], "41013": [2]}))
-    shapes = CountyShapes(cache, width=400.0, height=300.0).build({"41017", "41031", "41013"})
+    cache = seeded(_topology({"08069": [0], "08013": [1], "08123": [2]}))
+    shapes = CountyShapes(cache, width=400.0, height=300.0).build({"08069", "08013", "08123"})
     for path in shapes.counties.values():
         assert 0 <= min(_xs(path)) and max(_xs(path)) <= 400.0
         assert 0 <= min(_ys(path)) and max(_ys(path)) <= 300.0
@@ -127,10 +127,10 @@ def test_the_drawing_fits_inside_the_viewbox(seeded):
 def test_a_centroid_lands_inside_its_own_county(seeded):
     """The marker for a selected county is drawn here, and a centroid outside the
     shape points at a neighbour."""
-    cache = seeded(_topology({"41017": [0]}))
-    shapes = CountyShapes(cache).build({"41017"})
-    x, y = shapes.centroids["41017"]
-    path = shapes.counties["41017"]
+    cache = seeded(_topology({"08069": [0]}))
+    shapes = CountyShapes(cache).build({"08069"})
+    x, y = shapes.centroids["08069"]
+    path = shapes.counties["08069"]
     assert min(_xs(path)) <= x <= max(_xs(path))
     assert min(_ys(path)) <= y <= max(_ys(path))
 
@@ -163,36 +163,36 @@ def test_the_delta_encoding_is_undone_before_projecting(seeded):
     """TopoJSON arcs are stored as differences from the previous point. Read as
     absolute coordinates every county collapses towards the origin, and the map
     still renders -- as a smear near one corner."""
-    cache = seeded(_topology({"41017": [0], "41013": [2]}))
-    shapes = CountyShapes(cache).build({"41017", "41013"})
-    east = shapes.centroids["41013"][0]
-    west = shapes.centroids["41017"][0]
+    cache = seeded(_topology({"08069": [0], "08123": [2]}))
+    shapes = CountyShapes(cache).build({"08069", "08123"})
+    east = shapes.centroids["08123"][0]
+    west = shapes.centroids["08069"][0]
     assert east > west, "the eastern county must project to the east"
 
 
 def test_a_negative_arc_index_reverses_that_arc(seeded):
     """TopoJSON shares one arc between neighbours, and the second traverses it
     backwards. Ignoring the sign draws a bow-tie instead of a polygon."""
-    topology = _topology({"41017": [0]})
+    topology = _topology({"08069": [0]})
     topology["objects"]["counties"]["geometries"][0]["arcs"] = [[~0]]
-    forward = CountyShapes(seeded(_topology({"41017": [0]}))).build({"41017"})
-    reversed_ = CountyShapes(seeded(topology)).build({"41017"})
-    assert forward.counties["41017"] != reversed_.counties["41017"]
+    forward = CountyShapes(seeded(_topology({"08069": [0]}))).build({"08069"})
+    reversed_ = CountyShapes(seeded(topology)).build({"08069"})
+    assert forward.counties["08069"] != reversed_.counties["08069"]
     # Same points, opposite order: the shape it encloses is unchanged.
-    assert sorted(_xs(forward.counties["41017"])) == pytest.approx(
-        sorted(_xs(reversed_.counties["41017"]))
+    assert sorted(_xs(forward.counties["08069"])) == pytest.approx(
+        sorted(_xs(reversed_.counties["08069"]))
     )
 
 
 def test_a_multipolygon_contributes_every_island(seeded):
     """An island dropped is a county drawn with a piece missing."""
-    topology = _topology({"41017": [0]})
+    topology = _topology({"08069": [0]})
     topology["objects"]["counties"]["geometries"][0] = {
         "type": "MultiPolygon",
-        "id": "41017",
+        "id": "08069",
         "arcs": [[[0]], [[1]]],
     }
-    path = CountyShapes(seeded(topology)).build({"41017"}).counties["41017"]
+    path = CountyShapes(seeded(topology)).build({"08069"}).counties["08069"]
     assert path.count("M") == 2
 
 
@@ -235,5 +235,5 @@ def test_the_topology_is_not_downloaded_twice(seeded, monkeypatch):
         raise AssertionError("the topology was cached; nothing should reach the network")
 
     monkeypatch.setattr(httpx, "get", explode)
-    assert CountyShapes(seeded(_topology({"41017": [0]}))).build({"41017"}).counties
+    assert CountyShapes(seeded(_topology({"08069": [0]}))).build({"08069"}).counties
     assert TOPOJSON_URL.startswith("https://")

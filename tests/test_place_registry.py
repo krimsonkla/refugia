@@ -23,7 +23,7 @@ CENTROIDS = "\n".join(
     [
         CENTROID_HEADER,
         "6,37,Los Angeles,California,10014009,34.043360,-118.251160",
-        "41,17,Deschutes,Oregon,198253,44.077406,-121.348514",
+        "8,69,Larimer,Colorado,198253,40.660000,-105.460000",
         "30,55,McCone,Montana,1723,47.645537,-105.795530",
     ]
 )
@@ -37,7 +37,7 @@ DELINEATION_COLUMNS = [
 ]
 DELINEATION_ROWS = [
     ["31080", "Los Angeles-Long Beach-Anaheim, CA", "Metropolitan Statistical Area", "06", "037"],
-    ["13460", "Bend, OR", "Metropolitan Statistical Area", "41", "017"],
+    ["22660", "Fort Collins, CO", "Metropolitan Statistical Area", "08", "069"],
     ["21580", "Elko, NV", "Micropolitan Statistical Area", "32", "007"],
 ]
 
@@ -81,7 +81,7 @@ def test_the_default_universe_is_the_counties_inside_a_cbsa(seeded):
     """`metro_micro` is the default because a county with no town in it has no
     housing market, no city and no one to be near."""
     places = PlaceRegistry.load(seeded()).places
-    assert [p.fips for p in places] == ["06037", "41017"]
+    assert [p.fips for p in places] == ["06037", "08069"]
     assert all(p.cbsa is not None for p in places)
 
 
@@ -90,7 +90,7 @@ def test_metro_narrows_further_and_all_keeps_everything(seeded):
     micro_too = _delineation_bytes(
         rows=[
             *DELINEATION_ROWS[:1],
-            ["13460", "Bend, OR", "Micropolitan Statistical Area", "41", "017"],
+            ["22660", "Fort Collins, CO", "Micropolitan Statistical Area", "08", "069"],
         ]
     )
     assert [
@@ -98,8 +98,8 @@ def test_metro_narrows_further_and_all_keeps_everything(seeded):
     ] == ["06037"]
     assert [p.fips for p in PlaceRegistry.load(seeded(), universe="all").places] == [
         "06037",
+        "08069",
         "30055",
-        "41017",
     ]
 
 
@@ -163,9 +163,9 @@ def test_the_header_is_found_wherever_the_vintage_put_it(seeded):
     """The delineation file opens with title rows, and how many has changed."""
     for preamble in (0, 1, 5):
         registry = PlaceRegistry.load(seeded(delineation=_delineation_bytes(preamble=preamble)))
-        bend = registry.get("41017")
-        assert bend is not None and bend.cbsa is not None
-        assert bend.cbsa.name == "Bend, OR", f"preamble of {preamble} rows"
+        larimer = registry.get("08069")
+        assert larimer is not None and larimer.cbsa is not None
+        assert larimer.cbsa.name == "Fort Collins, CO", f"preamble of {preamble} rows"
 
 
 def test_metropolitan_and_micropolitan_are_told_apart(seeded):
@@ -183,7 +183,7 @@ def test_metropolitan_and_micropolitan_are_told_apart(seeded):
 def test_a_delineation_row_missing_its_codes_is_skipped_not_guessed(seeded):
     """The real file ends with footnotes, which arrive as rows with empty cells."""
     ragged = _delineation_bytes(rows=[*DELINEATION_ROWS, ["", "", "", "", ""], [None] * 5])
-    assert PlaceRegistry.load(seeded(delineation=ragged)).get("41017") is not None
+    assert PlaceRegistry.load(seeded(delineation=ragged)).get("08069") is not None
 
 
 def test_places_come_back_in_fips_order_however_the_file_was_ordered(seeded):
@@ -191,13 +191,13 @@ def test_places_come_back_in_fips_order_however_the_file_was_ordered(seeded):
     shuffled = "\n".join(
         [
             CENTROID_HEADER,
-            "41,17,Deschutes,Oregon,198253,44.077406,-121.348514",
+            "8,69,Larimer,Colorado,198253,40.660000,-105.460000",
             "6,37,Los Angeles,California,10014009,34.043360,-118.251160",
         ]
     )
     assert [p.fips for p in PlaceRegistry.load(seeded(centroids=shuffled)).places] == [
         "06037",
-        "41017",
+        "08069",
     ]
 
 
@@ -207,9 +207,10 @@ def test_the_centroid_is_the_population_weighted_one(seeded):
     landscape the candidate would never breathe -- which is why this file is the
     one used, and why the numbers have to survive the parse as floats.
     """
-    deschutes = PlaceRegistry.load(seeded()).get("41017")
-    assert (deschutes.lat, deschutes.lon) == (44.077406, -121.348514)
-    assert deschutes.population == 198253
+    larimer = PlaceRegistry.load(seeded()).get("08069")
+    assert larimer is not None
+    assert (larimer.lat, larimer.lon) == (40.660000, -105.460000)
+    assert larimer.population == 198253
 
 
 def test_length_and_lookup_agree_with_the_places_tuple(seeded):

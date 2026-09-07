@@ -180,9 +180,9 @@ def test_narration_describes_a_ranking_it_is_handed(monkeypatch):
     """It must not recompute: the numbers on the page and the numbers in the
     sentence under it would then be produced by two different code paths."""
     sent = []
-    _ollama(monkeypatch, "Bend looks best.", capture=sent)
+    _ollama(monkeypatch, "Fort Collins looks best.", capture=sent)
     place = Place(
-        fips="41017", name="Deschutes", state="Oregon", lat=44.0, lon=-121.0, population=1
+        fips="08069", name="Larimer", state="Colorado", lat=44.0, lon=-121.0, population=1
     )
     scored = ScoredPlace(
         place=place,
@@ -195,7 +195,7 @@ def test_narration_describes_a_ranking_it_is_handed(monkeypatch):
     from refugia.scoring.profile import Profile
 
     text = QueryPlanner().narrate("q", Profile("p", {"juniper_cover": 1.0}), [scored], METRICS)
-    assert text == "Bend looks best."
+    assert text == "Fort Collins looks best."
     data = sent[0]["messages"][1]["content"]
-    assert "Deschutes" in data and "3.2 u" in data
+    assert "Larimer" in data and "3.2 u" in data
     assert sent[0].get("format") != "json", "prose, not an object"
