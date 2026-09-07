@@ -5,6 +5,7 @@ import json
 from refugia.artifact.builder import ArtifactBuilder
 from refugia.metrics.metric import Metric
 from refugia.places.place import Place
+from refugia.scoring.criterion import Criterion
 from refugia.scoring.profile import Profile
 from refugia.store.cache import Cache
 from refugia.store.dataset import Dataset
@@ -113,3 +114,33 @@ def test_the_built_page_closes_its_payload_tag_exactly_once(tmp_path, monkeypatc
     # One from the payload block, one from the main script block, and none smuggled.
     assert written.count("</script>") == 2
     assert "<\\/script>" in written
+
+
+def test_a_misspelled_criterion_stops_the_build_before_the_download(tmp_path):
+    """The page filters too, so a typo publishes an empty page rather than failing.
+
+    `build` refuses before `CountyShapes`, which is the expensive part and the
+    part that reaches the network -- so this test needs no cache and no fixture
+    beyond the profile.
+    """
+    import pytest
+
+    dataset = Dataset(
+        places=(Place(fips="00001", name="A", state="S", lat=0.0, lon=0.0, population=1),),
+        metrics=(
+            Metric(
+                key="a",
+                label="A",
+                unit="u",
+                direction="lower_better",
+                category="c",
+                description="",
+                source="s",
+            ),
+        ),
+        values={"a": {"00001": 1.0}},
+    )
+    profile = Profile("t", {"a": 1.0}, criteria=(Criterion("populaton", "min", 40_000),))
+    with pytest.raises(KeyError) as caught:
+        ArtifactBuilder(Cache(tmp_path)).build(dataset, profile, tmp_path / "out.html")
+    assert "populaton" in str(caught.value)

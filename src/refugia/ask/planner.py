@@ -9,6 +9,7 @@ from refugia import USER_AGENT
 from refugia.metrics.metric import Metric
 from refugia.scoring.profile import Profile
 from refugia.scoring.scored_place import ScoredPlace
+from refugia.scoring.vocabulary import criterion_fields
 
 PLAN_SYSTEM = """\
 You translate a question about where to live into a JSON scoring profile.
@@ -77,7 +78,7 @@ class QueryPlanner:
         payload = json.loads(raw)
         known = {m.key for m in metrics}
         payload["weights"] = {k: v for k, v in payload.get("weights", {}).items() if k in known}
-        allowed_fields = known | {"population", "state", "cbsa_type"}
+        allowed_fields = criterion_fields(metrics)
         payload["criteria"] = [
             c for c in payload.get("criteria", []) if c.get("field") in allowed_fields
         ]

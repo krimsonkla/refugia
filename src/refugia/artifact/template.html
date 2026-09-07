@@ -1261,6 +1261,17 @@
     return out;
   }
 
+  /* Normalise one metric and apply its direction, so every normalised value in the
+    page means "higher is better". The map's colour ramp used to carry a
+    character-for-character copy of this, which is CLAUDE.md's "direction is applied
+    in exactly one place" broken in the file that says it. */
+  function directed(metric, observed, method) {
+    const pc = method === "minmax" ? minmax(observed) : percentile(observed);
+    return metric.direction === "lower_better"
+      ? Object.fromEntries(Object.entries(pc).map(([f, s]) => [f, 100 - s]))
+      : pc;
+  }
+
   /* Normalised over every metric, not only the weighted ones. Scoring uses the
     weighted subset, but a comparison between two places has to be able to show
     what a switched-off metric says: those are exactly where an unwelcome surprise
@@ -1296,11 +1307,7 @@
       const obs = {};
       for (const [f, v] of Object.entries(values[m.key] || {}))
         if (keep.has(f)) obs[f] = v;
-      const pc = method === "minmax" ? minmax(obs) : percentile(obs);
-      norm[m.key] =
-        m.direction === "lower_better"
-          ? Object.fromEntries(Object.entries(pc).map(([f, s]) => [f, 100 - s]))
-          : pc;
+      norm[m.key] = directed(m, obs, method);
     }
     return norm;
   }
@@ -1979,11 +1986,7 @@
         const v = (V[mapMetric] || {})[r.p.fips];
         if (v != null) obs[r.p.fips] = v;
       });
-      const pc = percentile(obs);
-      vals =
-        m.direction === "lower_better"
-          ? Object.fromEntries(Object.entries(pc).map(([f, s]) => [f, 100 - s]))
-          : pc;
+      vals = directed(m, obs, PROFILE.normalization);
       lo =
         m.direction === "lower_better"
           ? `most ${m.label.toLowerCase()}`

@@ -145,3 +145,31 @@ def test_an_unknown_metric_key_names_the_valid_ones(places, registry):
         ScoringEngine(registry).rank(places, {}, profile)
     assert "juniper_covr" in str(caught.value)
     assert "refugia metrics" in str(caught.value)
+
+
+def test_an_unknown_criterion_field_names_the_vocabulary(places, registry):
+    """A typo here used to return an empty ranking and say nothing at all."""
+    profile = Profile(
+        "t", {"juniper_cover": 1.0}, criteria=(Criterion("populaton", "min", 40_000),)
+    )
+    with pytest.raises(KeyError) as caught:
+        ScoringEngine(registry).rank(places, {}, profile)
+    assert "populaton" in str(caught.value)
+    assert "population" in str(caught.value)
+
+
+def test_a_criterion_on_a_real_metric_key_is_accepted(places, registry):
+    """The check must not reject the half of the vocabulary that is metric keys."""
+    values = {"juniper_cover": {p.fips: 1.0 for p in places}}
+    profile = Profile(
+        "t", {"juniper_cover": 1.0}, criteria=(Criterion("juniper_cover", "max", 5.0),)
+    )
+    assert ScoringEngine(registry).rank(places, values, profile)
+
+
+def test_the_vocabulary_covers_derived_place_properties(registry):
+    """`metro` and `cbsa_type` are properties, not columns; the guide offers both."""
+    from refugia.scoring.vocabulary import criterion_fields
+
+    fields = criterion_fields(registry.metrics)
+    assert {"metro", "cbsa_type", "population", "state"} <= fields

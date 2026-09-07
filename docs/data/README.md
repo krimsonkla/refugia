@@ -111,7 +111,7 @@ paragraph explaining why there was no such test outlived the test.
 ## 6. `findings.jsonl`
 
 **146 rows across 2 cycles and 8 lenses.**
-`13 open, 117 fixed, 3 parked, 13 declined.`
+`11 open, 119 fixed, 3 parked, 13 declined.`
 
 - `cyc-release-audit` — the first public-release audit. Seven lenses plus a
   completeness critic, so eight `lens` values appear.
@@ -144,21 +144,21 @@ jq -c 'select(.batch == "publish-the-repo" and .status == "open") | [.id, .effor
   docs/data/findings.jsonl
 ```
 
-### `scoring-parity` — 3 rows (2 important, 1 nice-to-have)
+### `scoring-parity` — 1 row (1 important)
 
 The page and the CLI rank differently for the shipped example profile, because the
-page never reads `criteria` or `normalization`. Grouped because the fix moves the
-kernel markers, and everything else here is inside or beside them: the map's colour
-ramp re-derives the direction inversion, three scoring mutants survive the suite,
-and an emptied vectors file passes. Doing these separately means moving the same
-boundary three times.
+page reads the whole profile now, the vectors cover requirements and normalisation,
+the mutants die, and direction inversion is one function. What is left is the last
+thing outside the markers: the maximum-home-value box is per-metric code in a page
+the guide says has none, so it is neither covered by the vectors nor honest in the
+docs.
 
 ```bash
 jq -c 'select(.batch == "scoring-parity" and .status == "open") | [.id, .effort, .title] | @tsv' -r \
   docs/data/findings.jsonl
 ```
 
-### `upstream-resilience` — 1 rows (1 important)
+### `upstream-resilience` — 1 row (1 important)
 
 What happens when a source misbehaves. `fetch` survives one that raises and not one
 that returns empty; a saved dataset looks identical either way; `publish` has no
@@ -171,7 +171,7 @@ jq -c 'select(.batch == "upstream-resilience" and .status == "open") | [.id, .ef
   docs/data/findings.jsonl
 ```
 
-### `prose-guard` — 1 rows (1 nice-to-have)
+### `prose-guard` — 1 row (1 nice-to-have)
 
 Widen `tests/test_guide.py` first — it reads only the guide and the README, so every
 document the audit found wrong is outside it — then fix whatever turns red. Ordered
@@ -197,7 +197,7 @@ jq -c 'select(.batch == "attribution" and .status == "open") | [.id, .effort, .t
   docs/data/findings.jsonl
 ```
 
-### `tests-that-bite` — 1 rows (1 nice-to-have)
+### `tests-that-bite` — 1 row (1 nice-to-have)
 
 Tests that cannot fail. A syntax error anywhere in the page passes the whole suite,
 the Throttle's lock can be deleted with nothing noticing, one spec assertion is a

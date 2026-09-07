@@ -7,6 +7,7 @@ from refugia.places.place import Place
 from refugia.scoring.normalizer import Normalizer
 from refugia.scoring.profile import Profile
 from refugia.scoring.scored_place import ScoredPlace
+from refugia.scoring.vocabulary import check_criteria
 
 
 class ScoringEngine:
@@ -29,6 +30,7 @@ class ScoringEngine:
         profile: Profile,
     ) -> list[ScoredPlace]:
         """Rank `places` best-first under `profile`."""
+        check_criteria(profile, self._registry.metrics)
         survivors = self._apply_filters(places, values, profile)
         weights = profile.normalized_weights
         normalizer = Normalizer(method=profile.normalization)

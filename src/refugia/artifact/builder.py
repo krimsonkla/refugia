@@ -8,6 +8,7 @@ from refugia.artifact.city_profile import CityProfile
 from refugia.metrics.city_only import CITY_ONLY
 from refugia.artifact.geometry import CountyShapes
 from refugia.scoring.profile import Profile
+from refugia.scoring.vocabulary import check_criteria
 from refugia.store.cache import Cache
 from refugia.store.dataset import Dataset
 
@@ -51,6 +52,9 @@ class ArtifactBuilder:
 
     def build(self, dataset: Dataset, profile: Profile, out: Path) -> Path:
         """Write the page and return its path."""
+        # The page filters on criteria too, so a typo here empties the page as
+        # surely as it empties a ranking. Refuse before the long build.
+        check_criteria(profile, dataset.metrics)
         shapes = CountyShapes(self._cache).build({p.fips for p in dataset.places})
         payload = dataset.to_dict()
         payload["paths"] = shapes.counties

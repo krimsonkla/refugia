@@ -36,8 +36,11 @@ A key that is not in it stops the run and says so.
 **`criteria`** — hard filters, each `{field, comparison, value}`. `comparison` is
 one of `min`, `max`, `in`, `not_in`; the last two take a list. `field` is either a
 metric key or an attribute of the place itself — `population`, `state`, `name`,
-`lat`, `lon`, `fips`, `metro` or `cbsa_type`. A place with no value for the field never
-passes, which is deliberate: an unknown is not a pass.
+`lat`, `lon`, `fips`, `metro` or `cbsa_type`. A field that is neither stops the run,
+the same way an unknown weight key does — a misspelled requirement would otherwise
+match nothing and hand back an empty list with no explanation. A place with no
+_value_ for a real field never passes, which is different and deliberate: an
+unknown is not a pass.
 
 ```json
 [
