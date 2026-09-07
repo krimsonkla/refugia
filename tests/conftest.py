@@ -31,9 +31,15 @@ def _no_network(monkeypatch, request):
             "httpx: the suite has to run offline, on a plane, with no keys."
         )
 
-    for name in ("get", "post", "request", "stream"):
+    for name in ("get", "post", "put", "patch", "delete", "head", "options", "request", "stream"):
         monkeypatch.setattr(httpx, name, _refuse)
+    # Both client classes and both transports: patching the module functions and
+    # Client.send left httpx.AsyncClient and a raw HTTPTransport able to resolve a
+    # hostname, which is a real request even when it fails.
     monkeypatch.setattr(httpx.Client, "send", _refuse)
+    monkeypatch.setattr(httpx.AsyncClient, "send", _refuse)
+    monkeypatch.setattr(httpx.HTTPTransport, "handle_request", _refuse)
+    monkeypatch.setattr(httpx.AsyncHTTPTransport, "handle_async_request", _refuse)
 
 
 @pytest.fixture

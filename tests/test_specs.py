@@ -31,7 +31,8 @@ def test_there_are_specs_to_check():
 def test_every_shipped_spec_loads(spec, tmp_path):
     """Construction runs the validator, which is where a bad spec should die."""
     source = DeclarativeSource.from_file(spec, Cache(tmp_path / spec.stem))
-    assert source.metrics[0].key == spec.stem or source.metrics[0].key
+    # The value is that construction ran the validator; a spec declares one metric.
+    assert len(source.metrics) == 1
 
 
 @pytest.mark.parametrize("spec", SPECS, ids=[s.stem for s in SPECS])

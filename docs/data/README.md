@@ -107,7 +107,7 @@ nothing checks is a rule that drifts.
 ## 6. `findings.jsonl`
 
 **146 rows across 2 cycles and 8 lenses.**
-`46 open, 84 fixed, 3 parked, 13 declined.`
+`42 open, 88 fixed, 3 parked, 13 declined.`
 
 - `cyc-release-audit` — the first public-release audit. Seven lenses plus a
   completeness critic, so eight `lens` values appear.
@@ -193,7 +193,7 @@ jq -c 'select(.batch == "attribution" and .status == "open") | [.id, .effort, .t
   docs/data/findings.jsonl
 ```
 
-### `tests-that-bite` — 5 rows (1 important, 4 nice-to-have)
+### `tests-that-bite` — 1 row (1 nice-to-have)
 
 Tests that cannot fail. A syntax error anywhere in the page passes the whole suite,
 the Throttle's lock can be deleted with nothing noticing, one spec assertion is a

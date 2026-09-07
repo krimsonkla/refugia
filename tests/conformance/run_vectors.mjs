@@ -31,6 +31,31 @@ if (from < 0 || to < 0) {
     process.exit(2);
 }
 
+/* The kernel is ninety-odd lines of a two-thousand-line script, and lifting only
+ * the marked slice meant nothing ever parsed the rest: a syntax error anywhere
+ * outside these markers shipped a page whose script never runs, with the whole
+ * suite green. Parse the entire block first, then take the kernel from it. */
+const scriptStart = page.indexOf("<script>", page.indexOf('id="payload"'));
+const scriptEnd = page.indexOf("</script>", scriptStart);
+if (scriptStart < 0 || scriptEnd < 0) {
+    console.error(
+        "could not find the page's main script block in template.html",
+    );
+    process.exit(2);
+}
+try {
+    // Constructed, never called: this parses the body without touching a DOM.
+    // eslint-disable-next-line no-new-func
+    new Function(page.slice(scriptStart + "<script>".length, scriptEnd));
+} catch (error) {
+    console.error(
+        `the page's script does not parse: ${error.message}\n` +
+            "Nothing else in the suite executes this file, so a broken page would " +
+            "otherwise ship with every test green.",
+    );
+    process.exit(2);
+}
+
 // eslint-disable-next-line no-new-func
 const kernel = new Function(
     `${page.slice(from, to)}\nreturn { percentile, normalizeAll, scoreAll };`,
