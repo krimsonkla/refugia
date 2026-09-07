@@ -85,9 +85,12 @@ read.
 `CLAUDE.md` carries the full set; these are the ones that actually come up.
 
 - **Scoring exists twice** — Python in `scoring/`, JavaScript in
-  `artifact/template.html`, because the page's sliders re-rank without a round
-  trip. Nothing executes both to compare them, so a change to ranking semantics
-  has to be made in both, in the same commit.
+  `artifact/template.html`, because the page's sliders re-rank with no server to
+  ask. A change to ranking semantics has to be made in both, in the same commit,
+  and `tests/conformance/vectors.json` will fail you if it is not. Add a vector for
+  the behaviour you changed. The JavaScript half sits between the `scoring kernel:
+BEGIN/END` markers and must stay pure, since the test lifts it out of the file
+  and runs it.
 - **No `if metric.key == ...` outside a source.** Scoring, the CLI and the page are
   written against the registry. A special case for one metric means the
   registration model has failed somewhere else.

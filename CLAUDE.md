@@ -78,7 +78,11 @@ A written adapter is for sources needing real logic, and owes tests.
   the zero-byte case everywhere; an empty _parsed_ result serialises to a valid `{}`
   or `[]` and is not caught there, so each source guards its own write.
 - **Scoring exists twice** — Python in `scoring/`, JavaScript in
-  `artifact/template.html`. Change both together; nothing enforces their agreement.
+  `artifact/template.html`, because the page re-ranks with no server to ask. Change
+  both together. `tests/conformance/vectors.json` is executed by both and fails if
+  they disagree, and the JavaScript half lives between the `scoring kernel:
+BEGIN/END` markers in the template and must stay pure — no globals, no DOM — or
+  it can no longer be lifted out and run.
 - **Every outbound request carries `USER_AGENT`** from `refugia/__init__.py`, and a
   source that fans out over a worker pool takes a `Throttle` so the rate belongs to
   the source rather than to each thread. `tests/test_outbound_requests.py` parses the

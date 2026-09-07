@@ -178,10 +178,10 @@ working one to copy.
 
 **`weights`** — a metric key to a number. Only the ratios matter: they are
 rescaled to sum to 1, so `{"a": 5, "b": 1}` and `{"a": 50, "b": 10}` rank
-identically. **Omit a metric you don't want rather than weighting it `0`** — a
-zero-weighted metric contributes nothing to the score but still counts toward
-`min_coverage`, so weighting `0` a metric that has no data for your candidates can
-empty the ranking. **Never use a negative weight.** Each metric already declares whether high
+identically. Omitting a metric and weighting it `0` mean the same thing: both
+leave it out of the score and out of the coverage denominator, so switching one
+off cannot drop a place for missing data it is no longer being judged on. **Never
+use a negative weight** — it is read as zero. Each metric already declares whether high
 or low is good, so the sign is carried for you, and `refugia metrics` prints it:
 
 ```
@@ -335,8 +335,10 @@ want it to, and then they do.
   cottonwood sits inside generic riparian classes. The metric combines aspen
   classes with western riparian and floodplain woodland where cottonwood dominates.
 - **Scoring is implemented twice** — Python in `scoring/`, JavaScript in
-  `artifact/template.html`, because the sliders re-rank without a round trip.
-  Nothing currently executes both to compare them.
+  `artifact/template.html`, because the sliders re-rank without a round trip and
+  the page has no server to ask. `tests/conformance/vectors.json` runs the same
+  cases through both and fails the build if they disagree, so the duplication
+  remains but the drift does not.
 - Network adapters are thinly tested; the scoring core is not.
 - Alaska and Hawaii appear in the table but not the map: the vegetation layer is
   CONUS-only.

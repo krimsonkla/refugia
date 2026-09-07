@@ -68,8 +68,17 @@ class Profile:
 
     @property
     def normalized_weights(self) -> dict[str, float]:
-        """Weights rescaled to sum to 1, so a total score is always 0-100."""
-        total = sum(abs(w) for w in self.weights.values())
+        """Positive weights rescaled to sum to 1, so a total score is always 0-100.
+
+        A weight of zero or less is not a metric weighted lightly, it is a metric
+        not asked for. Carrying it kept it in the coverage denominator, so
+        switching a metric off could drop a place for missing data it was no longer
+        being judged on -- and the page, which drops them, disagreed. Direction
+        already encodes whether high or low is good, so a negative weight has no
+        meaning left to honour either.
+        """
+        positive = {k: w for k, w in self.weights.items() if w > 0}
+        total = sum(positive.values())
         if total == 0:
             return {}
-        return {k: v / total for k, v in self.weights.items()}
+        return {k: w / total for k, w in positive.items()}

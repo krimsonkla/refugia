@@ -1211,6 +1211,16 @@
           : v.toFixed(1);
 
   /* ---- scoring: mirrors the Python engine, so the page and CLI agree ---- */
+  /* ---- scoring kernel: BEGIN -------------------------------------------------
+    Scoring exists twice, in Python under scoring/ and here, because the page has
+    to re-rank when a slider moves and it has no server to ask. The duplication is
+    forced by that; the two drifting apart is not.
+
+    Everything between these markers is pure: it reads no globals and touches no
+    DOM, so tests/conformance/run_vectors.mjs can lift it out of this file and run
+    the same vectors Python runs. Keep it that way -- anything needing `weights`,
+    `filters`, `PL` or an element belongs below the END marker.
+  ---------------------------------------------------------------------------- */
   function percentile(vals) {
     const e = Object.entries(vals).sort((a, b) => a[1] - b[1]),
       n = e.length,
@@ -1230,65 +1240,35 @@
     }
     return out;
   }
-  function cutsAllow(p) {
-    for (const key of Object.keys(cuts)) {
-      if (!cuts[key]) continue;
-      const metric = M.find((x) => x.key === key);
-      const homeValue = (V[key] || {})[HOME];
-      const value = (V[key] || {})[p.fips];
-      if (homeValue == null) continue;
-      // No data is not a pass: a place cannot be shown to clear a bar it has no
-      // measurement for.
-      if (value == null) return false;
-      // Equal passes, so home always clears its own cuts.
-      if (
-        metric.direction === "lower_better"
-          ? value > homeValue
-          : value < homeValue
-      )
-        return false;
-    }
-    return true;
-  }
 
-  function passes(p) {
-    if (p.population < filters.population) return false;
-    if (filters.states.length && filters.states.includes(p.state)) return false;
-    if (!cutsAllow(p)) return false;
-    if (filters.home_value > 0) {
-      const hv = (V.home_value || {})[p.fips];
-      if (hv == null || hv > filters.home_value) return false;
-    }
-    return true;
-  }
-  /* Where you live is a reference point, not a candidate. It has to be scored on
-    the same scale whatever the requirements say, or asking for somewhere bigger
-    than home silently removes the thing every comparison is made against. It is
-    scored with the field and then taken back out of the ranking. */
-  function compute() {
-    const passers = PL.filter(passes);
-    const homePlace = HOME ? PL.find((p) => p.fips === HOME) : null;
-    homeExcluded = !!homePlace && !passers.some((p) => p.fips === HOME);
-    const live = homeExcluded ? [...passers, homePlace] : passers;
-    const keep = new Set(live.map((p) => p.fips));
-    const active = Object.entries(weights).filter(([, w]) => w > 0);
-    /* Normalised over every metric, not only the weighted ones. Scoring uses the
-      weighted subset, but a comparison between two places has to be able to show
-      what a switched-off metric says: those are exactly where an unwelcome
-      surprise hides, and they were invisible. */
+  /* Normalised over every metric, not only the weighted ones. Scoring uses the
+    weighted subset, but a comparison between two places has to be able to show
+    what a switched-off metric says: those are exactly where an unwelcome surprise
+    hides, and they were invisible. */
+  function normalizeAll(metrics, values, keep) {
     const norm = {};
-    for (const m of M) {
-      const k = m.key;
+    for (const m of metrics) {
       const obs = {};
-      for (const [f, v] of Object.entries(V[k] || {}))
+      for (const [f, v] of Object.entries(values[m.key] || {}))
         if (keep.has(f)) obs[f] = v;
       const pc = percentile(obs);
-      norm[k] =
+      norm[m.key] =
         m.direction === "lower_better"
           ? Object.fromEntries(Object.entries(pc).map(([f, s]) => [f, 100 - s]))
           : pc;
     }
-    const rows = live.map((p) => {
+    return norm;
+  }
+
+  /* The whole of scoring, over an already-filtered set of places. A weight of
+    zero or less is not a metric weighted lightly, it is a metric not asked for:
+    it is left out of the score and out of the coverage denominator, so switching
+    one off cannot drop a place for missing data it was never being judged on. */
+  function scoreAll(places, values, metrics, weights, minCoverage) {
+    const keep = new Set(places.map((p) => p.fips));
+    const active = Object.entries(weights).filter(([, w]) => w > 0);
+    const norm = normalizeAll(metrics, values, keep);
+    const rows = places.map((p) => {
       let tot = 0,
         avail = 0;
       const contrib = {},
@@ -1321,15 +1301,61 @@
     // A place missing a metric is scored on the rest, which rewards it for the
     // absence: a county outside the vegetation layer would otherwise top an
     // allergen search precisely because its allergen data is unknown.
+    const ranked = rows.filter((r) => r.cover >= minCoverage);
+    ranked.sort((a, b) => b.score - a.score);
+    ranked.forEach((r, i) => (r.rank = i + 1));
+    return { norm, ranked };
+  }
+  /* ---- scoring kernel: END ------------------------------------------------ */
+
+  function cutsAllow(p) {
+    for (const key of Object.keys(cuts)) {
+      if (!cuts[key]) continue;
+      const metric = M.find((x) => x.key === key);
+      const homeValue = (V[key] || {})[HOME];
+      const value = (V[key] || {})[p.fips];
+      if (homeValue == null) continue;
+      // No data is not a pass: a place cannot be shown to clear a bar it has no
+      // measurement for.
+      if (value == null) return false;
+      // Equal passes, so home always clears its own cuts.
+      if (
+        metric.direction === "lower_better"
+          ? value > homeValue
+          : value < homeValue
+      )
+        return false;
+    }
+    return true;
+  }
+
+  function passes(p) {
+    if (p.population < filters.population) return false;
+    if (filters.states.length && filters.states.includes(p.state)) return false;
+    if (!cutsAllow(p)) return false;
+    if (filters.home_value > 0) {
+      const hv = (V.home_value || {})[p.fips];
+      if (hv == null || hv > filters.home_value) return false;
+    }
+    return true;
+  }
+
+  /* Where you live is a reference point, not a candidate. It has to be scored on
+    the same scale whatever the requirements say, or asking for somewhere bigger
+    than home silently removes the thing every comparison is made against. It is
+    scored with the field and then taken back out of the ranking. */
+  function compute() {
+    const passers = PL.filter(passes);
+    const homePlace = HOME ? PL.find((p) => p.fips === HOME) : null;
+    homeExcluded = !!homePlace && !passers.some((p) => p.fips === HOME);
+    const live = homeExcluded ? [...passers, homePlace] : passers;
+    const { norm, ranked } = scoreAll(live, V, M, weights, minCoverage);
     lastNorm = norm;
-    const kept = rows.filter((r) => r.cover >= minCoverage);
-    kept.sort((a, b) => b.score - a.score);
-    kept.forEach((r, i) => (r.rank = i + 1));
     // Keep the scored home aside; where it is not a candidate it must not be
     // counted among them, or "rank 4 of 336" quietly becomes 337.
-    computedHome = kept.find((r) => r.p.fips === HOME) || null;
-    if (!homeExcluded) return kept;
-    const candidates = kept.filter((r) => r.p.fips !== HOME);
+    computedHome = ranked.find((r) => r.p.fips === HOME) || null;
+    if (!homeExcluded) return ranked;
+    const candidates = ranked.filter((r) => r.p.fips !== HOME);
     candidates.forEach((r, i) => (r.rank = i + 1));
     return candidates;
   }
