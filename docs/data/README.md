@@ -106,8 +106,8 @@ nothing checks is a rule that drifts.
 
 ## 6. `findings.jsonl`
 
-**145 rows across 2 cycles and 8 lenses.**
-`45 open, 84 fixed, 3 parked, 13 declined.`
+**146 rows across 2 cycles and 8 lenses.**
+`46 open, 84 fixed, 3 parked, 13 declined.`
 
 - `cyc-release-audit` — the first public-release audit. Seven lenses plus a
   completeness critic, so eight `lens` values appear.
@@ -120,7 +120,106 @@ nothing checks is a rule that drifts.
 Both cycles ran the same shape: each lens found, a second agent reproduced or
 refuted, then a critic looked for what no lens covered.
 
-## 7. Working with the file
+## 7. Batches
+
+Open rows carry a `batch`, so the remaining work can be picked up by theme rather
+than by scrolling. The grouping is by what a change touches, not by severity — a
+batch is meant to be one sitting with one set of files open in front of you.
+
+### `publish-the-repo` — 7 rows (3 blocker, 2 important, 2 nice-to-have)
+
+One sitting, and nothing else matters until it is done. The pre-rewrite history is
+still served by GitHub, so the repository has to be deleted and re-created rather
+than force-pushed again. Everything else here happens in the same operation or
+immediately after it: the tag is re-cut at the new HEAD, the ledger's stale SHA
+goes with it, and branch protection, secret scanning and private vulnerability
+reporting are all switchable only once the repository is public.
+
+```bash
+jq -c 'select(.batch == "publish-the-repo" and .status == "open") | [.id, .effort, .title] | @tsv' -r \
+  docs/data/findings.jsonl
+```
+
+### `scoring-parity` — 6 rows (3 important, 3 nice-to-have)
+
+The page and the CLI rank differently for the shipped example profile, because the
+page never reads `criteria` or `normalization`. Grouped because the fix moves the
+kernel markers, and everything else here is inside or beside them: the map's colour
+ramp re-derives the direction inversion, three scoring mutants survive the suite,
+and an emptied vectors file passes. Doing these separately means moving the same
+boundary three times.
+
+```bash
+jq -c 'select(.batch == "scoring-parity" and .status == "open") | [.id, .effort, .title] | @tsv' -r \
+  docs/data/findings.jsonl
+```
+
+### `upstream-resilience` — 6 rows (5 important, 1 nice-to-have)
+
+What happens when a source misbehaves. `fetch` survives one that raises and not one
+that returns empty; a saved dataset looks identical either way; `publish` has no
+failure handling at all and reaches four more upstreams on a cold cache, which the
+docs say it does not. The LANDFIRE error classification and the city sampler's
+self-constructed source are the same code path.
+
+```bash
+jq -c 'select(.batch == "upstream-resilience" and .status == "open") | [.id, .effort, .title] | @tsv' -r \
+  docs/data/findings.jsonl
+```
+
+### `prose-guard` — 13 rows (1 important, 12 nice-to-have)
+
+Widen `tests/test_guide.py` first — it reads only the guide and the README, so every
+document the audit found wrong is outside it — then fix whatever turns red. Ordered
+that way deliberately: the corrections are individually trivial and the reason both
+audits found a pile of them is that nothing was checking. Fixing the checker first
+means the pile does not rebuild.
+
+```bash
+jq -c 'select(.batch == "prose-guard" and .status == "open") | [.id, .effort, .title] | @tsv' -r \
+  docs/data/findings.jsonl
+```
+
+### `attribution` — 5 rows (5 nice-to-have)
+
+The citation machinery works for the case it was built for and not for its edges: a
+dataset saved before the field existed publishes a page with no citations, nothing
+forces an attribution-owing source to arrive with one, `terms_url` is collected and
+never shown, and `ask --host` is exempt from the User-Agent rule on the grounds it
+is local when a flag makes it remote.
+
+```bash
+jq -c 'select(.batch == "attribution" and .status == "open") | [.id, .effort, .title] | @tsv' -r \
+  docs/data/findings.jsonl
+```
+
+### `tests-that-bite` — 5 rows (1 important, 4 nice-to-have)
+
+Tests that cannot fail. A syntax error anywhere in the page passes the whole suite,
+the Throttle's lock can be deleted with nothing noticing, one spec assertion is a
+tautology, and the no-network fixture misses async and raw transports. The adapter
+coverage row sits here too, as the large one nobody should start on a Friday.
+
+```bash
+jq -c 'select(.batch == "tests-that-bite" and .status == "open") | [.id, .effort, .title] | @tsv' -r \
+  docs/data/findings.jsonl
+```
+
+### `packaging` — 4 rows (4 nice-to-have)
+
+The wheel is verified by hand and by nothing else, CI exercises one Python against a
+README that promises three, and an install-from-wheel user has no example profile
+to run. Cheap, and all of it is about the artifact rather than the source tree.
+
+```bash
+jq -c 'select(.batch == "packaging" and .status == "open") | [.id, .effort, .title] | @tsv' -r \
+  docs/data/findings.jsonl
+```
+
+A row leaves its batch by being closed, not by being reassigned: `batch` describes
+what the work touches, and that does not change because somebody did it.
+
+## 8. Working with the file
 
 ```bash
 # What blocks the repo going public, in order

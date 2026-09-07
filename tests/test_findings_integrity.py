@@ -137,3 +137,35 @@ def test_the_readme_does_not_claim_a_clean_release_while_blockers_are_open():
         assert "blocker" in text.lower() and any(i in text for i in open_blockers), (
             "blockers are open and docs/data/README.md names none of them: " f"{open_blockers}"
         )
+
+
+BATCHES = {
+    "publish-the-repo",
+    "scoring-parity",
+    "upstream-resilience",
+    "prose-guard",
+    "attribution",
+    "tests-that-bite",
+    "packaging",
+}
+
+
+def test_every_open_row_is_in_a_batch():
+    """Open work that belongs to no theme is work nobody picks up."""
+    stray = [r["id"] for r in ROWS if r["status"] == "open" and not r.get("batch")]
+    assert not stray, f"open with no batch: {stray}"
+
+
+def test_a_batch_name_is_one_the_readme_documents():
+    """A batch nobody named is a batch nobody can query for."""
+    named = {r.get("batch") for r in ROWS if r.get("batch")}
+    assert named <= BATCHES, f"undocumented batch names: {sorted(named - BATCHES)}"
+    text = README.read_text(encoding="utf-8")
+    missing = [b for b in named if f"`{b}`" not in text]
+    assert not missing, f"batches not described in docs/data/README.md: {missing}"
+
+
+def test_a_closed_row_is_not_left_holding_a_batch():
+    """`batch` is the queue of remaining work; a done row is not in it."""
+    stale = [r["id"] for r in ROWS if r["status"] in {"fixed", "declined"} and r.get("batch")]
+    assert not stale, f"closed but still batched: {stale}"
