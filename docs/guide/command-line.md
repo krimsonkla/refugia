@@ -24,7 +24,7 @@ are yours, and that is the point.
        sagebrush_cover        +  6.3   raw=0.0
        air_pollution          +  6.2   raw=6.5
        poor_mental_health_days +  4.8   raw=3.5
-       life_expectancy        +  4.7   raw=83.8
+       poor_or_fair_health    +  4.8   raw=9.8
        ...
 ```
 

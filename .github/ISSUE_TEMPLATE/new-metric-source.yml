@@ -1,6 +1,6 @@
 name: New metric source
 description: Propose a dataset refugia should rank on
-labels: ["metric"]
+labels: ["enhancement"]
 body:
   - type: markdown
     attributes:

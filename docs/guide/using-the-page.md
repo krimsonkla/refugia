@@ -14,14 +14,19 @@ as about the places. And it loads its typefaces from Google, so a viewer's brows
 contacts `fonts.googleapis.com` — no server of ours, but a third party. Offline it
 falls back to system faces and works unchanged.
 
-**The sliders are the point.** Move one and everything re-ranks immediately: the
-table reorders, the map reshades, the scores change. Nothing is precomputed, so
-there is no wrong question to ask of it.
+**Weights reorder, requirements remove.** Most of the requirements panel drops
+places out of the running entirely — a minimum population, a maximum home value,
+states you will not consider, and the per-metric "rule out anywhere worse than
+home".
 
-**Weights reorder, requirements remove.** The requirements panel drops places out
-of the running entirely — a minimum population, a maximum home value, states you
-will not consider — and each metric additionally offers "rule out anywhere worse
-than home", which is the cut you cannot express by weighting however heavily.
+Two controls in that panel are not requirements and do not remove anything: the
+minimum-fit slider hides rows below a score, and the coverage slider hides rows
+with too much missing data. They change what you are shown, not what is ranked.
+
+The per-metric cut is offered only while that metric is switched on and you have set
+a home county — there is nothing to compare against otherwise — and switching a
+metric off clears its cut, because a requirement sitting inside a row that reads as
+disabled is a requirement still quietly removing places.
 
 **The map shades on whichever metric you pick**, from the selector above it, not
 only on the overall fit. That is how you see a single metric's geography rather

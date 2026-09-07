@@ -129,8 +129,11 @@ clothing — see `SECURITY.md`. Read the URL before merging one.
 1. Write the file into `src/refugia/specs/<key>.json`. Inside the package, because
    that is what a wheel carries; a `specs/` beside the project also works and is
    where your own go if you would rather not touch the repository's.
-2. `uv run refugia metrics` — your key should be in the list. If it is not, the
-   registry rejected it and will say why.
+2. `uv run refugia metrics` — your key should be in the list. A spec that fails
+   validation does not go quietly missing: it raises, naming the file, and **every**
+   command fails until it is fixed. That is deliberate — a metric silently absent is
+   the failure this project is most careful about — but it does mean a bad spec
+   stops the tool rather than stopping itself.
 3. `uv run refugia fetch --only <key>` — fetches just yours, leaving everything
    else cached.
 4. **Read the coverage.** `fetch` flags anything under 75%. This is the number that

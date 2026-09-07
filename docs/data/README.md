@@ -1,11 +1,12 @@
 # `docs/data` — the tracked state layer
 
 Each stream here is JSONL: one JSON object per line, UTF-8, sorted by `id`.
-Prose and reasoning belong in `docs/*.md`; this directory holds the **rows**, so
+Prose and reasoning belong in the documents above this directory; it holds the
+**rows**, so
 state can be queried and cross-checked mechanically rather than read out of a
 markdown table by eye.
 
-The format follows the one in `krimsonkla/recension`. What differs is recorded in
+The format was adapted from a sibling project of the author's. What differs is recorded in
 §4 — this repo has one stream, not fifteen, and no integrity test yet.
 
 ## 1. The envelope
@@ -98,16 +99,19 @@ Adopted: the envelope, permanent ids, the closed status vocabulary, the
 evidence-to-close rule, `refs`-as-section-anchor, append-and-amend.
 
 Not here, and deliberately: there is no `tasks.jsonl`, so an `open` finding does
-not yet owe a task row; there is no `tests/docs/test_data_integrity.py`, so
-these rules are convention rather than enforcement; and there is no
-`docs/data/reference/` split, because nothing in this repo's plan layer is
-lookup data. Add the integrity test before adding a second stream — a rule that
-nothing checks is a rule that drifts.
+not yet owe a task row, and there is no reference-data split because nothing in
+this repository's plan layer is lookup data.
+
+What _is_ here, and was not when this paragraph first said it was missing:
+`tests/test_findings_integrity.py` checks the envelope, the cross-references, that
+a closed row carries evidence and an author, that this file's counts match the
+rows, and that it cannot describe a clean release while a blocker is open. The
+paragraph explaining why there was no such test outlived the test.
 
 ## 6. `findings.jsonl`
 
 **146 rows across 2 cycles and 8 lenses.**
-`37 open, 93 fixed, 3 parked, 13 declined.`
+`24 open, 106 fixed, 3 parked, 13 declined.`
 
 - `cyc-release-audit` — the first public-release audit. Seven lenses plus a
   completeness critic, so eight `lens` values appear.
@@ -167,7 +171,7 @@ jq -c 'select(.batch == "upstream-resilience" and .status == "open") | [.id, .ef
   docs/data/findings.jsonl
 ```
 
-### `prose-guard` — 13 rows (1 important, 12 nice-to-have)
+### `prose-guard` — 0 rows (done)
 
 Widen `tests/test_guide.py` first — it reads only the guide and the README, so every
 document the audit found wrong is outside it — then fix whatever turns red. Ordered

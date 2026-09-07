@@ -22,7 +22,7 @@ pick.
 ![The refugia page: weighting sliders on the left, a choropleth of the United States on the right](docs/screenshot-map.jpg)
 
 Weights reorder; requirements remove. "Nowhere with more juniper than I already
-have" is not a preference you can express by weighting, so each metric carries its
+have" is not a preference you can express by weighting, so a metric can carry its
 own cut, measured against where you live now.
 
 Click any county and it is compared with home, metric by metric, ordered by how
@@ -123,7 +123,7 @@ are yours, and that is the point.
        sagebrush_cover        +  6.3   raw=0.0
        air_pollution          +  6.2   raw=6.5
        poor_mental_health_days +  4.8   raw=3.5
-       life_expectancy        +  4.7   raw=83.8
+       poor_or_fair_health    +  4.8   raw=9.8
        ...
 ```
 

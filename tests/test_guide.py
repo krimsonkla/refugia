@@ -9,6 +9,7 @@ So: every repository path the guide names must exist, every metric key it names 
 be registered, and every link between its pages must resolve.
 """
 
+import json
 import re
 from pathlib import Path
 
@@ -19,9 +20,22 @@ from refugia.places.registry import UNIVERSES
 from refugia.workspace import Workspace
 
 ROOT = Path(__file__).resolve().parents[1]
+SRC_PAGE = ROOT / "src" / "refugia" / "artifact" / "template.html"
 GUIDE = ROOT / "docs" / "guide"
 PAGES = sorted(GUIDE.glob("*.md"))
-DOCS = [*PAGES, ROOT / "README.md"]
+# Every document that makes claims about this repository, not just the guide. The
+# audit found wrong statements in CONTRIBUTING, SECURITY, DATA_SOURCES and CLAUDE.md,
+# all of which sat outside what this file was reading.
+DOCS = [
+    *PAGES,
+    ROOT / "README.md",
+    ROOT / "CONTRIBUTING.md",
+    ROOT / "CLAUDE.md",
+    ROOT / "DATA_SOURCES.md",
+    ROOT / "SECURITY.md",
+    ROOT / "CHANGELOG.md",
+    ROOT / "docs" / "data" / "README.md",
+]
 
 # A backticked token is a path when it looks like one: a known top-level directory,
 # or a bare filename with an extension this project actually keeps at its root.
@@ -75,9 +89,27 @@ def test_every_metric_key_the_guide_names_is_registered():
     # A criterion may name a Place attribute, so those are vocabulary too and are
     # read from the class rather than listed.
     place_fields = {f for f in dir(Place) if not f.startswith("_")}
+    # The ledger's envelope and the page's tool names are vocabulary too, read from
+    # the file and the template so neither can drift out from under this check.
+    # Every key the ledger uses, not only the first row's: review_at appears on
+    # parked rows alone.
+    ledger = {
+        k
+        for line in (ROOT / "docs/data/findings.jsonl").read_text(encoding="utf-8").splitlines()
+        for k in json.loads(line)
+    }
+    # And anything that appears verbatim in the source. A doc naming
+    # `raise_for_status` or `weighted_deficit` is naming a real thing; the check is
+    # for invented vocabulary, and a token the code contains is not invented.
+    source = " ".join(
+        path.read_text(encoding="utf-8")
+        for path in (ROOT / "src").rglob("*")
+        if path.suffix in {".py", ".html", ".json"}
+    )
     field_names = (
         set(UNIVERSES)
         | place_fields
+        | set(ledger)
         | {
             "key",
             "label",
@@ -109,14 +141,28 @@ def test_every_metric_key_the_guide_names_is_registered():
         }
     )
     unknown = set()
-    for page in PAGES:
+    for page in DOCS:
         for token in re.findall(
             r"`([a-z][a-z0-9]*(?:_[a-z0-9]+)+)`", page.read_text(encoding="utf-8")
         ):
-            if token in field_names or token in keys:
+            if token in field_names or token in keys or token in source:
                 continue
             unknown.add(token)
     assert not unknown, (
         "the guide names snake_case tokens that are neither metric keys nor known "
         f"spec/profile fields: {sorted(unknown)}"
     )
+
+
+def test_the_spec_the_guide_quotes_in_full_is_the_shipped_one():
+    """adding-a-spec.md embeds a real file, so it can silently stop being one."""
+    quoted = re.search(
+        r"`src/refugia/specs/life_expectancy\.json`, in full:\s*```json\n(.*?)```",
+        (GUIDE / "adding-a-spec.md").read_text(encoding="utf-8"),
+        re.S,
+    )
+    assert quoted, "the guide no longer quotes the spec where this test expects it"
+    shipped = json.loads(
+        (ROOT / "src" / "refugia" / "specs" / "life_expectancy.json").read_text(encoding="utf-8")
+    )
+    assert json.loads(quoted.group(1)) == shipped
