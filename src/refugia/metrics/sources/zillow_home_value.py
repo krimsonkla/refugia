@@ -38,7 +38,7 @@ class ZillowHomeValueSource:
                     "Zillow Home Value Index, mid-tier, seasonally adjusted, most recent "
                     "month available."
                 ),
-                source="Zillow ZHVI",
+                source="Zillow Home Value Index (ZHVI)",
             ),
         )
 

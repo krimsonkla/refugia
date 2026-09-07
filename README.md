@@ -6,6 +6,32 @@ wellbeing, hazard and cost.
 _Refugia_ is the ecological term for the pockets where a species persists through
 conditions that eliminated it everywhere else. That is the search.
 
+## The answer is a page, not a table
+
+`refugia publish` writes one self-contained HTML file. The ranking is not baked
+into it — the page carries the whole dataset and re-scores in the browser, so the
+sliders re-rank as you move them and the map reshades on whichever metric you
+pick.
+
+![The refugia page: weighting sliders on the left, a choropleth of the United States on the right](docs/screenshot-map.jpg)
+
+Weights reorder; requirements remove. "Nowhere with more juniper than I already
+have" is not a preference you can express by weighting, so each metric carries its
+own cut, measured against where you live now.
+
+Click any county and it is compared with home, metric by metric, ordered by how
+much each one actually moved the score rather than by the size of the raw gap.
+
+![The comparison panel: Yankton County, South Dakota against Cook County, Illinois, metric by metric](docs/screenshot-compare.jpg)
+
+One file, no server, works offline. You can hand it to someone else and they can
+re-weight it to their own priorities without installing anything.
+
+> These are county-wide figures, and several are modelled estimates rather than
+> direct measurements. They are ranked against weights you choose, which makes
+> this a way to narrow a list — not advice, and not a verdict on these places or
+> the people who live in them.
+
 ## Why it works the way it does
 
 **Allergen exposure is structural, not forecast.** Pollen APIs answer "should I go

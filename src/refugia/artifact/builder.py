@@ -12,6 +12,22 @@ from refugia.store.dataset import Dataset
 
 TEMPLATE = Path(__file__).with_name("template.html")
 PLACEHOLDER = "__REFUGIA_DATA__"
+# The template is a fragment on purpose: a host that publishes it supplies the
+# document around it, and a second `<html>` nested inside that one is worse than
+# none. A file written to disk has no such host.
+HEAD_END = "</style>"
+DOCUMENT = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+{head}
+</head>
+<body>
+{body}
+</body>
+</html>
+"""
 
 
 class ArtifactBuilder:
@@ -45,8 +61,24 @@ class ArtifactBuilder:
         # `</script>` inside embedded JSON would close the host tag early.
         encoded = json.dumps(payload, separators=(",", ":")).replace("</", "<\\/")
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(html.replace(PLACEHOLDER, encoded), encoding="utf-8")
+        out.write_text(self.as_document(html.replace(PLACEHOLDER, encoded)), encoding="utf-8")
         return out
+
+    @staticmethod
+    def as_document(fragment: str) -> str:
+        """Wrap the template fragment in the document a browser needs.
+
+        Without a doctype the page renders in quirks mode; without a charset the
+        non-ASCII characters in the credits arrive as mojibake; without a viewport
+        every phone lays it out at desktop width.
+        """
+        head, marker, body = fragment.partition(HEAD_END)
+        if not marker:
+            # No stylesheet to keep out of the body, so all of it is body.
+            head, body = "", fragment
+        else:
+            head += marker
+        return DOCUMENT.format(head=head.strip(), body=body.strip())
 
     @staticmethod
     def _subtitle(dataset: Dataset, profile: Profile) -> str:

@@ -2692,10 +2692,36 @@
   document.getElementById("reset").addEventListener("click", resetToDefault);
 
   document.getElementById("sub").textContent = D.subtitle;
+  /* The sources line is built from the registry, so anything that is not a
+    registered metric - the geography, the city files, the map topology - cannot
+    appear in it and is named here instead. us-atlas is ISC-licensed and its
+    notice has to travel with any page built from its topology; Zillow asks for
+    clear attribution by name rather than an abbreviation. */
+  const CREDITS =
+    "County and place geography, and the city population and gazetteer files, from the US Census Bureau. " +
+    "County and state outlines from " +
+    '<a href="https://github.com/topojson/us-atlas" target="_blank" rel="noopener noreferrer">us-atlas</a>' +
+    " — Copyright Michael Bostock, ISC licence — itself a redistribution of the Census cartographic boundary files. " +
+    "Home values are the " +
+    '<a href="https://www.zillow.com/research/data/" target="_blank" rel="noopener noreferrer">Zillow Home Value Index</a>' +
+    ", used with attribution.";
+
+  /* What the numbers are, and what they are not. This page travels: whoever
+    opens it did not choose the weights that built it, and it names real places
+    where real people live. Saying so costs a sentence. */
+  const CAVEAT =
+    "These are county-wide figures, and several are modelled estimates rather than direct measurements. " +
+    "They are ranked against one particular set of weights — the ones this page was built with, which the " +
+    "sliders will change — so this is a way to narrow a list rather than advice, and not a verdict on these " +
+    "places or the people who live in them.";
+
   document.getElementById("srcs").innerHTML =
     "Sources — " +
-    [...new Set(M.map((m) => m.source))].join(" · ") +
-    ". Places are US counties in a Census metro or micropolitan area; vegetation is sampled around each county’s population-weighted centre, so it describes the inhabited part rather than empty acreage.";
+    [...new Set(M.map((m) => esc(m.source)))].join(" · ") +
+    ". Places are US counties in a Census metro or micropolitan area; vegetation is sampled around each county’s population-weighted centre, so it describes the inhabited part rather than empty acreage. " +
+    CREDITS +
+    " " +
+    CAVEAT;
 
   /* ---- ask ----------------------------------------------------------------
     The model is given functions over the live view rather than a precomputed
