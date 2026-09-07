@@ -23,17 +23,39 @@ def _workspace(root: Path | None, radius_km: float = 25.0) -> Workspace:
     return Workspace(root or Path.cwd(), radius_km=radius_km)
 
 
-def _collect(registry, places, existing, wanted) -> dict[str, dict[str, float]]:
-    """Run each source that supplies a wanted key and merge its values."""
+def _collect(registry, places, existing, wanted):
+    """Run each source that supplies a wanted key and merge its values.
+
+    A source that raises costs its own metrics and nothing else. Nine of these
+    upstreams are pinned to a dated path -- a filename with a year in it, a release
+    directory -- so one of them moving is a matter of when, and letting that end
+    the run would throw away every source registered after it along with the hours
+    already spent on the ones before. Returning partial data is the documented
+    contract in metrics/source.py; a source returning none of it is the same
+    statement, louder.
+
+    Returns the merged values and a list of (source name, reason) for the failures.
+    """
     values: dict[str, dict[str, float]] = dict(existing)
+    failures: list[tuple[str, str]] = []
     for source in registry.sources:
         keys = {m.key for m in source.metrics}
         if wanted and not keys & wanted:
             continue
-        typer.echo(f"  fetching {type(source).__name__} -> {', '.join(sorted(keys))}")
-        values.update(source.fetch(places))
+        name = type(source).__name__
+        typer.echo(f"  fetching {name} -> {', '.join(sorted(keys))}")
+        try:
+            values.update(source.fetch(places))
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            # Deliberately broad: an adapter can fail in as many ways as the
+            # format it parses, and every one of them should cost one metric
+            # rather than the run.
+            reason = f"{type(error).__name__}: {error}".strip()
+            failures.append((name, reason))
+            typer.secho(f"    failed: {reason}", fg="red")
+            continue
         _report_source(source)
-    return values
+    return values, failures
 
 
 def _report_source(source) -> None:
@@ -46,6 +68,39 @@ def _report_source(source) -> None:
         typer.echo(f"    {len(failures)} place(s) failed after retries:")
         for fips, reason in failures[:5]:
             typer.echo(f"      {fips}: {reason}")
+
+
+def _load_dataset(workspace: Workspace) -> Dataset:
+    """Read the saved dataset, or say how to make one.
+
+    Every command but `fetch` needs it, and before the first fetch the bare
+    FileNotFoundError names a path rather than the thing to do about it.
+    """
+    if not workspace.dataset_path.exists():
+        typer.secho(
+            f"no dataset at {workspace.dataset_path}\nrun `refugia fetch` first "
+            "-- it downloads every metric and saves them there.",
+            fg="red",
+        )
+        raise typer.Exit(code=1)
+    return Dataset.load(workspace.dataset_path)
+
+
+def _report_failures(failures) -> None:
+    """Repeat any source failure at the end, where it will still be on screen."""
+    if not failures:
+        return
+    typer.secho(
+        f"\n{len(failures)} source(s) failed and contributed nothing:",
+        fg="red",
+    )
+    for name, reason in failures:
+        typer.secho(f"  {name}: {reason}", fg="red")
+    typer.secho(
+        "Their metrics keep whatever a previous fetch saved. "
+        "A dated upstream path that has moved is the usual cause.",
+        fg="red",
+    )
 
 
 def _report_coverage(dataset: Dataset) -> None:
@@ -94,12 +149,15 @@ def fetch(
         Dataset.load(workspace.dataset_path).values if workspace.dataset_path.exists() else {}
     )
     wanted = {k.strip() for k in only.split(",") if k.strip()}
-    values = _collect(registry, places, existing, wanted)
+    values, failures = _collect(registry, places, existing, wanted)
 
     dataset = Dataset(places=places, metrics=registry.metrics, values=values)
     dataset.save(workspace.dataset_path)
     typer.echo(f"\nsaved {workspace.dataset_path}")
     _report_coverage(dataset)
+    # After the coverage table, not before: a failure scrolled past an hour ago is
+    # the one thing a reader must not miss, and this is the last thing printed.
+    _report_failures(failures)
 
 
 @app.command()
@@ -141,7 +199,7 @@ def rank(
 ) -> None:
     """Score the saved dataset under a profile and print the ranking."""
     workspace = _workspace(root)
-    dataset = Dataset.load(workspace.dataset_path)
+    dataset = _load_dataset(workspace)
     registry = workspace.build_registry()
     ranked = ScoringEngine(registry).rank(dataset.places, dataset.values, Profile.load(profile))
 
@@ -168,7 +226,7 @@ def publish(
 ) -> None:
     """Build the interactive map and table as a self-contained HTML page."""
     workspace = _workspace(root)
-    dataset = Dataset.load(workspace.dataset_path)
+    dataset = _load_dataset(workspace)
     written = ArtifactBuilder(workspace.cache).build(dataset, Profile.load(profile), out)
     typer.echo(f"wrote {written} ({written.stat().st_size / 1e6:.1f} MB)")
 
@@ -184,7 +242,7 @@ def ask(
 ) -> None:
     """Answer a question by planning a query, running it, and narrating the result."""
     workspace = _workspace(root)
-    dataset = Dataset.load(workspace.dataset_path)
+    dataset = _load_dataset(workspace)
     planner = QueryPlanner(model=model, host=host)
     plan = planner.plan(question, dataset.metrics)
     typer.echo(f"plan: {json.dumps(plan.to_dict())}\n")

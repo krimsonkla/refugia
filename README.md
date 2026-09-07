@@ -136,6 +136,12 @@ picks up where it stopped. `--only wildfire_risk` refreshes one metric without
 touching the rest, which is what you want when a single upstream has published a
 new year.
 
+A source whose upstream has moved costs its own metrics and nothing else. Nine of
+these are pinned to a dated path — a filename with a year in it, a release
+directory — so expect it eventually. The run continues, those metrics keep
+whatever the last successful fetch saved, and the failure is repeated in red after
+the coverage table so an hour of scrollback cannot hide it.
+
 ## Reading the output
 
 **The score is a position, not a measurement.** `score` in the CLI, `FIT` on the
