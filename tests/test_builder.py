@@ -103,7 +103,7 @@ def test_the_built_page_closes_its_payload_tag_exactly_once(tmp_path, monkeypatc
     )
     monkeypatch.setattr(
         "refugia.artifact.builder.CityProfile",
-        lambda cache: type("C", (), {"build": lambda self, cities: {}})(),
+        lambda cache, vegetation=None: type("C", (), {"build": lambda self, cities: {}})(),
     )
 
     out = ArtifactBuilder(Cache(tmp_path / "c")).build(

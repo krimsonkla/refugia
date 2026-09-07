@@ -246,6 +246,14 @@ class LandfireVegetationSource:
         response.raise_for_status()
         body = response.json()
         if "error" in body:
+            # A 200 carrying an error body is how this service reports both "your
+            # extent is outside the layer", which is permanent geography, and "I am
+            # busy", which is not. Filed under coverage, the second becomes a place
+            # silently recorded as having no vegetation.
+            error = body["error"] if isinstance(body["error"], dict) else {}
+            code = error.get("code", 400)
+            if code in (429, 500, 502, 503, 504):
+                raise httpx.HTTPError(f"LANDFIRE is unavailable: {body['error']}")
             raise OutsideCoverage(f"LANDFIRE rejected the request: {body['error']}")
         samples = body.get("samples") or []
         if not samples:

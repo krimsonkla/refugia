@@ -27,6 +27,7 @@ class Workspace:
         self._root = root
         self._radius_km = radius_km
         self._cache = Cache(root / "data" / "cache")
+        self._vegetation: LandfireVegetationSource | None = None
 
     @property
     def cache(self) -> Cache:
@@ -37,6 +38,20 @@ class Workspace:
     def dataset_path(self) -> Path:
         """Where `fetch` writes and every other command reads."""
         return self._root / "data" / "dataset.json"
+
+    @property
+    def vegetation(self) -> LandfireVegetationSource:
+        """The one LANDFIRE sampler, shared by the county metrics and the city panel.
+
+        Constructed here because the radius is a run-level decision: the city panel
+        used to build its own with a default Sampling, so `--radius-km 50` sampled
+        cities at 25 km while the page's own hint text said 50.
+        """
+        if self._vegetation is None:
+            self._vegetation = LandfireVegetationSource(
+                self._cache, sampling=Sampling(radius_km=self._radius_km)
+            )
+        return self._vegetation
 
     @property
     def packaged_spec_dir(self) -> Path:
@@ -74,9 +89,7 @@ class Workspace:
         whose behaviour is covered by tests.
         """
         registry = MetricRegistry()
-        registry.register(
-            LandfireVegetationSource(self._cache, sampling=Sampling(radius_km=self._radius_km))
-        )
+        registry.register(self.vegetation)
         registry.register(CdcPlacesSource(self._cache))
         registry.register(NasaPowerClimateSource(self._cache))
         registry.register(EpaAirQualitySource(self._cache))

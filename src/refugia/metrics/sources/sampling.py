@@ -18,7 +18,11 @@ class Sampling:
     retries: int = 4
     backoff: float = 1.5
     # A full county-and-city run is roughly six and a half thousand requests to a
-    # single public endpoint. Eight workers with no floor between starts is a rate
-    # nobody agreed to, and a public repository multiplies it by however many
-    # people run it.
+    # single public endpoint, and a public repository multiplies that by however
+    # many people run it. Measured over a real cache the pool sits ON this floor at
+    # about 15 requests a second, so this is the rate rather than a ceiling above
+    # one -- the earlier reasoning that a request takes a second or two and the
+    # limit would rarely bind was wrong by roughly threefold. 0.05s buys a cold
+    # fetch of about eight minutes; raise it to 0.2 for five a second and twenty
+    # minutes if that reads as too brisk for somebody else's service.
     min_interval: float = 0.05

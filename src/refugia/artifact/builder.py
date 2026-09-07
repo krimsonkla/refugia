@@ -43,8 +43,11 @@ class ArtifactBuilder:
     page's handling of `criteria` and `normalization` is outside them.
     """
 
-    def __init__(self, cache: Cache) -> None:
+    def __init__(self, cache: Cache, *, vegetation=None) -> None:
         self._cache = cache
+        # Passed through to the city panel so the radius the run was configured
+        # with is the radius the city figures are sampled at.
+        self._vegetation = vegetation
 
     def build(self, dataset: Dataset, profile: Profile, out: Path) -> Path:
         """Write the page and return its path."""
@@ -55,7 +58,9 @@ class ArtifactBuilder:
         payload["centroids"] = shapes.centroids
         cities = CityMarkers(self._cache).for_places(dataset.places, shapes.transform)
         payload["cities"] = cities
-        payload["city_metrics"] = CityProfile(self._cache).build(cities)
+        payload["city_metrics"] = CityProfile(self._cache, vegetation=self._vegetation).build(
+            cities
+        )
         payload["city_only_metrics"] = list(CITY_ONLY)
         payload["profile"] = profile.to_dict()
         payload["subtitle"] = self._subtitle(dataset, profile)

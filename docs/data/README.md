@@ -107,7 +107,7 @@ nothing checks is a rule that drifts.
 ## 6. `findings.jsonl`
 
 **146 rows across 2 cycles and 8 lenses.**
-`42 open, 88 fixed, 3 parked, 13 declined.`
+`37 open, 93 fixed, 3 parked, 13 declined.`
 
 - `cyc-release-audit` — the first public-release audit. Seven lenses plus a
   completeness critic, so eight `lens` values appear.
@@ -154,7 +154,7 @@ jq -c 'select(.batch == "scoring-parity" and .status == "open") | [.id, .effort,
   docs/data/findings.jsonl
 ```
 
-### `upstream-resilience` — 6 rows (5 important, 1 nice-to-have)
+### `upstream-resilience` — 1 row (1 nice-to-have)
 
 What happens when a source misbehaves. `fetch` survives one that raises and not one
 that returns empty; a saved dataset looks identical either way; `publish` has no

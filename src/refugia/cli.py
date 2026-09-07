@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
 
+import httpx
 import typer
 
 from refugia.artifact.builder import ArtifactBuilder
@@ -39,6 +40,7 @@ def _collect(registry, places, existing, wanted):
     """
     values: dict[str, dict[str, float]] = dict(existing)
     failures: list[tuple[str, str]] = []
+    empty: list[str] = []
     for source in registry.sources:
         keys = {m.key for m in source.metrics}
         if wanted and not keys & wanted:
@@ -46,7 +48,17 @@ def _collect(registry, places, existing, wanted):
         name = type(source).__name__
         typer.echo(f"  fetching {name} -> {', '.join(sorted(keys))}")
         try:
-            values.update(source.fetch(places))
+            got = source.fetch(places)
+            # Merged per metric, not assigned: `update` on the outer mapping
+            # replaces a whole metric's values, so a source that returns an empty
+            # inner mapping without raising deleted everything a previous fetch had
+            # saved for it -- the byte-level empty-result guard in Cache.write
+            # cannot see that, because the failure is one layer above it.
+            for key, found in got.items():
+                if not found:
+                    empty.append(key)
+                    continue
+                values.setdefault(key, {}).update(found)
         except Exception as error:  # pylint: disable=broad-exception-caught
             # Deliberately broad: an adapter can fail in as many ways as the
             # format it parses, and every one of them should cost one metric
@@ -56,6 +68,11 @@ def _collect(registry, places, existing, wanted):
             typer.secho(f"    failed: {reason}", fg="red")
             continue
         _report_source(source)
+    # An empty return is a failure that did not raise: the column stops being
+    # refreshed while the run reports success, which is the shape a renamed upstream
+    # column or a `where` clause that stopped matching actually takes.
+    for key in empty:
+        failures.append((key, "returned no values; the previous fetch's data was kept"))
     return values, failures
 
 
@@ -271,7 +288,21 @@ def publish(
     workspace = _workspace(root)
     dataset = _load_dataset(workspace)
     loaded = Profile.load(profile)
-    written = ArtifactBuilder(workspace.cache).build(dataset, loaded, out)
+    try:
+        written = ArtifactBuilder(workspace.cache, vegetation=workspace.vegetation).build(
+            dataset, loaded, out
+        )
+    except (httpx.HTTPError, OSError) as error:
+        # The first publish on a cold cache fetches the county outlines, the city
+        # files and the place health release, so it can fail the way fetch can --
+        # and this is the traceback fnd-020 removed from fetch and left here.
+        typer.secho(
+            f"could not build the page: {type(error).__name__}: {error}\n"
+            "The map and city layers are downloaded on the first publish. Run "
+            "`refugia publish` again when the upstream is back.",
+            fg="red",
+        )
+        raise typer.Exit(code=1) from error
     typer.echo(f"wrote {written} ({written.stat().st_size / 1e6:.1f} MB)")
     typer.secho(f"\n{_sharing_note(dataset, loaded)}", fg="cyan")
 

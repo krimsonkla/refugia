@@ -84,6 +84,12 @@ LANDFIRE says.
 LF2025 is a partial release: it returns NoData across the eastern US. LF2024 is
 national and is what the code uses.
 
+**Outbound rate.** A cold county-and-city fetch makes roughly 6,600 requests to
+this one endpoint. They are spaced by a shared floor of 0.05s between request
+starts — about 15 a second, measured — which is the rate rather than a ceiling
+above one. `--radius-km` does not change the count; the sample count per request
+does not change the count either.
+
 ## CDC PLACES
 
 Centers for Disease Control and Prevention, with the Robert Wood Johnson
