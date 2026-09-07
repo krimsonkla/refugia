@@ -260,9 +260,13 @@ Three tiers, in increasing order of what they can express and of what they cost.
 
 2. **A tabular source is a JSON spec in `specs/`** — no code. Name the URL, the
    format (`csv`, `json`, `xlsx`), the column holding a county FIPS and the column
-   holding the value. `specs/wildfire_risk.json` is a worked example. This tier is
-   safe for a model to author: it is schema-validated data, and nothing in it
-   executes.
+   holding the value. `specs/wildfire_risk.json` is a worked example. Nothing in a
+   spec executes, and it is validated on load — the URL must be `https`, and the
+   fields that reach the published page may not contain markup — so a model can
+   draft one and the blast radius stays bounded: a wrong spec produces a metric
+   with poor coverage, which the coverage gate surfaces, rather than arbitrary
+   behaviour. It is still a network request in data clothing, though. Read the URL
+   before you merge it.
 
 3. **A source needing real logic is a written adapter** in
    `src/refugia/metrics/sources/`, implementing the `MetricSource` protocol.
@@ -281,10 +285,17 @@ rest.
 
 Two front ends, because a published page cannot reach a machine on your desk.
 
-**In the page.** The artifact declares the `sample` capability, so the browser asks
-Claude on the viewer's own account. The model is not handed a summary — it is given
-_functions_ over the live view (`list_states`, `explain_subset`, `top_places`,
-`compare_places`) and told to call them and never do arithmetic itself.
+**In the page**, but only where a host offers a model. Nothing is declared at build
+time — `publish` substitutes the data into the template and writes a file. The page
+asks at runtime: it looks for `window.claude.use`, and if that exists it requests
+the `sample` capability. Granted, the Ask panel appears and the viewer's questions
+run on their own account, under whatever the host asks them to agree to. Declined,
+or opened from disk, or served from anywhere else — the panel stays hidden and the
+rest of the page behaves exactly as it does anywhere.
+
+Where it is available, the model is not handed a summary — it is given _functions_
+over the live view (`list_states`, `explain_subset`, `top_places`, `compare_places`)
+and told to call them and never do arithmetic itself.
 
 That distinction is the design. A precomputed summary can only answer the question
 it was built for, and the next question has a different shape: "what drives the west
@@ -298,7 +309,11 @@ raw gap. Handed raw gaps, a model will name a metric that is severe in one state
 near average in its neighbours and call it a shared cause. The weighting is what
 makes the answer correct rather than merely plausible.
 
-The first question asks the viewer for consent, and the usage is theirs.
+The page reaches the model only when the viewer asks it to — typing a question, or
+pressing "Summarise this comparison". Acquiring the capability is not using it, and
+nothing is sent on load. Whether the viewer is prompted first, and on whose account
+the usage lands, is the host's to decide; the page only asks, and handles being
+told no.
 
 **On the command line.** `refugia ask` uses a local Ollama model as a _query
 planner_ rather than an analyst: it converts a question into a scoring profile, the
