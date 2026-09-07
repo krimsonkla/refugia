@@ -42,7 +42,7 @@ jobs:
 
       # The conformance check runs the published page's own JavaScript, so node is
       # a hard requirement of the suite rather than a convenience of the image.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
 
