@@ -111,7 +111,7 @@ paragraph explaining why there was no such test outlived the test.
 ## 6. `findings.jsonl`
 
 **146 rows across 2 cycles and 8 lenses.**
-`10 open, 120 fixed, 3 parked, 13 declined.`
+`8 open, 122 fixed, 3 parked, 13 declined.`
 
 - `cyc-release-audit` — the first public-release audit. Seven lenses plus a
   completeness critic, so eight `lens` values appear.
@@ -161,26 +161,26 @@ jq -c 'select(.batch == "scoring-parity" and .status == "open") | [.id, .effort,
   docs/data/findings.jsonl
 ```
 
-### `upstream-resilience` — 1 row (1 important)
+### `upstream-resilience` — done
 
-What happens when a source misbehaves. `fetch` survives one that raises and not one
-that returns empty; a saved dataset looks identical either way; `publish` has no
-failure handling at all and reaches four more upstreams on a cold cache, which the
-docs say it does not. The LANDFIRE error classification and the city sampler's
-self-constructed source are the same code path.
+Closed. What happens when a source misbehaves: `fetch` survives one that raises and
+one that returns empty, a saved dataset no longer looks identical either way, and
+`publish` handles its own failures. The last row here was the docs saying `publish`
+touches no network while the first one reaches four more upstreams; the guide now
+lists them, and a test counts them so the list cannot rot.
 
 ```bash
 jq -c 'select(.batch == "upstream-resilience" and .status == "open") | [.id, .effort, .title] | @tsv' -r \
   docs/data/findings.jsonl
 ```
 
-### `prose-guard` — 1 row (1 nice-to-have)
+### `prose-guard` — done
 
-Widen `tests/test_guide.py` first — it reads only the guide and the README, so every
-document the audit found wrong is outside it — then fix whatever turns red. Ordered
-that way deliberately: the corrections are individually trivial and the reason both
-audits found a pile of them is that nothing was checking. Fixing the checker first
-means the pile does not rebuild.
+Closed. `tests/test_guide.py` was widened first and the corrections followed, which
+was the point of the ordering: the reason both audits found a pile of prose defects
+is that nothing was checking. It now validates paths, links, vocabulary, the
+endpoint table and the claim that the page contains no per-metric code, so the pile
+does not rebuild.
 
 ```bash
 jq -c 'select(.batch == "prose-guard" and .status == "open") | [.id, .effort, .title] | @tsv' -r \

@@ -4,6 +4,7 @@ import json
 
 from refugia.artifact.builder import ArtifactBuilder
 from refugia.metrics.metric import Metric
+from refugia.places.cbsa import Cbsa
 from refugia.places.place import Place
 from refugia.scoring.criterion import Criterion
 from refugia.scoring.profile import Profile
@@ -144,3 +145,109 @@ def test_a_misspelled_criterion_stops_the_build_before_the_download(tmp_path):
     with pytest.raises(KeyError) as caught:
         ArtifactBuilder(Cache(tmp_path)).build(dataset, profile, tmp_path / "out.html")
     assert "populaton" in str(caught.value)
+
+
+def _universe_dataset(universe: str, count: int = 3) -> Dataset:
+    metric = Metric(
+        key="a",
+        label="Air quality",
+        unit="u",
+        direction="lower_better",
+        category="c",
+        description="",
+        source="s",
+    )
+    return Dataset(
+        places=tuple(
+            Place(fips=f"{i:05d}", name=f"P{i}", state="S", lat=0.0, lon=0.0, population=1)
+            for i in range(count)
+        ),
+        metrics=(metric,),
+        values={"a": {f"{i:05d}": 1.0 for i in range(count)}},
+        universe=universe,
+    )
+
+
+def test_the_subtitle_does_not_call_every_county_metropolitan():
+    """A page built from `--universe all` claimed a membership two thirds of its
+    counties do not have. The count could not carry the correction: the same 1,101
+    is a metro_micro run or a truncated all one.
+    """
+    profile = Profile("t", {"a": 1.0})
+    everywhere = ArtifactBuilder._subtitle(_universe_dataset("all"), profile)
+    metro_micro = ArtifactBuilder._subtitle(_universe_dataset("metro_micro"), profile)
+    assert "metro or micropolitan" not in everywhere
+    assert "metro or micropolitan" in metro_micro
+    assert everywhere.startswith("3 US counties, scored on")
+
+
+def test_a_dataset_saved_before_the_universe_was_recorded_reads_it_off_the_places():
+    """Every shipped dataset predates the field, and all of them are real runs.
+    Saying nothing would be safe and useless; CBSA membership travels with each
+    place, so what the page holds can be read from what the page holds.
+    """
+    profile = Profile("t", {"a": 1.0})
+
+    def older(*kinds):
+        data = _universe_dataset("", count=len(kinds))
+        places = tuple(
+            Place(
+                fips=p.fips,
+                name=p.name,
+                state=p.state,
+                lat=p.lat,
+                lon=p.lon,
+                population=p.population,
+                cbsa=Cbsa(code="1", name="Somewhere", kind=k) if k else None,
+            )
+            for p, k in zip(data.places, kinds, strict=True)
+        )
+        return Dataset(places=places, metrics=data.metrics, values=data.values, universe="")
+
+    assert "in a metro or micropolitan area" in ArtifactBuilder._subtitle(
+        older("metro", "micro"), profile
+    )
+    assert "in a metro area" in ArtifactBuilder._subtitle(older("metro", "metro"), profile)
+    # One county outside every CBSA cannot be a metro or micropolitan run.
+    assert "metro" not in ArtifactBuilder._subtitle(older("metro", None), profile)
+
+
+def test_a_recorded_universe_beats_what_the_places_look_like():
+    """A truncated `all` run holding only metro counties is still an `all` run, and
+    the recorded answer is the better one wherever there is one."""
+    data = _universe_dataset("all", count=2)
+    places = tuple(
+        Place(
+            fips=p.fips,
+            name=p.name,
+            state=p.state,
+            lat=p.lat,
+            lon=p.lon,
+            population=p.population,
+            cbsa=Cbsa(code="1", name="Somewhere", kind="metro"),
+        )
+        for p in data.places
+    )
+    subtitle = ArtifactBuilder._subtitle(
+        Dataset(places=places, metrics=data.metrics, values=data.values, universe="all"),
+        Profile("t", {"a": 1.0}),
+    )
+    assert "metro" not in subtitle
+
+
+def test_every_universe_the_places_registry_offers_has_a_subtitle_phrase():
+    """The phrases live beside the page and the universes live beside the places.
+    A fourth universe added to one and not the other would publish a page that
+    describes its contents by omission.
+    """
+    from refugia.artifact.builder import UNIVERSE_PHRASE
+    from refugia.places.registry import UNIVERSES
+
+    assert set(UNIVERSES) == set(UNIVERSE_PHRASE)
+
+
+def test_the_universe_survives_a_save_and_load(tmp_path):
+    """The page is built from the file, so anything it must say lives in the file."""
+    path = tmp_path / "d.json"
+    _universe_dataset("metro").save(path)
+    assert Dataset.load(path).universe == "metro"

@@ -27,6 +27,11 @@ class Dataset:
     # hour old and made entirely of figures cached last year.
     built_at: str = ""
     oldest_response: str = ""
+    # Which candidate universe `fetch` was run with. The page describes what the
+    # reader is looking at, and it cannot describe the set of places honestly by
+    # counting them: 1,101 counties is a `metro_micro` run or a truncated `all`
+    # one, and the page said "metro or micropolitan" either way.
+    universe: str = ""
 
     def save(self, path: Path) -> None:
         """Write the whole dataset as JSON."""
@@ -72,6 +77,7 @@ class Dataset:
             "values": self.values,
             "built_at": self.built_at,
             "oldest_response": self.oldest_response,
+            "universe": self.universe,
         }
 
     @classmethod
@@ -93,6 +99,9 @@ class Dataset:
             # file should still load rather than becoming unreadable.
             built_at=payload.get("built_at", ""),
             oldest_response=payload.get("oldest_response", ""),
+            # Absent for the same reason, and the page falls back to naming no
+            # universe at all rather than naming the wrong one.
+            universe=payload.get("universe", ""),
         )
 
     @staticmethod

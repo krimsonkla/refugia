@@ -200,3 +200,28 @@ def test_the_page_names_no_metric_of_its_own():
     assert not {
         k: v for k, v in named.items() if v
     }, f"template.html names metrics: {({k: v for k, v in named.items() if v})}"
+
+
+def test_the_guide_accounts_for_every_endpoint_the_first_publish_reaches():
+    """`fetch` is documented as the network-bound step; the first `publish` is too.
+
+    The guide used to say `fetch` is slow and everything else reads the saved
+    dataset. That is true from the second publish on and false for the first, which
+    is exactly the run a reader following the quickstart makes. The correction is
+    a table, and a table rots: this counts the URLs the artifact layer actually
+    names and fails if one is added or removed without the table moving with it.
+    """
+    urls = set()
+    for path in sorted((ROOT / "src" / "refugia" / "artifact").glob("*.py")):
+        urls |= set(re.findall(r'"(https://[^"\s]+)', path.read_text(encoding="utf-8")))
+    hosts = {re.match(r"https://([^/]+)", u).group(1) for u in urls}
+    guide = (GUIDE / "command-line.md").read_text(encoding="utf-8")
+    table = guide[guide.index("**The first `publish` downloads more.**") :]
+    table = table[: table.index("Then it resamples")]
+    rows = [line for line in table.splitlines() if line.startswith("| ") and "---" not in line]
+    # One header row plus one row per thing downloaded.
+    assert len(rows) - 1 == len(urls), (
+        f"the artifact layer names {len(urls)} endpoints {sorted(urls)} but the guide "
+        f"table lists {len(rows) - 1}"
+    )
+    assert hosts, "no endpoints found; the check would pass vacuously"

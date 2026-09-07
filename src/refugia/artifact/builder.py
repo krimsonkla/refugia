@@ -12,6 +12,13 @@ from refugia.scoring.vocabulary import check_criteria
 from refugia.store.cache import Cache
 from refugia.store.dataset import Dataset
 
+# How each candidate universe reads in the page's subtitle.
+UNIVERSE_PHRASE = {
+    "metro_micro": " in a metro or micropolitan area",
+    "metro": " in a metro area",
+    "all": "",
+}
+
 TEMPLATE = Path(__file__).with_name("template.html")
 PLACEHOLDER = "__REFUGIA_DATA__"
 # The template is a fragment on purpose: a host that publishes it supplies the
@@ -102,7 +109,29 @@ class ArtifactBuilder:
         labels = {m.key: m.label.lower() for m in dataset.metrics}
         named = ", ".join(labels.get(k, k) for k in weighted[:4])
         return (
-            f"{len(dataset.places):,} US counties in a metro or micropolitan area, "
+            f"{len(dataset.places):,} US counties{ArtifactBuilder._universe_phrase(dataset)}, "
             f"scored on {named}. Move the sliders to change what matters; "
             f"requirements remove places outright."
         )
+
+    @staticmethod
+    def _universe_phrase(dataset: Dataset) -> str:
+        """How to describe the set of places the page holds.
+
+        `fetch` records which universe it was run with, and that is the answer where
+        there is one. A dataset saved before it was recorded is not silent, though:
+        CBSA membership travels with every place, so what the file contains can be
+        read off the file. That is a weaker claim than naming the command -- a
+        truncated `all` run holding only metro counties reads as a metro run -- but
+        it is a true statement about the places on the page, which is what the
+        subtitle is for. Saying nothing would be the safe answer to a question
+        nobody asked; the reader wants to know what they are looking at.
+        """
+        if dataset.universe in UNIVERSE_PHRASE:
+            return UNIVERSE_PHRASE[dataset.universe]
+        kinds = {p.cbsa.kind if p.cbsa else None for p in dataset.places}
+        if None in kinds or not kinds:
+            return UNIVERSE_PHRASE["all"]
+        if kinds == {"metro"}:
+            return UNIVERSE_PHRASE["metro"]
+        return UNIVERSE_PHRASE["metro_micro"]

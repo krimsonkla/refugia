@@ -1,7 +1,9 @@
 # The command line
 
-Five commands. `metrics` needs no dataset and is the one to run first; `fetch` is slow and network-bound; everything else reads the saved
-dataset, so re-weighting costs nothing.
+Five commands. `metrics` needs no dataset and is the one to run first. `fetch` is
+slow and network-bound, and so is the **first** `publish` — it downloads four more
+things `fetch` never touches. After that, everything reads the saved dataset and the
+cache, so re-weighting costs nothing.
 
 ```bash
 uv run refugia fetch                                      # download everything (slow, cached)
@@ -10,9 +12,9 @@ uv run refugia publish --profile profiles/example.json    # writes out/refugia.h
 uv run refugia ask "cheapest places with almost no juniper"
 ```
 
-`fetch` is slow and network-bound; everything else reads the saved dataset, so
-re-weighting costs nothing. Copy `profiles/example.json` and edit it — the weights
-are yours, and that is the point.
+Copy `profiles/example.json` and edit it — the weights are yours, and that is the
+point. `rank` never touches the network. `publish` does, but only until its own
+downloads are cached: see [What a fetch costs](#what-a-fetch-costs).
 
 `--explain` breaks a place's score into what actually produced it:
 
@@ -56,11 +58,37 @@ counties inside a Census metro or micropolitan area — the places with a town i
 them. `all` is every US county, and `metro` narrows to metro areas only. It
 decides what gets downloaded, so changing it means fetching again.
 
+Whichever you choose is recorded in `data/dataset.json` and the published page
+says so under its title — "1,906 US counties in a metro or micropolitan area", "in
+a metro area", or just "3,144 US counties" for `all`. A dataset saved before that
+was recorded still gets the right line: CBSA membership travels with every place,
+so the page reads it off the places it holds.
+
 ## What a fetch costs
 
-Roughly 90 MB across about 6,900 files under `data/cache/`, and a `data/dataset.json`
+Roughly 55 MB across about 2,100 files under `data/cache/`, and a `data/dataset.json`
 of around 1.3 MB. Expect it to take a while: the vegetation layer alone is
 thousands of individual samples.
+
+**The first `publish` downloads more.** `fetch` runs the metric sources and nothing
+else; the page needs four things none of them provide, so `publish` gets them itself
+the first time it runs:
+
+| What                       | From                        | Size   |
+| -------------------------- | --------------------------- | ------ |
+| County and state outlines  | `us-atlas` on a CDN         | 0.8 MB |
+| City names and populations | Census population estimates | 7 MB   |
+| City coordinates           | Census 2024 Gazetteer       | 1.2 MB |
+| City-level health measures | CDC PLACES place release    | 6 MB   |
+
+Then it resamples the land cover around every mapped town — about 4,800 more
+LANDFIRE calls, 19 MB — because a town's vegetation is not its county's. Together
+that is another 34 MB and roughly 4,800 files, so a full cache is nearer 90 MB
+across 6,900 files than the fetch figure above.
+
+All of it is cached, so the second `publish` and every one after it is offline and
+immediate. The first is not: fetching, disconnecting and then publishing fails, and
+`publish` says so rather than showing a traceback.
 
 It is cache-first and therefore resumable — interrupt it and run it again and it
 picks up where it stopped. `--only wildfire_risk` refreshes one metric without

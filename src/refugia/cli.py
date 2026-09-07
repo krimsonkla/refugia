@@ -213,6 +213,7 @@ def fetch(
         values=values,
         built_at=datetime.now(tz=UTC).date().isoformat(),
         oldest_response=workspace.cache.oldest_entry(),
+        universe=universe,
     )
     dataset.save(workspace.dataset_path)
     typer.echo(f"\nsaved {workspace.dataset_path}")

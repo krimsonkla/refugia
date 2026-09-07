@@ -109,9 +109,11 @@ uv run refugia publish --profile profiles/example.json    # writes out/refugia.h
 uv run refugia ask "cheapest places with almost no juniper"
 ```
 
-`fetch` is slow and network-bound; everything else reads the saved dataset, so
-re-weighting costs nothing. Copy `profiles/example.json` and edit it — the weights
-are yours, and that is the point.
+`fetch` is slow and network-bound, and so is the first `publish` — it downloads the
+county outlines, the city markers and the CDC place release, then resamples land
+cover around each town, and caches all of it. `rank` and every later `publish` read
+what is already on disk, so re-weighting costs nothing. Copy `profiles/example.json`
+and edit it — the weights are yours, and that is the point.
 
 `--explain` breaks a place's score into what actually produced it:
 
