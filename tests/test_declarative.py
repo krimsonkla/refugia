@@ -70,12 +70,23 @@ def test_reads_nested_json(tmp_path, places):
         ({"format": "xml"}, "format must be"),
         ({"direction": "up"}, "direction must be"),
         ({"aggregate": "average"}, "aggregate must be"),
+        ({"url": "http://example.invalid/data.csv"}, "url must be https"),
+        ({"url": "file:///etc/passwd"}, "url must be https"),
+        ({"url": "ftp://example.invalid/data.csv"}, "url must be https"),
     ],
 )
 def test_a_malformed_spec_fails_at_construction(broken, message, tmp_path):
     """A model-authored spec must fail immediately, not produce an empty metric."""
     with pytest.raises(ValueError, match=message):
         DeclarativeSource({**SPEC, **broken}, Cache(tmp_path / "c"))
+
+
+@pytest.mark.parametrize("field", ["key", "label", "description", "source", "unit", "category"])
+def test_markup_in_a_displayed_field_is_rejected(field, tmp_path):
+    """Every one of these is interpolated into the published page."""
+    spec = {**SPEC, field: "<img src=x onerror=alert(1)>"}
+    with pytest.raises(ValueError, match="must not contain markup"):
+        DeclarativeSource(spec, Cache(tmp_path / "c"))
 
 
 def test_a_spec_missing_fields_names_them(tmp_path):

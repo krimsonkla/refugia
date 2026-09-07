@@ -6,6 +6,7 @@ import json
 import statistics
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 import openpyxl
 
@@ -15,6 +16,11 @@ from refugia.store.cache import Cache
 
 AGGREGATIONS = ("first", "mean", "median", "sum", "max", "min")
 FORMATS = ("csv", "json", "xlsx")
+
+# Every one of these reaches the published page as text. The page escapes what it
+# interpolates, but a spec is reviewed input and the cheapest place to refuse
+# markup is before it is ever stored.
+DISPLAYED = ("key", "label", "unit", "category", "description", "source")
 
 
 class DeclarativeSource:
@@ -63,6 +69,12 @@ class DeclarativeSource:
         missing = [f for f in required if f not in spec]
         if missing:
             raise ValueError(f"spec is missing required fields: {missing}")
+        scheme = urlparse(str(spec["url"])).scheme
+        if scheme != "https":
+            raise ValueError(f"url must be https, got {scheme or 'no'} scheme: {spec['url']!r}")
+        for field in DISPLAYED:
+            if "<" in str(spec[field]) or ">" in str(spec[field]):
+                raise ValueError(f"{field} must not contain markup: {spec[field]!r}")
         if spec["format"] not in FORMATS:
             raise ValueError(f"format must be one of {FORMATS}, got {spec['format']!r}")
         if spec["direction"] not in ("higher_better", "lower_better"):
